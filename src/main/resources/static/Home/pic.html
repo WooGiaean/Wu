@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>写真集</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+   <!-- <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">-->
+
+   <!-- <script>
+        // 配置Tailwind自定义颜色
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a1a1a',
+                        secondary: '#f5f5f5',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            }
+        }
+    </script>-->
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .photo-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1.5rem;
+            }
+            .photo-item {
+                @apply overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl;
+            }
+            .photo-img {
+                @apply w-full h-64 object-cover transition-transform duration-500 hover:scale-105;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-primary">
+<!-- 页面头部 -->
+<header class="py-6 px-4 md:px-8 bg-white shadow-sm">
+    <div class="container mx-auto flex justify-between items-center">
+        <h1 class="text-2xl md:text-3xl font-bold">
+            <i class="fa fa-camera-retro mr-2"></i>写真集
+        </h1>
+        <div class="text-gray-500">
+            <span class="hidden md:inline">记录生活中的美好瞬间</span>
+        </div>
+    </div>
+</header>
+
+<!-- 主要内容区 -->
+<main class="container mx-auto py-8 px-4 md:px-8">
+    <!-- 照片网格 -->
+    <div class="photo-grid">
+        <!-- 照片1 -->
+        <div class="photo-item">
+            <img src="/imgs/image1.png" alt="写真照片" class="photo-img">
+            <div class="p-4 bg-white">
+                <h3 class="font-medium">海边日落</h3>
+                <p class="text-sm text-gray-500 mt-1">2023.06.15</p>
+            </div>
+        </div>
+
+        <!-- 照片2 -->
+        <div class="photo-item">
+            <img src="/imgs/image2.jpg" alt="写真照片" class="photo-img">
+            <div class="p-4 bg-white">
+                <h3 class="font-medium">城市夜景</h3>
+                <p class="text-sm text-gray-500 mt-1">2023.07.02</p>
+            </div>
+        </div>
+
+        <!-- 照片3 -->
+        <div class="photo-item">
+            <img src="/imgs/image3.jpg" alt="写真照片" class="photo-img">
+            <div class="p-4 bg-white">
+                <h3 class="font-medium">山间晨雾</h3>
+                <p class="text-sm text-gray-500 mt-1">2023.05.20</p>
+            </div>
+        </div>
+
+        <!-- 照片4 -->
+        <div class="photo-item">
+            <img src="/imgs/image4.jpg" alt="写真照片" class="photo-img">
+            <div class="p-4 bg-white">
+                <h3 class="font-medium">街头角落</h3>
+                <p class="text-sm text-gray-500 mt-1">2023.08.10</p>
+            </div>
+        </div>
+
+        <!-- 照片5 -->
+        <div class="photo-item">
+            <img src="/imgs/image5.jpg" alt="写真照片" class="photo-img">
+            <div class="p-4 bg-white">
+                <h3 class="font-medium">雨后公园</h3>
+                <p class="text-sm text-gray-500 mt-1">2023.04.05</p>
+            </div>
+        </div>
+
+        <!-- 照片6 -->
+        <div class="photo-item">
+            <img src="/imgs/image6.jpg" alt="写真照片" class="photo-img">
+            <div class="p-4 bg-white">
+                <h3 class="font-medium">建筑细节</h3>
+                <p class="text-sm text-gray-500 mt-1">2023.09.18</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-white py-6 px-4 mt-12 border-t">
+    <div class="container mx-auto text-center text-gray-500 text-sm">
+        <p>© 2023 写真集 | 用镜头捕捉生活</p>
+    </div>
+</footer>
+</body>
+</html>

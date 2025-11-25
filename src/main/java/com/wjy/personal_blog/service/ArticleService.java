@@ -1,0 +1,45 @@
+package com.wjy.personal_blog.service;
+
+
+import com.wjy.personal_blog.pojo.dto.ArticleDTO;
+import com.wjy.personal_blog.pojo.entity.Article;
+import com.wjy.personal_blog.result.PageResult;
+import jdk.dynalink.linker.LinkerServices;
+
+import java.util.List;
+
+public interface ArticleService {
+
+    /*
+    * 查询历史文章
+    * */
+    PageResult list();
+
+
+    /*
+    * 查询某一/几篇文章（模糊查询）
+    * */
+    List<Article> singleQuery(ArticleDTO articleDTO);
+
+
+    /*
+    * 添加新文章
+    * */
+    void insertNewArticle(ArticleDTO articleDTO);
+
+    /*
+    * 编辑文章
+    * */
+    void updateArticle(ArticleDTO articleDTO);
+
+    /*
+    * 删除指定文章
+    * */
+    void deleteArticle(Integer articleId);
+
+
+    /*
+    * 进入具体文章
+    * */
+    Article specificArticle(Integer articleId);
+}

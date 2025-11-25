@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>我的笔记</title>
+    <!-- 导入axios接口转发请求和vue -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+    <style>
+        /* ===== 全局变量：亮色 & 暗色 ===== */
+        :root {
+            --bg-body: #fafafa;
+            --bg-card: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555;
+            --text-meta: #888;
+            --border-color: #ddd;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.1);
+            --input-bg: #fff;
+            --btn-primary-bg: #007aff;
+            --btn-primary-hover: #0062cc;
+            --btn-save-bg: #34c759;
+            --btn-cancel-bg: #f0f0f0;
+            --toolbar-bg: transparent;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #121212;
+            --bg-card: #1e1e1e;
+            --text-primary: #f0f0f0;
+            --text-secondary: #ccc;
+            --text-meta: #aaa;
+            --border-color: #333;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --input-bg: #2a2a2a;
+            --btn-primary-bg: #0a84ff;
+            --btn-primary-hover: #409cff;
+            --btn-save-bg: #30d158;
+            --btn-cancel-bg: #3a3a3c;
+            --toolbar-bg: rgba(30, 30, 30, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            background: #fff;
+            color: #333;
+        }
+        h1 { text-align: center; margin-bottom: 2rem; }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            width: 60%;
+            border: 2px solid burlywood;
+            border-radius: 10px;
+        }
+
+        #searchBtn,#addBtn{
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+
+
+        .note-item {
+            padding: 1.2rem;
+            margin-bottom: 1.2rem;
+            border-radius: 8px;
+            background: #f9f9f9;
+            transition: background 0.2s;
+        }
+        .note-item:hover {
+            transform: translateY(-3px);
+            background: #f0f7ff;
+            box-shadow: var(--shadow-hover);
+        }
+        .note-item h2 {
+            margin: 0 0 0.4rem;
+            font-size: 1.4rem;
+        }
+        .note-item h2 a {
+            text-decoration: none;
+            color: #d4b996;
+        }
+        .note-item h2 a:hover {
+            text-decoration: underline;
+        }
+        .note-date {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0.2rem 0;
+            text-align: right;
+        }
+        .note-summary {
+            color: #444;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<h1>我的笔记</h1>
+
+
+<div id="notes-list">
+
+    <!-- 导航和新增部分 -->
+    <div class="controls">
+        <input type="text" id="searchInput" v-model="keyword" placeholder="搜索笔记..." />
+
+        <button id="searchBtn" class="btn-primary" @click="search()" @keyup.enter="search()">搜索</button>
+
+        <button id="addBtn" class="btn-secondary" data-bs-toggle="modal" data-bs-target=".noteAdd">新增</button>
+
+    </div>
+
+    <!-- 笔记列表展示页面 -->
+
+       <!-- <ul>
+            <li v-for="(item,index) in notes" :key="item.noteId" style="text-decoration: none;  "
+                @click="turnToNote(item.noteId)">
+                <article class="note-item">
+                    <h2>
+                        &lt;!&ndash; 随笔标题 &ndash;&gt;
+                        <a href="notes/{{item.noteId}}.html">
+                            {{item.noteTopic}}
+                        </a>
+                    </h2>
+                    &lt;!&ndash; 随笔内容 &ndash;&gt;
+                    <p class="note-summary">{{item.noteContent}}</p>
+                    &lt;!&ndash; 创建时间 &ndash;&gt;
+                    <span class="note-date">{{item.noteCreateTime}}</span>
+                </article>
+            </li>
+              </ul>
+            -->
+
+            <section v-for="(item,index) in notes":key="item.noteId"
+                     @click="turnToNote(item.noteId)">
+                <article class="note-item">
+                    <h2 class="note-title">
+                        <a href="notes/{{item.noteId}}.html">
+                            {{item.noteTopic}}
+                        </a>
+                    </h2>
+                    <p class="note-summary">{{item.noteContent}}</p>
+                    <span class="note-date">{{item.noteCreateTime}}</span>
+                </article>
+                <!-- 后续由后端或前端循环生成更多卡片 -->
+            </section>
+
+        <!-- ===== 新增：评论区 ===== -->
+       <!-- <section class="comments-section">
+            <h2 class="comments-title">💬 发表评论</h2>
+
+            &lt;!&ndash; 评论列表（由后端或前端循环渲染） &ndash;&gt;
+            <div class="comments-list">
+                &lt;!&ndash; 示例：实际应由模板引擎循环生成 &ndash;&gt;
+                {{#each.comments}}
+                <div class="comment-item">
+                    <div class="comment-author">{{this.commenterName}}</div>
+                    <div class="comment-content">{{this.commentContent}}</div>
+                    <div class="comment-time">{{this.commentCreateTime}}</div>
+                </div>
+                {{/each}}
+
+                &lt;!&ndash; 若无评论 &ndash;&gt;
+                {{#if isEmptyComments}}
+                <p style="color: #999; text-align: center;">暂无评论，快来抢沙发吧！</p>
+                {{/if}}
+            </div>
+
+            &lt;!&ndash; 发表评论表单 &ndash;&gt;
+            <form class="comment-form">
+                <div class="form-group">
+                    <label for="commenter-name">昵称（必填）</label>
+                    <input type="text" id="commenter-name" name="commenterName" required maxlength="30" />
+                </div>
+                <div class="form-group">
+                    <label for="comment-content">评论内容</label>
+                    <textarea id="comment-content" name="commentContent" required placeholder="写下你的想法..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">发表评论</button>
+                </div>
+            </form>
+        </section>
+-->
+
+
+    <!-- bootstrap表单,用于添加新笔记 -->
+    <div class="modal noteAdd" id="addNoteModal" tabindex="-1" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <!-- 标题头部  -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addNoteModalLabel">新增笔记</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"/>
+                </div>
+                <!--  -->
+                <!-- 中间提交内容  -->
+                <div class="modal-body">
+                    <form id="noteForm">
+                        <div class="mb-3">
+                            <label for="noteTopic" class="form-label">笔记标题</label>
+                            <input type="text" v-model="newNote.topic" class="form-control" id="noteTopic" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="noteContent" class="form-label">笔记内容</label>
+                            <textarea class="form-control" v-model="newNote.content" id="noteContent" rows="6" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <!--  -->
+
+                <!-- 底部按钮  -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="saveNoteBtn"
+                            @click="insertNew()" @keyup.enter="insertNew()">保存笔记</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                </div>
+                <!--  -->
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+
+
+
+
+<!-- 随笔内容显示列表 -->
+<script>
+    //笔记列表渲染
+    new Vue({
+        el:'#notes-list',
+        data: {
+            keyword:'', //搜索关键字
+            notes: [],  //用于展示数据库中的列表数据
+            newNote:{   //新增笔记
+                topic: '',
+                content: ''
+            }
+        },
+        methods:{
+            //跳转到具体页面
+            turnToNote(id){
+                console.log("点击了id为{}的文章",id);
+                window.location.href = '/Home/specificNote.html?id='+id;
+            },
+            //关键字查询笔记
+            search(){
+                let word = this.keyword.trim();
+                //关键字为空
+                if (word==null){
+                    alert("请输入关键字！")
+                    return;
+                }
+                //关键字不为空
+                axios.post('/notes/query',{
+                    noteTopic: this.keyword,
+                    noteContent: this.keyword
+                })
+                    .then(res => {
+                        console.log("请求转发成功")
+                        console.log(res.data.data.records);
+                        let result = res.data;
+                        if (result.code == 1 || result.success) {
+                            console.log("后端数据返回成功")
+                            //将查询成功的数据保存在articles中
+                            this.notes = result.data.records;
+                            console.log(result.data.records);
+                        }else{
+                            console.log("后端数据返回失败", result.msg || result.message)
+                            this.notes=[];
+                            alert("没有该笔记！")
+                        }
+                    }).catch(err=>{
+                        console.error('请求转发失败', err);
+                        this.notes=[];
+                })
+
+
+            },
+            //添加新随笔
+            insertNew(){
+                console.log("点击了新增按钮")
+                axios.post('/notes/insert',{
+                    noteTopic: this.newNote.topic,
+                    noteContent: this.newNote.content,
+                }).then(res=>{
+                    console.log("请求转发成功")
+                     let result =res.data
+                    console.log(result)
+                    if (result.code == 1 || result.success) {
+                        alert("添加成功！")
+                        new bootstrap.Modal(document.querySelector(".noteAdd")).hide();
+                        window.location.href='/notes/'
+                    }
+                }).catch(err=>{
+                    console.error('请求转发失败', err);
+                })
+
+            },
+
+        },
+        //页面加载时渲染数据
+        mounted(){
+            axios.get('/notes/list')
+                .then(res => {
+                    console.log(res.data.data.records);
+                    this.notes = res.data.data.records;
+                })
+                .catch(err=>{
+                    console.error('加载失败', err);
+                    document.getElementById('notes-list').innerHTML = '<p>⚠️ 无法加载笔记列表。</p>';
+                })
+        }
+    })
+
+</script>
+
+
+</body>
+</html>

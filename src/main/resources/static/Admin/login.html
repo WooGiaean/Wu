@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" xmlns:th="http://www.thymeleaf.org">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录页面</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #faf6f0 0%, #f2e9dc 100%);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 320px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: border 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color:#d4b996;
+        }
+
+        button {
+            background: linear-gradient(135deg, #d4b996 0%, #d4b996 100%);
+            color: white;
+            border: none;
+            margin-bottom: 10px;
+            padding: 12px 0;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .forgot-password {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .forgot-password a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h2>用户登录</h2>
+    <!-- 表单提交 -->
+    <form id="loginForm" method="post" >
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" name="username"  placeholder="请输入用户名">
+        </div>
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" id="password"  name="password" placeholder="请输入密码" >
+        </div>
+    </form>
+
+    <!-- 登录和注册按钮 -->
+    <button type="submit" id="submit_btn">登录</button>
+    <button type="submit" id="register_btn">注册</button>
+    <div class="forgot-password">
+        <a href="#">忘记密码？</a>
+    </div>
+</div>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vue"></script>
+
+<script>
+
+
+    /* 登录跳转并进行验证*/
+    document.getElementById("submit_btn").addEventListener("click", function(e) {
+        e.preventDefault();
+
+        let username = document.getElementById('username').value;
+        let password = document.getElementById('password').value;
+
+        axios.post("/admin/loginCheck",JSON.stringify({  // 将数据转换为JSON字符串
+            username: username,
+            password: password
+            }), {
+                headers: {
+                    'Content-Type': 'application/json'  // 指定请求头为JSON格式
+                },
+            credentials: 'include'
+        },
+        ).then(response => {
+            const result = response.data;
+            console.log(result)
+            if (result.code==1) {
+                // 登录成功：跳转至后台首页（示例路径，需根据实际页面调整）
+                alert("登录成功")
+                window.location.href = "/Home/home.html";
+            } else {
+                // 登录失败：弹窗提示错误
+                alert(result.message);
+            }
+        })
+            .catch(error => {
+            console.error("登录请求异常：", error);
+            alert("登录请求失败，请稍后再试");
+        });
+
+    })
+
+
+    /* 隐藏通道 */
+   /* document.getElementById("submit_btn").addEventListener("click", function(e) {
+        e.preventDefault();
+
+        let username = document.getElementById('username').value;
+        let password = document.getElementById('password').value;
+
+
+
+        if (username=="wuhu" && password=="111"){
+            window.location.href="tempLogin"
+        }else if (username=="admin" && password=="admin"){
+            window.location.href="index"
+        }
+
+
+    })*/
+
+
+    /*
+    * 跳转到注册页面
+    * */
+    document.getElementById("register_btn").addEventListener("click", function() {
+        window.location.href = "/Admin/register.html";
+    })
+
+
+
+</script>
+
+
+</body>
+
+
+</html>

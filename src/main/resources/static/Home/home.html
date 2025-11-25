@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" xmlns:th="http://www.thymeleaf.org">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人博客</title>
+    <!-- css样式修饰 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            margin-top: 2.5vh;
+            padding: 0 5vw;
+            min-height: 100vh;
+        }
+
+        .left-column {
+            width: 15%;
+            background-color: white;
+            border-right: 1px solid #ddd;
+        }
+
+        .right-column {
+            width: 85%;
+            background-color: white;
+            padding: 20px;
+        }
+
+        .blog-title {
+            background-color: white;
+            border-left: 3px solid #E1BE97;
+            border-right: 1px solid #F9F4E9;
+            padding-left: 20%;
+            padding-top: 15%;
+            padding-bottom: 15%;
+        }
+
+        .blog-title h1,p {
+            font-size: 2vh;
+            color: #664401;
+            padding-left: 20%;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 15px 0;
+            padding-left: 20%;
+            font-size: 1.8vh;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover {
+            color: #664401;
+            font-weight: bold;
+        }
+
+        .notes-section h2, .blogs-section h2 {
+            font-size: 2.5vh;
+            color: black;
+            margin-bottom: 20px;
+        }
+
+        .notes-container {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .note-card {
+            background-color: #F9F4E9;
+            border-radius: 10px;
+            padding: 20px;
+            min-width: 200px;
+            transition: border 0.3s ease;
+        }
+
+        .note-card:hover {
+            border: 1px solid #E1BE97;
+        }
+
+        .note-card h3 {
+            font-size: 1.5vh;
+            color: black;
+            margin-bottom: 10px;
+        }
+
+        .note-card p {
+            font-size: 1vh;
+            color: gray;
+        }
+
+        .blog-item {
+            margin-bottom: 40px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .blog-item:hover{
+            border: 1px solid #E1BE97;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .blog-image {
+            width: 500px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .blog-content {
+            flex: 1;
+        }
+
+        .blog-content h3 {
+            font-size: 2.5vh;
+            color: black;
+            margin-bottom: 10px;
+        }
+
+        .blog-content p {
+            font-size: 1.5vh;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .footer{
+            text-align: center;
+            margin-top: 20px;
+            color: cornflowerblue;
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .left-column, .right-column {
+                width: 100%;
+            }
+
+            .blog-image {
+                width: 100%;
+                height: auto;
+                object-fit: cover; /* 保证图片不变形 */
+                border-radius: 6px;
+                margin-bottom: 12px;
+            }
+
+            .notes-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="mainP">
+        <!-- 左侧导航栏 -->
+        <div class="left-column">
+
+        <div class="blog-title">
+            <h1>个人博客</h1>
+            </br>
+            <img src="/touxiang.jpg" width="50" height="50" alt="Tom" style="border-radius: 50%">
+            </br>
+            <p style="font-weight:bold;color:burlywood;flex:auto">{{userNickName}}</p>
+        </div>
+
+        <!-- 菜单栏 -->
+        <div class="nav-menu">
+            <div class="nav-item">主页</div>
+            <div class="nav-item"><a href="/home/selfIntroduce" style="text-decoration: none;color: burlywood" >关于我</a> </div>
+            <div class="nav-item" ><a href="/articles/" style="text-decoration: none;color: burlywood" >博客</a></div>
+            <div class="nav-item"><a href="/notes/" style="text-decoration: none;color: burlywood" >随笔</a></div>
+            <div class="nav-item">知识库</div>
+        </div>
+
+    </div>
+
+        <!-- 右侧文章及评论 -->
+        <div class="right-column">
+
+            <!-- 笔记区域 -->
+            <div class="notes-section">
+                <h2 id="turnToNotePage">
+                    <a href="/home/note" style="text-decoration: none;color: burlywood">我的笔记</a>
+                </h2>
+                <div class="notes-container">
+                    <div class="note-card" v-for="(note,index) in notes" :key="note.noteId"
+                         @click="intoSpecificNote(note.noteId)">
+                        <h3>{{note.noteTopic}}</h3>    <!-- 标题 -->
+                        <p>{{note.noteCreateTime}}</p>  <!-- 创建时间 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 博客展示区域 -->
+            <div class="blogs-section">
+                <!-- 标题 -->
+                <h2><a href="/articles/" style="text-decoration: none; color: burlywood">最近博客</a></h2>
+
+                <!-- 博文列表 -->
+                <div class="blog-item" v-for="blog in blogs" :key="blog.articleId"
+                @click="intoSpecificBlog(blog.articleId)">
+                    <!--<img src="https://img.alicdn.com/imgextra/i2/O1CN01VjWLAB21Zb4eAatD8_!!6000000006999-2-tps-928-1232.png"
+                         alt="活力的源泉：健康生活的艺术与科学" class="blog-image">-->
+                    <img src="blog.articleThumbnail || touxiang.jpg " class="blog-image">
+                    <div class="blog-content">
+                        <h3>{{blog.articleTitle}}</h3>
+                        <p>{{blog.articleSummary}}</p>
+                        <span>{{blog.articleCreateTime}}</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+</div>
+
+
+<!-- 页脚个人信息 -->
+<footer>
+    <div class="footer">
+        © 2025 JiaYn | 个人博客 |  联系邮箱： 1317192941@qq.com
+    </div>
+</footer>
+<!-- 导入axios接口转发请求和vue -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+
+<!--
+ 实现页面渲染和跳转的逻辑
+ -->
+<script>
+    /* 获取用户名显示到主页以及文章列表的逻辑 */
+    new Vue({
+        el:'#mainP',
+        data:{
+            blogs:[],
+            userNickName:'',
+            notes:[]
+        },
+        methods:{
+            //具体某一篇随笔
+            async intoSpecificNote(id){
+                window.location.href = '/Home/specificNote.html?id='+id;
+            },
+            //具体某一篇博文
+            async intoSpecificBlog(id){
+                console.log(id);
+                alert("进入文章"+id)
+                window.location.href = '/Home/article.html?id='+id;
+            }
+        },
+        //页面加载时渲染数据
+        mounted() {
+            /* 访问最新博文列表的逻辑 */
+            axios.get('/home/latestArticles')
+                .then(response => {
+                    console.log(response.data.data.records);
+                    this.blogs = response.data.data.records || [];
+                })
+                .catch(error => {
+                    console.error("请求发送失误", error)
+                })
+            /* 获取用户昵称 */
+            axios.get('/home/currentUser',{
+                credentials: 'include'
+            }).then(response => {
+                console.log(response.data.data);
+                this.userNickName = response.data.data.userNickname || 'visitor';
+            })
+            /* 获取最近的笔记列表（3-5条） */
+            axios.get('/home/latestNotes?limit=3')
+                .then(response => {
+                    console.log(response.data.data.records);
+                    this.notes = response.data.data.records || [];
+                })
+                .catch(error => {
+                    console.error("请求发送失误", error)
+                })
+        }
+    })
+
+
+</script>
+
+</body>
+</html>
+

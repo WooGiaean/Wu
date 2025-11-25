@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>技术博客 - 简洁列表页</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- Vue3 引入 -->
+    <!-- <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>-->
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+    <!-- bootstrap 引入 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 600px;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .btn-primary {
+            background-color: #e94b35;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #5a67d8;
+            color: white;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-tab {
+            padding: 8px 16px;
+            background-color: #eee;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .nav-tab.active {
+            background-color: #333;
+            color: white;
+        }
+
+        .article-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .article-item {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .article-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-content {
+            flex: 1;
+            padding-right: 16px;
+            white-space: pre-wrap;       /* 保留空格和换行 */
+            word-wrap: break-word;       /* 长单词自动换行 */
+        }
+
+        .author {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            color: #222;
+            line-height: 1.4;
+        }
+
+        .excerpt {
+            font-size: 14px;
+            color: #777;
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .thumb {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .tags {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .tag {
+            font-size: 12px;
+            background-color: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 文章展示页面 -->
+<div id="app">
+    <!-- 头部搜索栏 -->
+    <div class="header">
+        <input type="text" id="searchCondition" v-model="keyword" class="search-bar" placeholder="搜索文章..."/>
+
+        <button class="btn btn-primary" id="searchBtn"
+                @click="search()" @keyup.enter="search()"/> 搜索</button>
+
+        <button class="btn btn-secondary"  data-bs-toggle="modal"
+                data-bs-target=".formModal">新增</button>
+    </div>
+
+    <!-- 导航标签 -->
+    <div class="nav-tabs">
+        <div class="nav-tab active">历史博文</div>
+    </div>
+
+    <!-- 文章列表 -->
+    <ul class="article-list" id="article-ul" > <!--id="app"-->
+        <!-- 文章1 -->
+        <li class="article-item" v-for="item in articles" :key="item.articleId"
+        id="concreteArticle" @click="showSpecificArticle(item.articleId)">
+
+            <div class="article-content">
+                <div class="author">{{item.blogger}}</div>
+                <h3 class="title">{{item.articleTitle}}</h3>
+                <p class="excerpt">{{item.articleSummary}}</p>
+                <div class="meta">
+                    <span>👁️ 阅读 {{item.articleReadCount}}</span>
+                    <span>👍 评论 {{item.articleCommentCount}}</span>
+                    <span>🔖 收藏  {{item.articleLikeCount}}</span>
+                </div>
+                <div class="tags" v-if="item.tagList && item.tagList.length > 0">
+                    <span class="tag" v-for="tag in item.tagList" :key="tag.tagId">{{tag.tagName}}</span>
+                </div>
+            </div>
+            <!-- <img src="https://via.placeholder.com/80x60?text=HTML+JS" alt="技术图标" class="thumb" />-->
+        </li>
+
+    </ul>
+
+    <!-- 无匹配的关键字 -->
+    <h1 v-if="articles.length==0">
+        暂无匹配的文章
+    </h1>
+
+    <!-- 弹窗页面(用于添加新文章) -->
+    <div class="modal formModal" id="addArticleModal" tabindex="-1" aria-labelledby="addArticleModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-lg">
+
+            <div class="modal-content">
+
+                <!-- 头部标题 -->
+                <div class="modal-header">
+                    <h5 class="modal-title"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!--  -->
+
+                <div class="modal-body">
+                    <!-- 表单开始 -->
+                    <form id="addArticleForm">
+                        <!-- 文章标题输入框 -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">标题</label>
+                            <input type="text" class="form-control" id="title" placeholder="请输入博文标题">
+                        </div>
+
+                        <!-- 博客名称输入框 -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">博客</label>
+                            <input type="text" class="form-control" id="blogger" placeholder="请输入博客名称">
+                        </div>
+
+
+                        <!-- 文章内容 -->
+                        <div class="mb-3">
+                            <label for="content" class="form-label">内容</label>
+                            <textarea id="content" name="content" rows="10" cols="60" placeholder="请输入内容">
+                            </textarea>
+                        </div>
+
+
+                        <!-- 文章概要 -->
+                        <div class="mb-3">
+                            <label for="summary" class="form-label">博文概要</label>
+                            <input type="text" class="form-control" id="summary" placeholder="概要信息">
+                        </div>
+
+                        <!-- 图片上传 -->
+                        <div class="mb-3">
+                            <label for="coverImage" class="form-label">封面图片（可选）</label>
+                            <input type="file" class="form-control" id="coverImage" accept="image/*" />
+                            <!-- 预览区域（可选） -->
+                            <!--<div class="mt-2" id="imagePreview" style="max-width: 200px; display: none;">
+                                <img id="previewImg" src="" alt="预览图" class="img-thumbnail" />
+                            </div>-->
+                        </div>
+
+                    </form>
+                    <!-- 表单结束 -->
+                </div>
+
+
+                <!-- 底部提交按钮以及取消按钮  -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" @click="submitNew()"
+                    data-bs-dismiss="modal">提交</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- 引入bootstrap弹窗 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+
+<script>
+        /* 实现页面数据刷新 */
+        new Vue({
+            el: '#app',
+            data: {
+                keyword: '',    //搜索框关键字
+                articles: [],   //文章列表
+                //博客 blogger:'',
+            },
+            methods: {
+                //查找具体某篇文章
+                search() {
+                    const keyWord = this.keyword.trim();
+                    console.log(keyWord)
+                    //判断关键字是否为空
+                    if (!keyWord) {
+                        alert("关键字为空");
+                        return;
+                    }
+                    //请求转发
+                    axios.post('/articles/searchCondition', {
+                        articleTitle: keyWord,
+                        articleContent: keyWord,
+                        articleSummary: keyWord
+                    }).then(response => {
+                        //通过在控制台请求是否正确发送和数据是否正确传输
+                        console.log("请求转发成功");
+                        const result = response.data
+                        console.log(result);
+                        //请求成功
+                        if (result.code == 1 || result.success) {
+                            console.log("后端数据返回成功")
+                            //将查询成功的数据保存在articles中
+                            this.articles = result.data;
+                            console.log(result.data.records);
+                        } else {
+                            console.log("请求失败", result.msg || result.message)
+                            this.articles = []
+                            alert("查询失败")
+                        }
+
+                    }).catch(error => {
+                        console.error("请求发送错误", error)
+                        this.articles = [];
+                    })
+                },
+
+                //新增文章
+                submitNew(){
+                    console.log("点击提交按钮")
+                    let articleTitle = document.getElementById("title").value.trim();
+                    let articleBlogger = document.getElementById("blogger").value;
+                    let articleContent = document.getElementById("content").textContent;
+                    let articleSummary = document.getElementById("summary").value.trim();
+                    let articleThumbnail = document.getElementById("coverImage").files[0];
+                    axios.post('/articles/insert',{
+                        articleTitle: articleTitle,
+                        blogger: articleBlogger,
+                        articleContent: articleContent,
+                        articleSummary: articleSummary,
+                        articleThumbnail:articleThumbnail
+                    }).then(response => {
+                        console.log(response.data.code===1?"请求转发成功":"请求转发失败")
+                        new bootstrap.Modal(document.querySelector(".formModal")).hide();
+                        //重新刷新
+                        window.location.href="/articles/"
+                    }).catch(error=>{
+                        console.error("请求发送错误", error)
+                        alert("请求发送错误")
+                    })
+                },
+
+                //跳转到文章详情页面
+                showSpecificArticle(id){
+                    console.log("点击了id为："+id+"的文章")
+                    //将具体文章的id保存在sessionStorage中（传输到controller中）
+                    /*axios.get('/articles/toArticle/'+id)
+                       .catch(error=>{
+                            console.error("请求发送错误", error)
+                    })*/
+                    sessionStorage.setItem("articleId",id)
+                    window.location.href='/Home/article.html';
+
+                }
+            },
+
+            // 页面渲染后立即执行
+            mounted() {
+                console.log("let's see how it work")
+                axios.get('/articles/list')
+                    .then(response => {
+                        console.log(response.data.data.records);
+                        this.articles = response.data.data.records || [];
+                        this.blogger=response.data.data.blogger;
+                    })
+                    .catch(error => {
+                        console.error("请求发送失误", error)
+                    })
+
+            }
+
+        })
+
+        /* 图片预览 */
+       /* document.getElementById("coverImage").addEventListener('change',function (e){
+
+        })*/
+</script>
+
+
+</body>
+</html>

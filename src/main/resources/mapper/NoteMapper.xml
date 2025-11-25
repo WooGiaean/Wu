@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wjy.personal_blog.mapper.NoteMapper">
+    <!-- 更新笔记  -->
+    <update id="updateNote">
+        update notes
+        <set>
+            <if test="noteTopic != null">
+                note_topic = #{noteTopic},
+            </if>
+            <if test="noteContent != null">
+                note_content = #{noteContent},
+            </if>
+        </set>
+        where note_id = #{noteId}
+    </update>
+
+    <!-- 模糊查询 -->
+    <select id="queryByKeyWord" resultType="com.wjy.personal_blog.pojo.entity.Notes">
+        select * from notes
+        <where>
+            <if test="noteTopic != null and noteTopic != ''">
+                or note_topic like concat('%',#{noteTopic},'%')
+            </if>
+            <if test="noteContent != null and noteContent != ''">
+                or note_content like concat('%',#{noteContent},'%')
+            </if>
+        </where>
+        order by note_create_time desc
+    </select>
+</mapper>
