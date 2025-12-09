@@ -10,11 +10,11 @@ public class ArticleDTO {
 
     private String articleContent;
 
-   /* private Integer articleViewCount;
+    private Integer articleReadCount;
 
     private Integer articleCommentCount;
 
-    private Integer articleLikeCount;*/
+    private Integer articleLikeCount;
 
    private Integer articleIsComment;
 

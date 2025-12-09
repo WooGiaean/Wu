@@ -21,6 +21,7 @@
         user.user_nickname AS blogger
     </sql>
 
+    <!-- 联合查询，加上标签 -->
     <resultMap id="ArticleWithTag" type="com.wjy.personal_blog.pojo.entity.Article">
         <!-- article的相关字段 -->
         <id property="articleId" column="article_id"/>
@@ -100,7 +101,9 @@
         left join user on article.article_user_id = user.user_id
         left join article_tag at on article.article_id = at.article_id
         left join tag t on at.tag_id = t.tag_id
+        where article.article_user_id = #{articleUserId}
         order by article.article_create_time desc
+
     </select>
 
 

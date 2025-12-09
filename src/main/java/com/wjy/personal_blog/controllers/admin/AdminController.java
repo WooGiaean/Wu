@@ -1,5 +1,6 @@
 package com.wjy.personal_blog.controllers.admin;
 
+import com.wjy.personal_blog.context.BaseContext;
 import com.wjy.personal_blog.pojo.dto.LoginDTO;
 import com.wjy.personal_blog.pojo.dto.UserDTO;
 import com.wjy.personal_blog.pojo.entity.User;
@@ -30,17 +31,8 @@ public class AdminController {
     * 默认访问路径是登录界面
     * */
     @GetMapping("/")
-    public String loginPage(HttpServletRequest request){
-        /*User user = (User)  request.getSession().getAttribute("user");
-        log.info("用户身份:"+user.getUserRole());
-        if(user!=null&& user.getUserRole().equals(User.USER_ROLE_ADMIN)){
-            log.info("用户已登录");
-            return "redirect:/Home/home.html";
-        }
-        log.info("非管理员,重新登录");
-        return "redirect:/Admin/login.html";*/
-
-        return "redirect:/Admin/login.html";
+    public String loginPage(){
+        return "forward:/Admin/login.html";
     }
 
     /**
@@ -68,7 +60,7 @@ public class AdminController {
 
     @PostMapping("/loginCheck")
     @ResponseBody
-    public Result loginCheck(@RequestBody LoginDTO loginDTO, HttpSession session){
+    public Result loginCheck(@RequestBody LoginDTO loginDTO,HttpSession session){
         log.info("用户登录验证:{}",loginDTO.getUsername()+":"+loginDTO.getPassword());
         if(loginDTO==null){
             return Result.error("用户名或密码为空");
@@ -78,9 +70,10 @@ public class AdminController {
             return Result.error("用户名或密码错误");
         }
         //设置session对象方便后续验证
-        log.info("登录用户：{},存入session",userLogin);
+        log.info("登录用户：{}",userLogin);
+        //存入用户session的id，作为唯一标识！！
         session.setAttribute("user",userLogin);
-        log.info("当前用户的JSESSIONID：{}",session.getId());
+        log.info("当前用户的JSESSIONID：{}",userLogin.getUserId());
         return Result.success(userLogin);
     }
 
@@ -133,10 +126,13 @@ public class AdminController {
     /**
      * 退出登录
      */
-    @GetMapping("/logout")
-    public String logoutPage(){
+    @PostMapping("/logout")
+    @ResponseBody
+    public Result<String> logoutPage(HttpSession session){
         log.info("用户退出登录");
-        return "redirect:/Admin/login.html";
+        session.invalidate();   //让session失效
+        BaseContext.removeCurrentId();
+        return Result.success("成功退出登录");
     }
 
 

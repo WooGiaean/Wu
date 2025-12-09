@@ -1,5 +1,6 @@
 package com.wjy.personal_blog.configs;
 
+import com.wjy.personal_blog.json.JacksonObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -25,12 +26,19 @@ public class RedisConfig {
         RedisTemplate redis=new RedisTemplate();
         //设置redis连接工厂对象
         redis.setConnectionFactory(redisConnectionFactory);
+
+        //引入时间的序列化器
+        JacksonObjectMapper objectMapper = new JacksonObjectMapper();
+
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+
+
         //设置redis的key序列化器
         redis.setKeySerializer(new StringRedisSerializer());
         redis.setHashKeySerializer(new StringRedisSerializer());
         //设置redis的value序列化器
-        redis.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        redis.setHashValueSerializer(new  GenericJackson2JsonRedisSerializer());
+        redis.setValueSerializer(serializer);
+        redis.setHashValueSerializer(serializer);
         // 初始化RedisTemplate
         redis.afterPropertiesSet();
         //成功返回redis对象

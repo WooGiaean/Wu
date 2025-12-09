@@ -15,4 +15,5 @@ public class Notes {
     private String noteContent;
     private LocalDateTime noteCreateTime;
     private LocalDateTime noteUpdateTime;
+    private Integer noteUserId;
 }

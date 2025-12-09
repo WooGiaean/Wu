@@ -1,6 +1,8 @@
 package com.wjy.personal_blog.service.impl;
 
 import com.github.pagehelper.Page;
+import com.wjy.personal_blog.constants.RedisConstant;
+import com.wjy.personal_blog.context.BaseContext;
 import com.wjy.personal_blog.mapper.NoteMapper;
 import com.wjy.personal_blog.pojo.dto.NotesDTO;
 import com.wjy.personal_blog.pojo.entity.Notes;
@@ -10,9 +12,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
+import java.sql.Time;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
+
+import static com.wjy.personal_blog.constants.RedisConstant.RECENT_NOTES_KEY;
 
 @Service
 @Slf4j
@@ -23,19 +30,48 @@ public class NoteServiceImpl implements NoteService {
 
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String,Object>redisTemplate;
 
+    /*
+    * 缓存笔记列表
+    * */
     @Override
     public  PageResult noteList() {
-        long start = System.currentTimeMillis();
-        Page<Notes> list = noteMapper.list();
-        PageResult pageResult = new PageResult(list.getTotal(),list.getResult());
-        //遍历pageResult的数据
-        /*pageResult.getRecords().forEach(notes -> {
+        //笔记列表键
+        String recentNotesKey = RECENT_NOTES_KEY;
+        //过期时间：5min
+        long expiredSeconds = RedisConstant.TEST_EXPIRED_SECONDS;
+        //获取redis操作对象
+        ValueOperations<String, Object> ops = redisTemplate.opsForValue();
 
-        });*/
+        //从缓存中获取数据，并计算耗时时间
+        long redisBegin = System.currentTimeMillis();
+        Object cacheNotes = ops.get(recentNotesKey);
+        long redisEnd = System.currentTimeMillis();
+        //如果缓存中有数据则直接返回缓存数据
+        if(cacheNotes!=null){
+            if(cacheNotes instanceof PageResult){
+                log.info("从缓存中查询笔记数据,Redis耗时：{}",redisEnd-redisBegin);
+                return (PageResult) cacheNotes;
+            }else{
+                log.warn("缓存数据格式错误，清除key：{}",recentNotesKey);
+                redisTemplate.delete(recentNotesKey);
+            }
+        }
+        //获取当前用户id
+        Integer currentId = BaseContext.getCurrentId();
+
+        //没有则到数据库查询
+        log.info("从数据库中查询笔记数据");
+        long start = System.currentTimeMillis();
+        Page<Notes> list = noteMapper.list(currentId);
         long end = System.currentTimeMillis();
-        log.info("查询笔记耗时：{}",end-start);
+        PageResult pageResult = new PageResult(list.getTotal(),list.getResult());
+        log.info("从数据库查询笔记,耗时：{}",end-start);
+
+        //将数据写入redis缓存
+        ops.set(recentNotesKey,pageResult,60*2, TimeUnit.SECONDS);
+
         return pageResult;
     }
 
@@ -45,8 +81,7 @@ public class NoteServiceImpl implements NoteService {
     * */
     @Override
     public Notes getNoteById(Integer id) {
-        Notes noteById = noteMapper.getNoteById(id);
-        return noteById;
+        return noteMapper.getNoteById(id);
     }
 
 
@@ -73,6 +108,7 @@ public class NoteServiceImpl implements NoteService {
         notes.setNoteUpdateTime(LocalDateTime.now());
         //数据库插入新数据
         noteMapper.addNewNote(notes);
+        redisTemplate.delete(RECENT_NOTES_KEY);
     }
 
 
@@ -86,6 +122,7 @@ public class NoteServiceImpl implements NoteService {
         BeanUtils.copyProperties(notesDTO,notes);
         notes.setNoteUpdateTime(LocalDateTime.now());
         noteMapper.updateNote(notes);
+        redisTemplate.delete(RECENT_NOTES_KEY);
     }
 
     /**
@@ -100,6 +137,7 @@ public class NoteServiceImpl implements NoteService {
         }
         noteMapper.deleteNote(noteId);
         log.info("删除笔记成功：{}",noteId);
+        redisTemplate.delete(RECENT_NOTES_KEY);
     }
 
 

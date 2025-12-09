@@ -3,10 +3,7 @@ package com.wjy.personal_blog.mapper;
 import com.github.pagehelper.Page;
 import com.wjy.personal_blog.pojo.dto.ArticleDTO;
 import com.wjy.personal_blog.pojo.entity.Article;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,12 +18,15 @@ public interface ArticleMapper {
             "from article left join user " +
             "on article.article_user_id = user.user_id" +
             " order by article.article_create_time desc")*/
-    Page<Article> list();   //带有标签的文章列表
+    Page<Article> list(@Param("articleUserId")Integer articleUserId);   //带有标签的文章列表
 
     /**
     * 模糊查询（单篇/多篇）
     * */
     List<Article> queryConditional(Article article);
+
+
+
 
     @Insert("insert into article (article_user_id, article_title,article_read_count,article_comment_count,article_like_count, article_content, article_is_comment, article_update_time, article_create_time, article_summary, article_thumbnail,article_status)" +
             " values(#{articleUserId},#{articleTitle},#{articleReadCount},#{articleCommentCount},#{articleLikeCount},#{articleContent},#{articleIsComment},#{articleUpdateTime},#{articleCreateTime},#{articleSummary},#{articleThumbnail},#{articleStatus})")
@@ -39,8 +39,15 @@ public interface ArticleMapper {
     void deleteArticle(Integer articleId);
 
     //where article_id=#{articleId}
+
+    //查询具体某篇文章
     @Select("select article.*,user.user_nickname as blogger from article left join" +
             " user on article_user_id=user.user_id" +
             "   where article.article_id=#{articleId}")
     Article  specificArticle(Integer articleId);
+
+
+    //更新文章阅读量
+    @Update("update article set article_read_count=article_read_count+1 where article_id=#{articleId}")
+    int updateCount(Integer articleId);
 }

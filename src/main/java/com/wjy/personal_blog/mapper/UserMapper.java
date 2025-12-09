@@ -24,6 +24,11 @@ public interface UserMapper {
     //@Select("select * from user where user_name=#{userName} and user_password=#{userPassword}")
     List<User> findSingleUser(User user);
 
+
+    @Select("select * from user where user_name=#{userName}")
+    User findUserByName(String userName);
+
+
     @Insert("insert into user values(#{userName},#{userPassword},#{userNickname},#{userEmail},#{userUrl},#{userAvatar}," +
             "#{userLastLoginIp},#{userRegisterTime},#{userLastLoginTime},#{userStatus},#{userRole})")
     void insertNewUser(User userIfExist);

@@ -29,19 +29,31 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/");
+
+
+        registry.addResourceHandler("/uploaded-images/**")
+                .addResourceLocations("file:///D:/Self_Directory/Pictures/");
+
             }
 
-
     /*
-    * 配置拦截器路径
+    * 注册拦截器
     * */
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(adminInterceptor)
-                .addPathPatterns("/admin/**","/home/**")
-                .excludePathPatterns("/admin/loginCheck","/admin/" ,"/Admin/login.html");
-    }//
+                //拦截器拦截的路径和页面
+                .addPathPatterns("/admin/**","/home/**","/articles/**","/notes/**","/Admin/**",
+                        "/Home/**","/Note/**","/Article/**")
+                //拦截器放行的路径和页面
+                .excludePathPatterns("/admin/","/admin/loginCheck","/admin/register",
+                        "/Admin/login.html",
+                        "/Admin/register.html");
+    }//"/admin/"
+
+
+
     /*
             * 配置json数据格式的转换
             * */

@@ -1,6 +1,7 @@
 package com.wjy.personal_blog.controllers.user;
 
 import com.github.pagehelper.PageHelper;
+import com.wjy.personal_blog.context.BaseContext;
 import com.wjy.personal_blog.pojo.entity.Notes;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.PageResult;
@@ -11,6 +12,7 @@ import com.wjy.personal_blog.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -62,7 +64,8 @@ public class HomeController {
      */
     @GetMapping("/latestArticles")
     @ResponseBody
-    public Result<PageResult> getLatestArticles(@RequestParam(defaultValue = "5") Integer limit){
+    public Result<PageResult> getLatestArticles(@RequestParam(defaultValue = "5") Integer limit
+                                               ){
         log.info("获取最近的{}篇博文",limit);
         PageHelper.startPage(1,limit);
         PageResult list = articleService.list();
@@ -81,13 +84,13 @@ public class HomeController {
     *
     * 退出登录
     * */
-    @GetMapping("/logout")
+    @PostMapping("/logout")
     public String logout(){
         return "redirect:/Admin/login.html";
     }
 
-    @GetMapping("/selfIntroduce")
+  /*  @GetMapping("/selfIntroduce")
     public String profile(){
         return "forward:/Home/profile.html";
-    }
+    }*/
 }

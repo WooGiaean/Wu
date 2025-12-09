@@ -4,6 +4,7 @@ package com.wjy.personal_blog.service;
 import com.wjy.personal_blog.pojo.dto.ArticleDTO;
 import com.wjy.personal_blog.pojo.entity.Article;
 import com.wjy.personal_blog.result.PageResult;
+import jakarta.servlet.http.HttpSession;
 import jdk.dynalink.linker.LinkerServices;
 
 import java.util.List;

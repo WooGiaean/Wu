@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 
 <head>
-    <meta charset="UTF-8" xmlns:th="http://www.thymeleaf.org">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>个人博客</title>
     <!-- css样式修饰 -->
@@ -121,8 +121,8 @@
         }
 
         .blog-image {
-            width: 500px;
-            height: 120px;
+            width: 300px;
+            height: 150px;
             object-fit: cover;
             border-radius: 8px;
         }
@@ -185,16 +185,17 @@
             </br>
             <img src="/touxiang.jpg" width="50" height="50" alt="Tom" style="border-radius: 50%">
             </br>
-            <p style="font-weight:bold;color:burlywood;flex:auto">{{userNickName}}</p>
+            <p style="font-weight:bold;color:burlywood;flex:auto" v-html="userNickName"></p>
         </div>
 
         <!-- 菜单栏 -->
         <div class="nav-menu">
-            <div class="nav-item">主页</div>
-            <div class="nav-item"><a href="/home/selfIntroduce" style="text-decoration: none;color: burlywood" >关于我</a> </div>
-            <div class="nav-item" ><a href="/articles/" style="text-decoration: none;color: burlywood" >博客</a></div>
-            <div class="nav-item"><a href="/notes/" style="text-decoration: none;color: burlywood" >随笔</a></div>
-            <div class="nav-item">知识库</div>
+            <div class="nav-item"><a href="/Home/home.html" style="text-decoration: none;color: burlywood" >主页</a></div>
+            <div class="nav-item"><a href="/Home/profile.html" style="text-decoration: none;color: burlywood" >关于我</a> </div>
+            <div class="nav-item" ><a href="/Article/allArticles.html" style="text-decoration: none;color: burlywood" >博客</a></div>
+            <div class="nav-item"><a href="/Note/note.html" style="text-decoration: none;color: burlywood" >随笔</a></div>
+            <div class="nav-item"><a href="#" style="text-decoration: none;color: burlywood" >知识库</a></div>
+            <div class="nav-item"><a href="#" style="text-decoration: none;color: burlywood"  @click="logout()" >退出登录</a></div>
         </div>
 
     </div>
@@ -205,7 +206,7 @@
             <!-- 笔记区域 -->
             <div class="notes-section">
                 <h2 id="turnToNotePage">
-                    <a href="/home/note" style="text-decoration: none;color: burlywood">我的笔记</a>
+                    <a href="/Note/note.html" style="text-decoration: none;color: burlywood">我的笔记</a>
                 </h2>
                 <div class="notes-container">
                     <div class="note-card" v-for="(note,index) in notes" :key="note.noteId"
@@ -219,14 +220,14 @@
             <!-- 博客展示区域 -->
             <div class="blogs-section">
                 <!-- 标题 -->
-                <h2><a href="/articles/" style="text-decoration: none; color: burlywood">最近博客</a></h2>
+                <h2><a href="/Article/allArticles.html" style="text-decoration: none; color: burlywood">最近博客</a></h2>
 
                 <!-- 博文列表 -->
                 <div class="blog-item" v-for="blog in blogs" :key="blog.articleId"
                 @click="intoSpecificBlog(blog.articleId)">
                     <!--<img src="https://img.alicdn.com/imgextra/i2/O1CN01VjWLAB21Zb4eAatD8_!!6000000006999-2-tps-928-1232.png"
                          alt="活力的源泉：健康生活的艺术与科学" class="blog-image">-->
-                    <img src="blog.articleThumbnail || touxiang.jpg " class="blog-image">
+                    <img :src="'/uploaded-images/'+blog.articleThumbnail" class="blog-image">
                     <div class="blog-content">
                         <h3>{{blog.articleTitle}}</h3>
                         <p>{{blog.articleSummary}}</p>
@@ -265,13 +266,28 @@
         methods:{
             //具体某一篇随笔
             async intoSpecificNote(id){
-                window.location.href = '/Home/specificNote.html?id='+id;
+                window.location.href = '/Note/specificNote.html?id='+id;
             },
             //具体某一篇博文
             async intoSpecificBlog(id){
                 console.log(id);
                 alert("进入文章"+id)
-                window.location.href = '/Home/article.html?id='+id;
+                window.location.href = '/Article/article.html?id='+id;
+            },
+            //点击主页的”退出登录“，退回到登录页面
+            async logout(){
+                axios.post('/admin/logout')
+                    .then(response => {
+                        console.log(response.data.message)
+                        alert(response.data.code===1?"退出成功":"退出失败")
+                        if (response.data.code === 1) {
+                            sessionStorage.removeItem("user");
+                            window.location.href = '/Admin/login.html';
+                        }
+                    }).catch(error=>{
+                    console.error('退出失败:', error);
+                    alert('退出登录失败，请重试');
+                })
             }
         },
         //页面加载时渲染数据

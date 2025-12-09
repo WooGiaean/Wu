@@ -48,7 +48,9 @@
             text-align: justify;
         }
 
-        .actions { margin-top: 20px; }
+        .actions {
+            margin-top: 20px;
+        }
 
         .actions button {
             margin-right: 30px;
@@ -83,12 +85,12 @@
         <h1>
             <strong>{{article.articleTitle}}</strong>
         </h1>
-       <!-- <p class="meta">发布于：<span th:text="${article.articleCreateTime}"></span> | 作者：<span th:text="${article.blogger}"></span></p>-->
+        <!-- <p class="meta">发布于：<span th:text="${article.articleCreateTime}"></span> | 作者：<span th:text="${article.blogger}"></span></p>-->
         <p>发布于：<span>{{article.articleCreateTime}}</span> | 作者：<span>{{article.blogger}}</span></p>
     </header>
 
     <!-- 显示博文内容 -->
-    <div class="content" id="textContent" >
+    <div class="content" id="textContent">
         <strong>
             {{article.articleContent}}
         </strong>
@@ -106,39 +108,64 @@
 
     </div>
 
+    <hr>
+
+    <!-- 评论区域 -->
+
+    <div id="comments">
+        <h2 style="text-align: center;">发表评论</h2>
+        <textarea v-model="newComment" name="commentContent" rows="10" placeholder="请输入您的评论..."></textarea>
+        <button type="submit">发表评论</button>
+    </div>
+
+   <!-- <div id="commentsList">
+        <h3>评论{{comments.length}}条</h3>
+        <div v-if="comments.length===0 ">暂无评论，快来抢沙发吧~ </div>
+        <div v-else>
+            <div class="comment-item" v-for="comment in comments" :key="comment.commentId">
+                <span>{{comment.}}</span>
+                <p></p>
+            </div>
+        </div>
+    </div>-->
 
 
 
-    <footer>
-        &copy; 2025 我的小博客. <a href="#">返回首页</a> | <a href="#comments">发表评论</a>
-    </footer>
+
+
 </div>
 
+
+<footer>
+    &copy; 2025 我的小博客. <a href="#">返回首页</a> | <a href="#comments">发表评论</a>
+</footer>
+</div>
 
 
 <script>
 
 
-
     new Vue({
         el: '#article',
         data: {
-            article: ''
+            article: '',
+            comments: [],
+            newComment: ''
         },
         methods: {
             //修改文章
-            editArticle(id){
-                console.log('正在执行修改文章'+id)
-                window.location.href='/articles/toEditPage?editId='+id;
+            editArticle(id) {
+                console.log('正在执行修改文章' + id)
+                window.location.href = '/articles/toEditPage?editId=' + id;
             },
             //删除文章
-            confirmDelete(id){
-                console.log('正在执行删除文章'+id)
-                axios.delete('/articles/delete/'+id)
+            confirmDelete(id) {
+                console.log('正在执行删除文章' + id)
+                axios.delete('/articles/delete/' + id)
                     .then(response => {
-                        console.log(response.data.code==1?'删除成功':'删除失败')
-                        if (response.data.code==1){
-                            this.article=''
+                        console.log(response.data.code == 1 ? '删除成功' : '删除失败')
+                        if (response.data.code == 1) {
+                            this.article = ''
                             window.location.href = '/articles/';
                         }
                     })
@@ -146,26 +173,26 @@
         },
         //页面加载时显示文章
         mounted() {
-            let Id =  new URLSearchParams(window.location.search).get('id');
-            if (Id==null){
+            let Id = new URLSearchParams(window.location.search).get('id');
+            if (Id == null) {
                 alert("文章id无效")
-                window.location.href='/articles/'
+                window.location.href = '/articles/'
                 return;
             }
-            console.log("文章id为："+Id)
-            axios.get('/articles/specificArticle?id='+Id)
+            console.log("文章id为：" + Id)
+            axios.get('/articles/specificArticle?id=' + Id)
                 .then(response => {
                     if (response.data.code === 1) {
                         console.log("成功跳转到具体的文章页面");
                         console.log(response.data.data);
                         this.article = response.data.data;
-                    }else{
-                        console.log("跳转失败："+response.data.msg);
+                    } else {
+                        console.log("跳转失败：" + response.data.msg);
                         alert(response.data.msg)
                     }
                 })
                 .catch(error => {
-                    console.log("请求失败："+error);
+                    console.log("请求失败：" + error);
                     window.location.href = '/articles/';
                 });
         }

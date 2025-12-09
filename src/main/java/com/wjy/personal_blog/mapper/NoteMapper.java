@@ -4,18 +4,16 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.github.pagehelper.Page;
 import com.wjy.personal_blog.pojo.dto.NotesDTO;
 import com.wjy.personal_blog.pojo.entity.Notes;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
 @Mapper
 public interface NoteMapper {
     /* 查询所有随笔 */
-    @Select("select * from notes order by note_create_time desc")
-    Page<Notes> list();
+    @Select("select * from notes where note_user_id = #{noteUserId} " +
+            "order by note_create_time desc")
+    Page<Notes> list(@Param("noteUserId")Integer noteUserId);
 
     /* 通过id搜寻笔记 */
     @Select("select * from notes where note_id=#{id}")

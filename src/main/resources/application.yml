@@ -9,9 +9,13 @@ spring:
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
   web:
     resources:
-      static-locations: classpath:/static
+      static-locations: classpath:/static,classpath:/static/img
       add-mappings: true
   data:
     #配置redis
@@ -27,6 +31,9 @@ spring:
           max-idle: 8
           min-idle: 1
 
+blog:
+  upload:
+    path: "D:/Self_Directory/Pictures/"
 
 #配置端口号
 server:
