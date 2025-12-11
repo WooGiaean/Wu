@@ -1,6 +1,7 @@
 package com.wjy.personal_blog.configs;
 
 import com.wjy.personal_blog.interceptor.AdminInterceptor;
+import com.wjy.personal_blog.interceptor.LoginInterceptor;
 import com.wjy.personal_blog.json.JacksonObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Autowired
     private AdminInterceptor adminInterceptor;
 
+
+    @Autowired
+    private LoginInterceptor loginInterceptor;
     /*
     * 配置静态资源位置
     * */
@@ -42,14 +46,29 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        //注册登录拦截器
+        registry.addInterceptor(loginInterceptor)
+                .addPathPatterns("/Home/**","/Article/**","/Note/**"
+                        ,"/home/**","/articles/**","/notes/**")
+                .excludePathPatterns("/admin/**");
+
+        //注册管理员拦截器
         registry.addInterceptor(adminInterceptor)
                 //拦截器拦截的路径和页面
-                .addPathPatterns("/admin/**","/home/**","/articles/**","/notes/**","/Admin/**",
-                        "/Home/**","/Note/**","/Article/**")
+                .addPathPatterns("/admin/**")
                 //拦截器放行的路径和页面
-                .excludePathPatterns("/admin/","/admin/loginCheck","/admin/register",
-                        "/Admin/login.html",
-                        "/Admin/register.html");
+                .excludePathPatterns("/admin/loginCheck",   //登录接口
+                        "/admin/register",  //注册接口
+                        "/admin/logout", //退出登录接口
+                        "/Admin/login.html",    //登录页面
+                        "/Admin/register.html");    //注册页面
+
+
+        /*
+        *
+                        ,
+        * */
+
     }//"/admin/"
 
 

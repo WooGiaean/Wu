@@ -73,6 +73,8 @@ public class AdminController {
         log.info("登录用户：{}",userLogin);
         //存入用户session的id，作为唯一标识！！
         session.setAttribute("user",userLogin);
+        //将当前登录用户的id存到ThreadLocal中
+        BaseContext.setCurrentId(userLogin.getUserId());
         log.info("当前用户的JSESSIONID：{}",userLogin.getUserId());
         return Result.success(userLogin);
     }
