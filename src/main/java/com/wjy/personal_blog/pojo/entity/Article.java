@@ -43,6 +43,7 @@ public class Article implements Serializable {
     /* tagList 和 categoryList 不是数据库字段 */
     private List<Tag> tagList;
 
-    //private List<Category> categoryList;
+
+    private List<Category> categoryList;
 
 }

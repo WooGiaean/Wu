@@ -75,6 +75,18 @@ public class NoteServiceImpl implements NoteService {
         return pageResult;
     }
 
+    @Override
+    public PageResult adminNoteList() {
+        log.info("管理员开始查询所有用户的笔记");
+        Page<Notes> notes = noteMapper.adminSeeNotesList();
+        if(notes==null){
+            log.warn("没有查询到笔记数据");
+            return null;
+        }
+        log.info("管理员查询成功，返回数据");
+        return new PageResult(notes.getTotal(),notes.getResult());
+    }
+
     /*
     * 根据id获取笔记内容
     * 先到redis中查询，没有则从数据库中查询

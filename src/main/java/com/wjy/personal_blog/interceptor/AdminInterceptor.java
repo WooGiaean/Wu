@@ -25,7 +25,7 @@ public class AdminInterceptor implements HandlerInterceptor {
         if (user == null) {
             //log.info("用户信息:"+user.toString());
             log.warn("用户未登录");
-            response.sendRedirect("/Admin/login.html");
+            response.sendRedirect("/Login/login.html");
             return false;
         }
 

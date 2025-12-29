@@ -28,4 +28,15 @@
         </where>
         order by note_create_time desc
     </select>
+
+
+    <select id="countNoteByUserId" >
+        select note_user_id,count(*) as noteCount
+        from notes
+        where note_user_id in
+        <foreach collection="userIds" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        group by note_user_id
+    </select>
 </mapper>

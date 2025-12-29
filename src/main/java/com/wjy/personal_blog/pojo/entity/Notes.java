@@ -16,4 +16,7 @@ public class Notes {
     private LocalDateTime noteCreateTime;
     private LocalDateTime noteUpdateTime;
     private Integer noteUserId;
+
+    //笔记作者（非数据库字段）
+    private String noteAuthor;
 }

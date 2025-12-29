@@ -21,5 +21,10 @@ public class RedisConstant {
     public static final long TEST_EXPIRED_SECONDS=300;
 
 
-    //
+    //存放登录验证码的key
+    public static final String VERIFY_CODE_KEY="verify_code:";
+
+
+    //邮箱发送频率限制
+    public static final String EMAIL_SEND_RATE_LIMIT="email_send_rate_limit:";
 }

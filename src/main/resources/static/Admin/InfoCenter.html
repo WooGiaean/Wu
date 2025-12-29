@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员中心</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!--<style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background-color: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 20px 0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h4 {
+            color: #8B6A4F;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 10px;
+            border: 3px solid #8B6A4F;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 15px;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 10px 20px;
+            color: #8B6A4F;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: #f8f9fa;
+            border-left: 3px solid #8B6A4F;
+            color: #8B6A4F;
+            font-weight: bold;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid #e9ecef;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #8B6A4F;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            color: #8B6A4F;
+            font-weight: bold;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        .user-name {
+            color: #8B6A4F;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .user-name:hover {
+            text-decoration: underline;
+        }
+
+        .btn-primary {
+            background-color: #8B6A4F;
+            border-color: #8B6A4F;
+        }
+
+        .btn-primary:hover {
+            background-color: #7a5c3d;
+            border-color: #7a5c3d;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+        }
+
+        .badge {
+            font-size: 12px;
+            padding: 0.3em 0.5em;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar-nav {
+                flex-direction: column;
+            }
+        }
+    </style>-->
+    <!-- css样式文件 -->
+    <link rel="stylesheet" href="/css/inforCenter.css">
+</head>
+<body>
+
+<div id="main_Content">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h4>管理员中心</h4>
+            <img src="https://via.placeholder.com/80" alt="管理员头像" class="sidebar-avatar">
+            <p style="margin: 0; color: #8B6A4F;">管理员</p>
+        </div>
+
+        <ul class="sidebar-nav">
+            <li><a href="#">仪表盘</a></li>
+            <li><a href="#" @click.prevent="switchPage('user')" :class="{active:currentPage==='user'}">用户管理</a></li>
+            <li><a href="#" @click.prevent="switchPage('article')"
+                   :class="{active:currentPage==='article'}">文章管理</a></li>
+            <li><a href="#" @click.prevent="switchPage('note')" :class="{active:currentPage==='note'}">笔记管理</a></li>
+            <li><a href="#">数据统计</a></li>
+            <li><a href="#">退出登录</a></li>
+        </ul>
+    </div>
+
+    <!-- 主要内容 -->
+    <div class="main-content">
+
+        <div class="container-fluid">
+
+            <div class="row">
+
+                <div class="col-12">
+
+                    <!-- 用户展示列表 -->
+                    <div class="card" v-if="currentPage==='user'">
+                        <div class="card-header">
+                            <!-- 导航头和标题 -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5>用户管理</h5>
+                                <button class="btn btn-primary btn-sm">添加用户</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="search-bar">
+                                <!-- 搜索框 -->
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" placeholder="搜索用户..."
+                                           aria-label="Search user">
+                                    <button class="btn btn-outline-secondary" type="button">搜索</button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <!-- 标题和内容 -->
+                                <table class="table table-hover">
+                                    <thead>
+                                    <!-- 列标题 -->
+                                    <tr>
+                                        <th>用户ID</th>
+                                        <th>用户名</th>
+                                        <th>邮箱</th>
+                                        <th>角色</th>
+                                        <th>注册时间</th>
+                                        <th>文章数</th>
+                                        <th>笔记数</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                    <!---->
+                                    </thead>
+
+                                    <tbody>
+                                    <tr v-for="user in users" :key="user.userId">
+                                        <td>{{user.userId}}</td>
+                                        <td><span class="user-name">{{user.userName}}</span></td>
+                                        <!--<td>{{user.userNickname}}</td>-->
+                                        <td>{{user.userEmail}}</td>
+                                        <td>{{user.userRole}}</td>
+                                        <td>{{user.userRegisterTime}}</td>
+                                        <td>{{user.articleCount}}</td>
+                                        <td>{{user.noteCount}}</td>
+                                        <td>
+                                        <span class="badge bg-success status-active"
+                                              v-if="user.userStatus==1">活跃</span>
+                                            <span class="badge bg-danger status-active"
+                                                  v-if="user.userStatus==0">禁用</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">编辑</button>
+                                            <button class="btn btn-sm btn-outline-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文章展示列表 -->
+                    <div class="card" v-if="currentPage=='article'">
+                        <div class="card-header">
+                            <!-- 导航头和标题 -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5>文章管理</h5>
+                                <button class="btn btn-primary btn-sm">添加文章</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="search-bar">
+                                <!-- 搜索框 -->
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" placeholder="搜索文章..."
+                                           aria-label="Search user">
+                                    <button class="btn btn-outline-secondary" type="button">搜索</button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <!-- 标题和内容 -->
+                                <table class="table table-hover">
+                                    <thead>
+                                    <!-- 列标题 -->
+                                    <tr>
+                                        <th>文章ID</th>
+                                        <th>文章标题</th>
+                                        <th>用户名</th>
+                                        <th>创建时间</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                    <!---->
+                                    </thead>
+
+                                    <tbody>
+                                    <!--  <tr>
+                                          <td>1</td>
+                                          <td><span class="user-name">张三</span></td>
+                                          <td>zhangsan@example.com</td>
+                                          <td>普通用户</td>
+                                          <td>2023-01-15</td>
+                                          <td>12</td>
+                                          <td>8</td>
+                                          <td><span class="badge bg-success status-active">活跃</span></td>
+                                          <td>
+                                              <button class="btn btn-sm btn-outline-primary">编辑</button>
+                                              <button class="btn btn-sm btn-outline-danger">删除</button>
+                                          </td>
+                                      </tr>
+                                      <tr>
+                                          <td>2</td>
+                                          <td><span class="user-name">李四</span></td>
+                                          <td>lisi@example.com</td>
+                                          <td>普通用户</td>
+                                          <td>2023-02-20</td>
+                                          <td>5</td>
+                                          <td>3</td>
+                                          <td><span class="badge bg-warning status-active">活跃</span></td>
+                                          <td>
+                                              <button class="btn btn-sm btn-outline-primary">编辑</button>
+                                              <button class="btn btn-sm btn-outline-danger">删除</button>
+                                          </td>
+                                      </tr>-->
+                                    <tr v-for="article in articles" :key="article.articleId">
+                                        <td>{{article.articleId}}</td>
+                                        <td>{{article.articleTitle}}</td>
+                                        <td><span class="user-name">{{article.blogger}}</span></td>
+                                        <td>{{article.articleUpdateTime}}</td>
+                                        <td>
+                                        <span class="badge bg-success status-active"
+                                              v-if="article.articleStatus==1">发布</span>
+                                            <span class="badge bg-danger status-active"
+                                                  v-if="article.articleStatus==0">草稿</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">编辑</button>
+                                            <button class="btn btn-sm btn-outline-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- 笔记展示列表 -->
+                    <div class="card" v-if="currentPage=='note'">
+                        <div class="card-header">
+                            <!-- 导航头和标题 -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5>笔记管理</h5>
+                                <button class="btn btn-primary btn-sm">添加笔记</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="search-bar">
+                                <!-- 搜索框 -->
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" placeholder="搜索笔记..."
+                                           aria-label="Search user">
+                                    <button class="btn btn-outline-secondary" type="button">搜索</button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <!-- 标题和内容 -->
+                                <table class="table table-hover">
+                                    <thead>
+                                    <!-- 列标题 -->
+                                    <tr>
+                                        <th>笔记ID</th>
+                                        <th>笔记标题</th>
+                                        <th>用户名</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                    <!---->
+                                    </thead>
+
+                                    <tbody>
+                                    <tr v-for="note in notes" :key="note.noteId">
+                                        <td>{{note.noteId}}</td>
+                                        <td>{{note.noteTopic}}</td>
+                                        <td><span class="user-name">{{note.noteAuthor}}</span></td>
+                                        <td>{{note.noteUpdateTime}}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">编辑</button>
+                                            <button class="btn btn-sm btn-outline-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <!-- 分页控件 -->
+               <!-- <div class="pagination" v-if="notes.length > 0">
+                    <div class="pagination-info">
+                        共 {{ noteTotal }} 条 | 每页 {{ notePageSize }} 条
+                    </div>
+                    <div class="pagination-controls">
+                        <button
+                                class="pagination-btn"
+                                :disabled="noteCurrentPage === 1"
+                                @click="prevPage('notes')"
+                        >
+                            上一页
+                        </button>
+
+                        <button
+                                v-for="page in notePagesToShow"
+                                :key="page"
+                                class="pagination-btn"
+                                :class="{ 'active': page === noteCurrentPage }"
+                                @click="goToPage('notes', page)"
+                        >
+                            {{ page }}
+                        </button>
+
+                        <button
+                                class="pagination-btn"
+                                :disabled="noteCurrentPage === noteTotalPages"
+                                @click="nextPage('notes')"
+                        >
+                            下一页
+                        </button>
+                    </div>
+
+                    <div class="pagination-jump">
+                        跳转到
+                        <input
+                                type="number"
+                                v-model.number="noteJumpPage"
+                                @keyup.enter="jumpToPage('notes')"
+                                min="1"
+                                :max="noteTotalPages"
+                                style="width: 60px;"
+                        >
+                        页
+                    </div>
+                </div>-->
+
+               <!-- <div class="loading" v-if="noteLoading">
+                    <i class="fas fa-spinner fa-spin"></i> 加载中...
+                </div>-->
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- 侧边栏 -->
+
+
+<!-- 导入axios接口转发请求和vue -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 前端逻辑脚本 -->
+<script>
+    new Vue({
+        el: '#main_Content',
+        data: {
+            currentPage: 'user',
+            users: [], //用户列表展示
+            articles: [], //文章列表展示
+            notes: [],
+        },
+        methods: {
+
+            /* 点击右侧面板切换展示内容 */
+            switchPage(page) {
+                switch (page) {
+                    case 'user':
+                        this.currentPage = 'user';
+                        this.allUsers();
+                        break;
+                    case 'article':
+                        this.currentPage = 'article';
+                        this.getAllArticles();
+                        break;
+                    case 'note':
+                        this.currentPage = 'note';
+                        this.allNotes();
+                        break;
+                    case 'info':
+                        this.currentPage = 'info';
+                        break;
+                    default:
+                        this.currentPage = 'user';
+                }
+            },
+
+            allUsers() {
+                //页面加载时，获取用户列表
+                axios.get('/manage/users',{
+                    params: {
+                        page: 1,
+                        pageSize: 10
+                    }
+                })
+                    .then(res => {
+                        const result = res.data;
+                        console.log(result);
+                        if (result.code == 1) {
+                            console.log("用户列表获取成功")
+                            this.users = result.data.records;
+                        } else {
+                            console.log("用户列表获取失败")
+                            this.users = []
+                        }
+                    }).catch(error => {
+                    console.log(error)
+                })
+
+
+            },
+
+            //所有文章
+            getAllArticles() {
+                axios.get('/manage/allArticles')
+                    .then(response => {
+                        const result = response.data
+                        console.log(result.code)
+                        if (result.code === 1) {
+                            console.log("文章列表获取成功")
+                            this.articles = result.data.records;
+                        } else {
+                            console.log("文章列表获取失败")
+                            this.articles = []
+                        }
+                    }).catch(error => {
+                    console.log(error)
+                    alert("错误信息：" + error)
+                })
+            },
+
+            //所有笔记
+            allNotes() {
+                axios.get('/manage/allNotes')
+                    .then(response => {
+                        const result = response.data
+                        console.log(result.code)
+                        if (result.code === 1) {
+                            console.log("笔记列表获取成功")
+                            this.notes = result.data.records;
+                        } else {
+                            console.log("笔记列表获取失败")
+                            this.notes = []
+                        }
+                    }).catch(error => {
+                    console.log(error)
+                    alert("错误信息：" + error)
+                })
+            }
+
+        },
+        //页面加载时渲染
+        mounted() {
+            this.allUsers();
+        }
+    })
+</script>
+</body>
+</html>

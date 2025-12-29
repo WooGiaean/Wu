@@ -27,17 +27,17 @@ public class LoginInterceptor implements HandlerInterceptor {
             //判断是否为ajax请求
             String accept = request.getHeader("Accept");
             log.info(accept);
-            response.sendRedirect("/Admin/login.html");
-            
-            /*if(accept!=null&&accept.contains("application/json")){
+           // response.sendRedirect("/Admin/login.html");
+
+            if(accept!=null&&accept.contains("application/json")){
                 //是ajax请求
                 response.setStatus(401);
                 response.setContentType("application/json;charset=utf-8");
                 response.getWriter().write("{\"code\":401,\"msg\":\"请先登录\",\"data\":null}");
             }else{
                 //重定向到登录页面
-                response.sendRedirect("/Admin/login.html");
-            }*/
+                response.sendRedirect("/Login/login.html");
+            }
         }
 
         return false;

@@ -1,4 +1,4 @@
-package com.wjy.personal_blog.controllers.admin;
+package com.wjy.personal_blog.controllers.user;
 
 import com.wjy.personal_blog.result.Result;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +29,7 @@ public class ImageController {
      * */
     @PostMapping("/upload")
     public Result uploadImage(MultipartFile file) {
+        log.info("开始上传图片");
         //判断上传的图片是否为空
         if (file == null) {
             return Result.error("图片为空");

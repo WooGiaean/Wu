@@ -88,9 +88,10 @@
                 or article_summary like concat('%',#{articleSummary},'%')
             </if>
         </where>
+            where article_user_id=#{articleUserId}
     </select>
 
-    <!-- 查询所有文章 -->
+    <!-- 查询当前用户所有文章 -->
     <select id="list" resultMap="ArticleWithTag">
         select
             <include refid="articleColumns"/>,
@@ -105,6 +106,50 @@
         order by article.article_create_time desc
 
     </select>
+
+
+    <!-- 查询对应用户文章数量，返回List<Map>类型 -->
+    <select id="countByArticleUserIdMapList" >
+        select article_user_id ,count(*)
+        from article
+        where article_user_id in
+        <foreach collection="userIds" item="ids" separator="," open="(" close=")">
+            #{ids}
+        </foreach>
+        group by article_user_id
+    </select>
+
+
+    
+    <!-- 查询用户的文章数，返回map类型 -->
+    <select id="countByArticleUserIdMap" >
+        select article_user_id ,count(*) as articleCount
+        from article
+        where article_user_id in
+        <foreach collection="userIds" item="ids" separator="," open="(" close=")">
+            #{ids}
+        </foreach>
+        group by article_user_id
+    </select>
+
+    <!-- 管理员查询所有用户文章 -->
+    <select id="adminSeeArticlesList" resultType="com.wjy.personal_blog.pojo.entity.Article">
+        select
+        <include refid="articleColumns"/>,
+        user.user_nickname as blogger
+        from article
+        left join user on article.article_user_id = user.user_id
+        order by article.article_update_time desc
+    </select>
+
+  <!--  <select id="countArticle" resultType="java.lang.Integer">
+        select count(*) as articleCount from article
+        where article_user_id in
+        <foreach collection="userIds" item="ids" separator="," open="(" close=")">
+            #{ids}
+        </foreach>
+        group by article_user_id
+    </select>-->
 
 
 </mapper>

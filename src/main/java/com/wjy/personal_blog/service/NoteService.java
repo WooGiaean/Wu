@@ -8,6 +8,9 @@ public interface NoteService {
     /* 笔记列表 */
     PageResult noteList();
 
+    /* 管理员笔记列表 */
+    PageResult adminNoteList();
+
     Notes getNoteById(Integer id);
 
     PageResult queryByKeyWord(NotesDTO notesDTO);

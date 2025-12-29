@@ -13,11 +13,6 @@ public class UserDTO {
 
     private String userEmail;
 
-    private String userUrl;
-
-    private String userAvatar;
-
     private Integer userStatus;
 
-    private String userRole;
 }

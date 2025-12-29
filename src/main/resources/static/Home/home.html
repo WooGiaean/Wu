@@ -282,7 +282,7 @@
                         alert(response.data.code===1?"退出成功":"退出失败")
                         if (response.data.code === 1) {
                             sessionStorage.removeItem("user");
-                            window.location.href = '/Admin/login.html';
+                            window.location.href = '../Login/login.html';
                         }
                     }).catch(error=>{
                     console.error('退出失败:', error);

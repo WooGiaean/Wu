@@ -6,16 +6,30 @@ spring:
     url: jdbc:mysql://localhost:3306/personal_blog?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true
     username: root
     password: 123456
-  thymeleaf:
-    prefix: classpath:/templates/
-    suffix: .html
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 10MB
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: 2939958861@qq.com  #发件人的邮箱地址
+    password: ouwvahghmcfbdfee  #发件人的邮箱密码
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
+          auth: true
+          starttls:
+            enable: true
+          requied: true
+
   web:
     resources:
-      static-locations: classpath:/static,classpath:/static/img
+      static-locations: classpath:/static
       add-mappings: true
   data:
     #配置redis
@@ -40,7 +54,7 @@ server:
   port: 8008
 
 #配置mybatis
-mybatis:
+mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

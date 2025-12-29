@@ -7,6 +7,7 @@ import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.PageResult;
 import com.wjy.personal_blog.result.Result;
 import com.wjy.personal_blog.service.ArticleService;
+import com.wjy.personal_blog.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,10 @@ public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+
+
+    @Autowired
+    private UserService userService;
 
     /*
      * 查看历史博客
@@ -43,6 +48,16 @@ public class ArticleController {
         PageResult pageResult = articleService.list();
         return Result.success(pageResult);
     }
+
+
+   /* @GetMapping("/allArticles")
+    @ResponseBody
+    public Result<PageResult> allArticles(){
+        log.info("管理员查询所有文章");
+        PageResult pageResult = articleService.listByAdmin();
+        return Result.success(pageResult);
+    }*/
+
 
     /*
      * 跳转到allArticles页面，显示所有的blog文章
@@ -107,6 +122,11 @@ public class ArticleController {
     @ResponseBody
     public Result updateArticle(@RequestBody ArticleDTO articleDTO) {
         log.info("修改文章:{}", articleDTO);
+        Integer currentId = BaseContext.getCurrentId();
+        User userById = userService.getUserById(currentId);
+        if(userById.getUserId()!=currentId){
+            return Result.error("非当前用户操作，无权修改其他用户的文章!");
+        }
         articleService.updateArticle(articleDTO);
         return Result.success();
     }

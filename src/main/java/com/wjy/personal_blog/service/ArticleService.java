@@ -12,9 +12,12 @@ import java.util.List;
 public interface ArticleService {
 
     /*
-    * 查询历史文章
+    * 查询当前用户所有历史文章
     * */
     PageResult list();
+
+
+    PageResult listByAdmin();
 
 
     /*

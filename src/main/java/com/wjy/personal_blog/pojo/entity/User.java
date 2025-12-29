@@ -3,6 +3,7 @@ package com.wjy.personal_blog.pojo.entity;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -28,9 +29,9 @@ public class User implements Serializable {
 
     private String userLastLoginIp;
 
-    private Date userRegisterTime;
+    private LocalDateTime userRegisterTime;
 
-    private Date userLastLoginTime;
+    private LocalDateTime userLastLoginTime;
 
     private Integer userStatus;
 
@@ -43,4 +44,9 @@ public class User implements Serializable {
      * 文章数量（不是数据库字段）
      */
     private Integer articleCount;
+
+    /**
+    * 笔记数量（非数据库字段）
+    * */
+    private Integer noteCount;
 }

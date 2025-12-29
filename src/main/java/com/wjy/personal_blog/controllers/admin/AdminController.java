@@ -1,22 +1,27 @@
 package com.wjy.personal_blog.controllers.admin;
 
+import com.wjy.personal_blog.constants.RedisConstant;
 import com.wjy.personal_blog.context.BaseContext;
 import com.wjy.personal_blog.pojo.dto.LoginDTO;
 import com.wjy.personal_blog.pojo.dto.UserDTO;
+import com.wjy.personal_blog.pojo.dto.VerifyCodeDTO;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.Result;
 import com.wjy.personal_blog.service.UserService;
+import com.wjy.personal_blog.service.impl.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.net.http.HttpRequest;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 @Controller
@@ -27,12 +32,20 @@ public class AdminController {
     @Autowired
     private UserService userService;
 
+
+    @Autowired
+    private EmailService emailService;
+
+
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
+
     /**
     * 默认访问路径是登录界面
     * */
     @GetMapping("/")
     public String loginPage(){
-        return "forward:/Admin/login.html";
+        return "redirect:/Login/login.html";
     }
 
     /**
@@ -69,7 +82,6 @@ public class AdminController {
         if(userLogin==null){
             return Result.error("用户名或密码错误");
         }
-        //设置session对象方便后续验证
         log.info("登录用户：{}",userLogin);
         //存入用户session的id，作为唯一标识！！
         session.setAttribute("user",userLogin);
@@ -101,7 +113,7 @@ public class AdminController {
         User user=new User();
         BeanUtils.copyProperties(userDTO,user);
         userService.insertNewUser(user);
-        log.info("用户注册成功：{}",userDTO);
+        log.info("用户注册成功：{}",user);
         return Result.success(userDTO);
     }
 
@@ -116,14 +128,6 @@ public class AdminController {
         return modelAndView;
     }*/
 
-    /**
-     * 用户资料提交
-     */
-   /* @PostMapping("/save")
-    public String saveProfile(){
-        return "redirect:/admin/profile";
-    }*/
-
 
     /**
      * 退出登录
@@ -136,6 +140,53 @@ public class AdminController {
         BaseContext.removeCurrentId();
         return Result.success("成功退出登录");
     }
+    
+    
+    /**
+     * 邮件发送验证码
+     * */
+    @PostMapping("/code2Email")
+    @ResponseBody
+    public Result sendEmailCode(@RequestBody VerifyCodeDTO codeDTO){
+        String email = codeDTO.getEmail();
+        //判断邮箱是否为空
+        if(email==null){
+            return Result.error("邮箱不能为空");
+        }
+        //判断邮箱格式
+        if (!email.matches("^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$")) {
+            return Result.error("邮箱格式不正确");
+        }
+
+        //防止重复发送验证码
+        String redisEmail = RedisConstant.EMAIL_SEND_RATE_LIMIT + email;
+        if(redisTemplate.hasKey(redisEmail)){
+            return Result.error("请勿重复发送验证码");
+        }
+        //设置验证码发送频率
+        redisTemplate.opsForValue().set(redisEmail,1,60, TimeUnit.SECONDS);
+
+        log.info("发送验证码到邮箱：{}",email);
+        emailService.sendEmailVerifyCode(email);
+        log.info("验证码发送成功");
+        return Result.success("验证码发送成功");
+    }
 
 
+    /**
+    * 验证码登录
+    * */
+    @PostMapping("/verifyCodeLogin")
+    @ResponseBody
+    public Result loginWithVerifyCode(@RequestBody VerifyCodeDTO verifyDTO,HttpSession session){
+        log.info("用户验证码登录：{}",verifyDTO.getEmail());
+        User user = emailService.loginWithVerifyCode(verifyDTO);
+        if(user==null){
+            return Result.error("当前邮箱用户不存在");
+        }
+        log.info("用户验证码登录成功：{}",user);
+        session.setAttribute("user",user);
+        BaseContext.setCurrentId(user.getUserId());
+        return Result.success(user);
+    }
 }

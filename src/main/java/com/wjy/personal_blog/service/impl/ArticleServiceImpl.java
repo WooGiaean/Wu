@@ -7,6 +7,7 @@ import com.wjy.personal_blog.mapper.ArticleMapper;
 import com.wjy.personal_blog.mapper.UserMapper;
 import com.wjy.personal_blog.pojo.dto.ArticleDTO;
 import com.wjy.personal_blog.pojo.entity.Article;
+import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.PageResult;
 import com.wjy.personal_blog.service.ArticleService;
 import jakarta.servlet.http.HttpSession;
@@ -71,11 +72,19 @@ public class ArticleServiceImpl implements ArticleService {
         Integer currentId = BaseContext.getCurrentId();
         Page<Article> list = articleMapper.list(currentId);
         PageResult pageResult = new PageResult(list.getTotal(),list.getResult());
-
         log.info("从数据库中获取数据成功，开始写入缓存");
         //将新数据插入到缓存,并设置过期时间
         ops.set(cacheKey,pageResult,60*2, TimeUnit.SECONDS);
 
+        return pageResult;
+    }
+
+    @Override
+    public PageResult listByAdmin() {
+        log.info("管理员查看所有文章");
+        Page<Article> articles = articleMapper.adminSeeArticlesList();
+        log.info("查询成功，返回数据");
+        PageResult pageResult = new PageResult(articles.getTotal(),articles.getResult());
         return pageResult;
     }
 
@@ -85,8 +94,15 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public List<Article> singleQuery(ArticleDTO articleDTO) {
         log.info("单条/多条查询：{}",articleDTO);
+        Integer currentId = BaseContext.getCurrentId();
+        User userById = userMapper.getUserById(currentId);
+        if(userById==null){
+            log.warn("当前用户未登录");
+            return null;
+        }
         Article article=new Article();
         BeanUtils.copyProperties(articleDTO,article);
+        article.setArticleUserId(currentId);
         List<Article> articles = articleMapper.queryConditional(article);
         return articles;
     }
@@ -101,9 +117,8 @@ public class ArticleServiceImpl implements ArticleService {
         Article article=new Article();
         BeanUtils.copyProperties(articleDTO,article);
 
-        Integer currentUserId = BaseContext.getCurrentId();
-
         //初始化用户id，当前用户id
+        Integer currentUserId = BaseContext.getCurrentId();
         article.setArticleUserId(currentUserId);
         /*
         * 分别设置初始的观看数、评论数和点赞数
@@ -139,13 +154,22 @@ public class ArticleServiceImpl implements ArticleService {
     * */
     @Override
     public void updateArticle(ArticleDTO articleDTO) {
-        log.info("更新文章：{}",articleDTO);
+        log.info("更新id为{}的文章",articleDTO.getArticleId());
         Article article=new Article();
         BeanUtils.copyProperties(articleDTO,article);
-        /*
-        * 更新修改时间
-        * */
+        //更新修改时间
         article.setArticleUpdateTime(LocalDateTime.now());
+        //判断文章是否存在以及判断是否当前用户在执行
+        Integer currentId = BaseContext.getCurrentId();
+        Article articleToBeUpdated = articleMapper.specificArticle(article.getArticleId());
+        if(articleToBeUpdated==null){
+            log.warn("文章不存在");
+            return;
+        }
+        if(!articleToBeUpdated.getArticleUserId().equals(currentId)){
+            log.warn("用户 {} 没有权限操作此文章",currentId);
+            return;
+        }
         articleMapper.updateArticle(article);
         redisTemplate.delete(RedisConstant.RECENT_ARTICLES_KEY);
     }

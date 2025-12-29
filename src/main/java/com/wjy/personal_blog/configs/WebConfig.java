@@ -50,18 +50,29 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(loginInterceptor)
                 .addPathPatterns("/Home/**","/Article/**","/Note/**"
                         ,"/home/**","/articles/**","/notes/**")
-                .excludePathPatterns("/admin/**");
+                .excludePathPatterns("/admin/**","/Login/**")
+                .order(0);
 
         //注册管理员拦截器
         registry.addInterceptor(adminInterceptor)
                 //拦截器拦截的路径和页面
                 .addPathPatterns("/admin/**")
                 //拦截器放行的路径和页面
-                .excludePathPatterns("/admin/loginCheck",   //登录接口
+                .excludePathPatterns(
+                        "/admin/loginCheck",
+                        "/admin/register",
+                        "/admin/logout",
+                        "/admin/code2Email",
+                        "/admin/verifyCodeLogin",
+                        "/Login/login.html",    //登录页面
+                        "/Login/register.html")
+                .order(1);    //注册页面
+
+/*"/admin/loginCheck",   //登录接口
                         "/admin/register",  //注册接口
-                        "/admin/logout", //退出登录接口
-                        "/Admin/login.html",    //登录页面
-                        "/Admin/register.html");    //注册页面
+                        "/admin/logout",//退出登录接口
+                        "/admin/code2Email",
+                        "/admin/verifyCodeLogin",*/
 
 
         /*
