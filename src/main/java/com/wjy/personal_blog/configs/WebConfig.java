@@ -31,10 +31,11 @@ public class WebConfig implements WebMvcConfigurer {
     * */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        //配置静态资源位置
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/");
 
-
+        //配置图片上传路径
         registry.addResourceHandler("/uploaded-images/**")
                 .addResourceLocations("file:///D:/Self_Directory/Pictures/");
 
@@ -48,7 +49,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         //注册登录拦截器
         registry.addInterceptor(loginInterceptor)
-                .addPathPatterns("/Home/**","/Article/**","/Note/**"
+                .addPathPatterns("/Admin/**,/Home/**","/Article/**","/Note/**"
                         ,"/home/**","/articles/**","/notes/**")
                 .excludePathPatterns("/admin/**","/Login/**")
                 .order(0);
@@ -56,9 +57,9 @@ public class WebConfig implements WebMvcConfigurer {
         //注册管理员拦截器
         registry.addInterceptor(adminInterceptor)
                 //拦截器拦截的路径和页面
-                .addPathPatterns("/admin/**")
+                .addPathPatterns("/Admin/**","/admin/**","/manage/**")
                 //拦截器放行的路径和页面
-                .excludePathPatterns(
+                .excludePathPatterns("/admin/",
                         "/admin/loginCheck",
                         "/admin/register",
                         "/admin/logout",

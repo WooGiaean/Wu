@@ -1,9 +1,8 @@
 package com.wjy.personal_blog.controllers.admin;
 
 
-import com.github.pagehelper.Page;
 import com.wjy.personal_blog.pojo.dto.UserDTO;
-import com.wjy.personal_blog.pojo.dto.UserPageQueryDTO;
+import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.PageResult;
 import com.wjy.personal_blog.result.Result;
@@ -11,11 +10,8 @@ import com.wjy.personal_blog.service.ArticleService;
 import com.wjy.personal_blog.service.NoteService;
 import com.wjy.personal_blog.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.UserDatabase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 
 /*
@@ -44,9 +40,11 @@ public class ManageController {
     * */
     @GetMapping ("/users")
     public Result<PageResult> allUsers(
+            PageQueryDTO pageQueryDTO
     ){
         log.info("开始查询所有用户信息");
-        PageResult allUsers = userService.getAllUsers();
+        log.info(pageQueryDTO.getPage()+":"+ pageQueryDTO.getPageSize());
+        PageResult allUsers = userService.getAllUsers(pageQueryDTO);
         return Result.success(allUsers);
     }
 
@@ -85,10 +83,11 @@ public class ManageController {
     * 查看所有文章
     * */
     @GetMapping("/allArticles")
-    public Result<PageResult> allArticles(@RequestParam(defaultValue = "1") Integer page,
-                                           @RequestParam(defaultValue = "10") Integer pageSize)
+    public Result<PageResult> allArticles(PageQueryDTO pageQueryDTO)
     {
         log.info("管理员查看所有用户的文章");
+        log.info("page:{}", pageQueryDTO.getPage());
+        log.info("pageSize:{}", pageQueryDTO.getPageSize());
         PageResult pageResult = articleService.listByAdmin();
         return Result.success(pageResult);
     }

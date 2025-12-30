@@ -3,13 +3,11 @@ package com.wjy.personal_blog.pojo.dto;
 import lombok.Data;
 
 @Data
-public class UserPageQueryDTO {
-
-    private String userName;
+public class PageQueryDTO {
 
     //当前页码
-    private int page;
+    private Integer page;
 
     //页面大小（每页显示记录数）
-    private int pageSize;
+    private Integer pageSize;
 }

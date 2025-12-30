@@ -2,10 +2,9 @@ package com.wjy.personal_blog.service;
 
 import com.wjy.personal_blog.pojo.dto.LoginDTO;
 import com.wjy.personal_blog.pojo.dto.UserDTO;
-import com.wjy.personal_blog.pojo.dto.UserPageQueryDTO;
+import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.PageResult;
-import com.wjy.personal_blog.result.Result;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ public interface UserService {
     User loginVerify(LoginDTO loginDTO);
 
     //用户列表
-    PageResult getAllUsers();
+    PageResult getAllUsers(PageQueryDTO pageQueryDTO);
 
     //通过id查询用户
     User getUserById(Integer id);

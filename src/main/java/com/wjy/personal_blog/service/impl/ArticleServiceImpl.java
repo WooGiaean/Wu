@@ -1,6 +1,7 @@
 package com.wjy.personal_blog.service.impl;
 
 import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.wjy.personal_blog.constants.RedisConstant;
 import com.wjy.personal_blog.context.BaseContext;
 import com.wjy.personal_blog.mapper.ArticleMapper;
@@ -70,6 +71,8 @@ public class ArticleServiceImpl implements ArticleService {
         //缓存中没有数据，从数据库中获取
         log.info("从数据库中获取数据");
         Integer currentId = BaseContext.getCurrentId();
+
+        PageHelper.startPage(1,10);
         Page<Article> list = articleMapper.list(currentId);
         PageResult pageResult = new PageResult(list.getTotal(),list.getResult());
         log.info("从数据库中获取数据成功，开始写入缓存");
@@ -82,6 +85,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public PageResult listByAdmin() {
         log.info("管理员查看所有文章");
+        PageHelper.startPage(1,10);
         Page<Article> articles = articleMapper.adminSeeArticlesList();
         log.info("查询成功，返回数据");
         PageResult pageResult = new PageResult(articles.getTotal(),articles.getResult());

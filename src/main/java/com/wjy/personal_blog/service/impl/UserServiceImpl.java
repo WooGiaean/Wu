@@ -7,23 +7,19 @@ import com.wjy.personal_blog.mapper.NoteMapper;
 import com.wjy.personal_blog.mapper.UserMapper;
 import com.wjy.personal_blog.pojo.dto.LoginDTO;
 import com.wjy.personal_blog.pojo.dto.UserDTO;
-import com.wjy.personal_blog.pojo.dto.UserPageQueryDTO;
+import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.PageResult;
-import com.wjy.personal_blog.result.Result;
 import com.wjy.personal_blog.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,13 +50,17 @@ public class UserServiceImpl implements UserService {
     * 获取所有用户
     * */
     @Override
-    public PageResult getAllUsers() {
+    public PageResult getAllUsers(PageQueryDTO pageQueryDTO) {
+        log.info("获取所有用户");
+
+        int page = pageQueryDTO.getPage() != null ? pageQueryDTO.getPage() : 1;
+        int pageSize = pageQueryDTO.getPageSize() != null ? pageQueryDTO.getPageSize() : 10;
+
         //默认分页：一页10个
-        PageHelper.startPage(1,10);
+        PageHelper.startPage(page,pageSize);
 
         //获取所有用户
         Page<User> allUsers = userMapper.getAllUsers();
-
 
         //获取所有用户id
         List<Integer> allUserIds = allUsers.stream()
@@ -85,6 +85,9 @@ public class UserServiceImpl implements UserService {
         return pageResult;
     }
 
+    /*
+    * map格式转换的方法
+    * */
     private Map<Integer,Integer> mapConvert(Map<Integer, Map<String, Long>> map,String str){
         Map<Integer,Integer> tempMap=new HashMap<>();
         for(Map.Entry<Integer,Map<String,Long>> entry:map.entrySet()){

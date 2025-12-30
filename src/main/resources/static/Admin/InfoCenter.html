@@ -184,12 +184,14 @@
 
         <ul class="sidebar-nav">
             <li><a href="#">仪表盘</a></li>
-            <li><a href="#" @click.prevent="switchPage('user')" :class="{active:currentPage==='user'}">用户管理</a></li>
+            <li><a href="#" @click.prevent="switchPage('user')"
+                   :class="{active:currentPage==='user'}">用户管理</a></li>
             <li><a href="#" @click.prevent="switchPage('article')"
                    :class="{active:currentPage==='article'}">文章管理</a></li>
-            <li><a href="#" @click.prevent="switchPage('note')" :class="{active:currentPage==='note'}">笔记管理</a></li>
+            <li><a href="#" @click.prevent="switchPage('note')"
+                   :class="{active:currentPage==='note'}">笔记管理</a></li>
             <li><a href="#">数据统计</a></li>
-            <li><a href="#">退出登录</a></li>
+            <li><a href="/admin/logout">退出登录</a></li>
         </ul>
     </div>
 
@@ -241,7 +243,7 @@
                                     </thead>
 
                                     <tbody>
-                                    <tr v-for="user in users" :key="user.userId">
+                                    <tr v-for="user in pageUsers" :key="user.userId">
                                         <td>{{user.userId}}</td>
                                         <td><span class="user-name">{{user.userName}}</span></td>
                                         <!--<td>{{user.userNickname}}</td>-->
@@ -304,35 +306,7 @@
                                     </thead>
 
                                     <tbody>
-                                    <!--  <tr>
-                                          <td>1</td>
-                                          <td><span class="user-name">张三</span></td>
-                                          <td>zhangsan@example.com</td>
-                                          <td>普通用户</td>
-                                          <td>2023-01-15</td>
-                                          <td>12</td>
-                                          <td>8</td>
-                                          <td><span class="badge bg-success status-active">活跃</span></td>
-                                          <td>
-                                              <button class="btn btn-sm btn-outline-primary">编辑</button>
-                                              <button class="btn btn-sm btn-outline-danger">删除</button>
-                                          </td>
-                                      </tr>
-                                      <tr>
-                                          <td>2</td>
-                                          <td><span class="user-name">李四</span></td>
-                                          <td>lisi@example.com</td>
-                                          <td>普通用户</td>
-                                          <td>2023-02-20</td>
-                                          <td>5</td>
-                                          <td>3</td>
-                                          <td><span class="badge bg-warning status-active">活跃</span></td>
-                                          <td>
-                                              <button class="btn btn-sm btn-outline-primary">编辑</button>
-                                              <button class="btn btn-sm btn-outline-danger">删除</button>
-                                          </td>
-                                      </tr>-->
-                                    <tr v-for="article in articles" :key="article.articleId">
+                                    <tr v-for="article in pageArticles" :key="article.articleId">
                                         <td>{{article.articleId}}</td>
                                         <td>{{article.articleTitle}}</td>
                                         <td><span class="user-name">{{article.blogger}}</span></td>
@@ -354,7 +328,6 @@
                             </div>
                         </div>
                     </div>
-
 
                     <!-- 笔记展示列表 -->
                     <div class="card" v-if="currentPage=='note'">
@@ -391,7 +364,7 @@
                                     </thead>
 
                                     <tbody>
-                                    <tr v-for="note in notes" :key="note.noteId">
+                                    <tr v-for="note in pageNotes" :key="note.noteId">
                                         <td>{{note.noteId}}</td>
                                         <td>{{note.noteTopic}}</td>
                                         <td><span class="user-name">{{note.noteAuthor}}</span></td>
@@ -408,59 +381,72 @@
                         </div>
                     </div>
 
+
                 </div>
 
 
-                <!-- 分页控件 -->
-               <!-- <div class="pagination" v-if="notes.length > 0">
-                    <div class="pagination-info">
-                        共 {{ noteTotal }} 条 | 每页 {{ notePageSize }} 条
-                    </div>
-                    <div class="pagination-controls">
+                <div class="pagination-container" v-if="currentPageType.totalPages >= 1">
+                    <div class="pagination">
+                        <!-- 上一页按钮 -->
                         <button
-                                class="pagination-btn"
-                                :disabled="noteCurrentPage === 1"
-                                @click="prevPage('notes')"
+                                id="prev-page"
+                                class="page-btn"
+                                :disabled="currentPageType.nowPage === 1"
+                                @click="prePage()"
                         >
-                            上一页
+                            <span class="icon">❮</span> 上一页
                         </button>
 
-                        <button
-                                v-for="page in notePagesToShow"
-                                :key="page"
-                                class="pagination-btn"
-                                :class="{ 'active': page === noteCurrentPage }"
-                                @click="goToPage('notes', page)"
-                        >
-                            {{ page }}
-                        </button>
+                        <!-- 页码显示区域 -->
+                        <div class="page-numbers">
+                           <!-- &lt;!&ndash; 首页 &ndash;&gt;
+                            <span
+                                    class="page-item"
+                                    :class="{ 'active': currentPageType.nowPage === 1 }"
+                                    @click="goToPage(1)"
+                            >1</span>
 
+                            &lt;!&ndash; 省略号（如果需要） &ndash;&gt;
+                            <span v-if="pageToShow.length > 2 && pageToShow[0] !== 1"
+                                  class="page-item ellipsis">...</span>-->
+
+                            <!-- 中间页码 -->
+                            <span
+                                    v-for="page in pageToShow"
+                                    :key="page"
+                                    class="page-item"
+                                    :class="{ 'active': currentPageType.nowPage === page }"
+                                    @click="page !== '...' ? goToPage(page) : null"
+                                    :style="{ cursor: page === '...' ? 'default' : 'pointer' }"
+                            >
+        {{ page }}
+      </span>
+
+                            <!-- 省略号（如果需要） -->
+                            <span v-if="pageToShow.length > 2 && pageToShow[pageToShow.length - 1] !== currentPageType.totalPages"
+                                  class="page-item ellipsis">...</span>
+
+                            <!-- 尾页 -->
+                            <!--<span
+                                    class="page-item"
+                                    :class="{ 'active': currentPageType.nowPage === currentPageType.totalPages }"
+                                    @click="goToPage(currentPageType.totalPages)"
+                            >{{ currentPageType.totalPages }}</span>-->
+                        </div>
+
+                        <!-- 下一页按钮 -->
                         <button
-                                class="pagination-btn"
-                                :disabled="noteCurrentPage === noteTotalPages"
-                                @click="nextPage('notes')"
+                                id="next-page"
+                                class="page-btn"
+                                :disabled="currentPageType.nowPage === currentPageType.totalPages"
+                                @click="nextPage()"
                         >
-                            下一页
+                            下一页 <span class="icon">❯</span>
                         </button>
                     </div>
+                </div>
 
-                    <div class="pagination-jump">
-                        跳转到
-                        <input
-                                type="number"
-                                v-model.number="noteJumpPage"
-                                @keyup.enter="jumpToPage('notes')"
-                                min="1"
-                                :max="noteTotalPages"
-                                style="width: 60px;"
-                        >
-                        页
-                    </div>
-                </div>-->
 
-               <!-- <div class="loading" v-if="noteLoading">
-                    <i class="fas fa-spinner fa-spin"></i> 加载中...
-                </div>-->
             </div>
         </div>
     </div>
@@ -482,9 +468,135 @@
         el: '#main_Content',
         data: {
             currentPage: 'user',
+            /* 用于分页展示的两个变量 */
+            /* nowPage: 1,
+             pageSize: 10,
+             totalCount: 0,
+             totalPages: 0,
+             loading: false,*/
+            /*  */
             users: [], //用户列表展示
+            usersPage: {
+                nowPage: 1,
+                pageSize: 10,
+                totalCount: 0,
+                totalPages: 0,
+                loading: false,
+            },
             articles: [], //文章列表展示
+            articlesPage: {
+                nowPage: 1,
+                pageSize: 10,
+                totalCount: 0,
+                totalPages: 0,
+                loading: false,
+            },
             notes: [],
+            notesPage: {
+                nowPage: 1,
+                pageSize: 10,
+                totalCount: 0,
+                totalPages: 0,
+                loading: false,
+            },
+        },
+        computed: {
+            //计算页码
+            pageUsers() {
+                const {nowPage, pageSize} = this.usersPage
+                const start = (nowPage - 1) * pageSize;
+                return this.users.slice(start, start + pageSize)
+            },
+            pageArticles() {
+                const {nowPage, pageSize} = this.articlesPage;
+                const start = (nowPage - 1) * pageSize
+                return this.articles.slice(start, start + pageSize)
+            },
+            pageNotes() {
+                const {nowPage, pageSize} = this.notesPage;
+                const start = (nowPage - 1) * pageSize
+                return this.notes.slice(start, start + pageSize)
+            },
+
+            //获取当前页面的分页位置
+            getCurrentPage() {
+                switch (this.currentPage) {
+                    case 'user':
+                        return this.pageUsers();
+                    case 'article':
+                        return this.pageArticles();
+                    case 'note':
+                        return this.pageNotes();
+                    default:
+                        return [];
+                }
+            },
+
+            //判断当前页面类型
+            currentPageType() {
+                switch (this.currentPage) {
+                    case 'user':
+                        return this.usersPage;
+                    case 'article':
+                        return this.articlesPage;
+                    case 'note':
+                        return this.notesPage;
+                    default:
+                        return this.usersPage;
+                }
+            },
+
+            //展示页面
+            pageToShow() {
+                const pages = [] //如果记录不多，用户存放每一个显示的页码
+
+                const maxPage = 5   //默认最大5
+
+                const currentPage = this.currentPageType;
+
+                if (!currentPage) {
+                    console.error("currentPageType is undefined");
+                    return [];
+                }
+
+                const nowPage = currentPage.nowPage
+                const totalPages = currentPage.totalPages
+
+                console.log(nowPage + "=" + totalPages)
+
+                if (totalPages <= maxPage) {
+                    for (let i = 1; i <= totalPages; i++) {
+                        pages.push(i)
+                    }
+                } else {
+                    const startPage = Math.max(1, nowPage - Math.floor(maxPage / 2))
+                    const endPage = Math.min(totalPages, startPage + maxPage - 1,)
+
+                    pages.push(1)
+
+                    if (startPage > 2) {
+                        pages.push('...')
+                    }
+
+                    for (let i = startPage; i <= endPage; i++) {
+                        pages.push(i);
+                    }
+
+                    // 添加省略号（如果需要）
+                    if (endPage < totalPages - 1) {
+                        pages.push('...');
+                    }
+
+                    // 添加最后一个页码
+                    if (endPage < totalPages) {
+                        pages.push(totalPages);
+                    }
+
+
+                }
+
+                return pages;
+            }
         },
         methods: {
 
@@ -497,7 +609,7 @@
                         break;
                     case 'article':
                         this.currentPage = 'article';
-                        this.getAllArticles();
+                        this.allArticles();
                         break;
                     case 'note':
                         this.currentPage = 'note';
@@ -511,12 +623,33 @@
                 }
             },
 
+            /* 获取页面数据类型，进行对应的请求 */
+            getPageType() {
+                switch (this.currentPage) {
+                    case 'user':
+                        this.allUsers();
+                        break;
+                    case 'article':
+                        this.allArticles();
+                        break;
+                    case 'note':
+                        this.allNotes();
+                        break;
+                    default:
+                        this.allUsers();
+                }
+            },
+
+            //所有用户
             allUsers() {
+                //this.loading = true;
+                this.usersPage.loading = true;
+
                 //页面加载时，获取用户列表
-                axios.get('/manage/users',{
+                axios.get('/manage/users', {
                     params: {
-                        page: 1,
-                        pageSize: 10
+                        page: this.usersPage.nowPage,
+                        pageSize: this.usersPage.pageSize
                     }
                 })
                     .then(res => {
@@ -525,26 +658,43 @@
                         if (result.code == 1) {
                             console.log("用户列表获取成功")
                             this.users = result.data.records;
+                            this.usersPage.totalCount = result.data.total;
+                            this.usersPage.totalPages = Math.ceil(this.usersPage.totalCount / this.usersPage.pageSize);
                         } else {
                             console.log("用户列表获取失败")
+                            alert('获取用户列表失败: ' + data.message)
                             this.users = []
                         }
                     }).catch(error => {
                     console.log(error)
+                    alert("错误信息：" + error)
+                }).finally(() => {
+                    this.usersPage.loading = false;
                 })
 
 
             },
 
             //所有文章
-            getAllArticles() {
-                axios.get('/manage/allArticles')
+            allArticles() {
+                //this.loading = true;
+                this.articlesPage.loading = true;
+
+                axios.get('/manage/allArticles', {
+                    params: {
+                        page: this.articlesPage.nowPage,
+                        pageSize: this.articlesPage.pageSize
+                    }
+                })
                     .then(response => {
                         const result = response.data
                         console.log(result.code)
                         if (result.code === 1) {
                             console.log("文章列表获取成功")
                             this.articles = result.data.records;
+                            this.articlesPage.totalCount = result.data.total;
+                            this.articlesPage.totalPages = Math.ceil(this.articlesPage.totalCount / this.articlesPage.pageSize);
+                            console.log(this.articlesPage.totalCount + ":" + this.articlesPage.totalPages)
                         } else {
                             console.log("文章列表获取失败")
                             this.articles = []
@@ -552,18 +702,30 @@
                     }).catch(error => {
                     console.log(error)
                     alert("错误信息：" + error)
+                }).finally(() => {
+                    this.articlesPage.loading = false;
                 })
             },
 
             //所有笔记
             allNotes() {
-                axios.get('/manage/allNotes')
+                this.notesPage.loading = true;
+
+                axios.get('/manage/allNotes', {
+                    params: {
+                        page: this.notesPage.nowPage,
+                        pageSize: this.notesPage.pageSize
+                    }
+                })
                     .then(response => {
                         const result = response.data
                         console.log(result.code)
                         if (result.code === 1) {
                             console.log("笔记列表获取成功")
                             this.notes = result.data.records;
+                            this.notesPage.totalCount = result.data.total;
+                            this.notesPage.totalPages = Math.ceil(this.notesPage.totalCount / this.notesPage.pageSize);
+                            console.log(this.notesPage.totalCount + ":" + this.notesPage.totalPages)
                         } else {
                             console.log("笔记列表获取失败")
                             this.notes = []
@@ -571,13 +733,43 @@
                     }).catch(error => {
                     console.log(error)
                     alert("错误信息：" + error)
+                }).finally(() => {
+                    this.notesPage.loading = false;
                 })
+            }
+            ,
+
+            //跳转到分页中的具体某一页
+            goToPage(page) {
+                if (page === '...' || page === this.currentPageType.nowPage) return;
+                this.currentPageType.nowPage = page;
+                this.getPageType(this.currentPage)
+            },
+
+            prePage() {
+                let currentPage = this.currentPageType;
+                if (currentPage.nowPage > 1) {
+                    currentPage.nowPage--;
+                    this.getPageType(this.currentPage)
+                }
+
+            },
+
+            nextPage() {
+                let currentPage = this.currentPageType;
+                if (currentPage.nowPage < currentPage.totalPages) {
+                    currentPage.nowPage++;
+                    this.getPageType(this.currentPage)
+                }
             }
 
         },
         //页面加载时渲染
         mounted() {
-            this.allUsers();
+            //this.allUsers();
+            this.usersPage.nowPage = 1;
+
+            this.getPageType();
         }
     })
 </script>

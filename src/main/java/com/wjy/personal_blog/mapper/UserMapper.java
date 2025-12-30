@@ -1,12 +1,8 @@
 package com.wjy.personal_blog.mapper;
 
 import com.github.pagehelper.Page;
-import com.wjy.personal_blog.pojo.dto.LoginDTO;
-import com.wjy.personal_blog.pojo.dto.UserPageQueryDTO;
 import com.wjy.personal_blog.pojo.entity.User;
 import org.apache.ibatis.annotations.*;
-
-import java.util.List;
 
 @Mapper
 public interface UserMapper {

@@ -153,7 +153,7 @@ public class AdminController {
         if(email==null){
             return Result.error("邮箱不能为空");
         }
-        //判断邮箱格式
+        //判断邮箱格式：使用正则表达式
         if (!email.matches("^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$")) {
             return Result.error("邮箱格式不正确");
         }
