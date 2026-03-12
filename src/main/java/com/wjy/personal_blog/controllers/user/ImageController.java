@@ -2,6 +2,7 @@ package com.wjy.personal_blog.controllers.user;
 
 import com.wjy.personal_blog.result.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,9 @@ public class ImageController {
 
     //在新增文章时添加图片，图片的上传路径
     private static final String UPLOAD_IMG_PATH = "D:/Self_Directory/Pictures/";
+
+
+
 
 
     /*

@@ -6,179 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>个人博客</title>
     <!-- css样式修饰 -->
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            min-height: 100vh;
-        }
-
-        .container {
-            display: flex;
-            margin-top: 2.5vh;
-            padding: 0 5vw;
-            min-height: 100vh;
-        }
-
-        .left-column {
-            width: 15%;
-            background-color: white;
-            border-right: 1px solid #ddd;
-        }
-
-        .right-column {
-            width: 85%;
-            background-color: white;
-            padding: 20px;
-        }
-
-        .blog-title {
-            background-color: white;
-            border-left: 3px solid #E1BE97;
-            border-right: 1px solid #F9F4E9;
-            padding-left: 20%;
-            padding-top: 15%;
-            padding-bottom: 15%;
-        }
-
-        .blog-title h1,p {
-            font-size: 2vh;
-            color: #664401;
-            padding-left: 20%;
-        }
-
-        .nav-menu {
-            padding: 20px 0;
-        }
-
-        .nav-item {
-            padding: 15px 0;
-            padding-left: 20%;
-            font-size: 1.8vh;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .nav-item:hover {
-            color: #664401;
-            font-weight: bold;
-        }
-
-        .notes-section h2, .blogs-section h2 {
-            font-size: 2.5vh;
-            color: black;
-            margin-bottom: 20px;
-        }
-
-        .notes-container {
-            display: flex;
-            gap: 40px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-        }
-
-        .note-card {
-            background-color: #F9F4E9;
-            border-radius: 10px;
-            padding: 20px;
-            min-width: 200px;
-            transition: border 0.3s ease;
-        }
-
-        .note-card:hover {
-            border: 1px solid #E1BE97;
-        }
-
-        .note-card h3 {
-            font-size: 1.5vh;
-            color: black;
-            margin-bottom: 10px;
-        }
-
-        .note-card p {
-            font-size: 1vh;
-            color: gray;
-        }
-
-        .blog-item {
-            margin-bottom: 40px;
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-        }
-
-        .blog-item:hover{
-            border: 1px solid #E1BE97;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .blog-image {
-            width: 300px;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .blog-content {
-            flex: 1;
-        }
-
-        .blog-content h3 {
-            font-size: 2.5vh;
-            color: black;
-            margin-bottom: 10px;
-        }
-
-        .blog-content p {
-            font-size: 1.5vh;
-            color: #555;
-            line-height: 1.6;
-        }
-
-        .footer{
-            text-align: center;
-            margin-top: 20px;
-            color: cornflowerblue;
-            font-size: 25px;
-            font-weight: bold;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-
-            .left-column, .right-column {
-                width: 100%;
-            }
-
-            .blog-image {
-                width: 100%;
-                height: auto;
-                object-fit: cover; /* 保证图片不变形 */
-                border-radius: 6px;
-                margin-bottom: 12px;
-            }
-
-            .notes-container {
-                flex-direction: column;
-                gap: 20px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../css/home.css">
 </head>
 <body>
 <div class="container" id="mainP">
-        <!-- 左侧导航栏 -->
-        <div class="left-column">
+    <!-- 左侧导航栏 -->
+    <aside class="left-column">
 
         <div class="blog-title">
             <h1>个人博客</h1>
@@ -189,62 +22,104 @@
         </div>
 
         <!-- 菜单栏 -->
-        <div class="nav-menu">
-            <div class="nav-item"><a href="/Home/home.html" style="text-decoration: none;color: burlywood" >主页</a></div>
-            <div class="nav-item"><a href="/Home/profile.html" style="text-decoration: none;color: burlywood" >关于我</a> </div>
-            <div class="nav-item" ><a href="/Article/allArticles.html" style="text-decoration: none;color: burlywood" >博客</a></div>
-            <div class="nav-item"><a href="/Note/note.html" style="text-decoration: none;color: burlywood" >随笔</a></div>
-            <div class="nav-item"><a href="#" style="text-decoration: none;color: burlywood" >知识库</a></div>
-            <div class="nav-item"><a href="#" style="text-decoration: none;color: burlywood"  @click="logout()" >退出登录</a></div>
-        </div>
+        <nav class="nav-menu">
+            <div class="nav-item"><a href="/Home/home.html">>🏠 主页</a></div>
+            <div class="nav-item"><a href="/Home/profile.html">👤 关于我</a>
+            </div>
+            <div class="nav-item"><a href="/Article/allArticles.html">📚 博客</a>
+            </div>
+            <div class="nav-item"><a href="/Note/note.html">✍️ 随笔</a>
+            </div>
+            <div class="nav-item"><a href="#">🧠 知识库</a>
+            </div>
+            <div class="nav-item"><a href="#" style="color: #d9534f;"
+                                     @click="logout()">🚪 退出登录</a></div>
+        </nav>
 
-    </div>
+    </aside>
 
-        <!-- 右侧文章及评论 -->
-        <div class="right-column">
+    <!-- 右侧文章及评论 -->
+    <main class="right-column">
 
-            <!-- 笔记区域 -->
-            <div class="notes-section">
-                <h2 id="turnToNotePage">
-                    <a href="/Note/note.html" style="text-decoration: none;color: burlywood">我的笔记</a>
-                </h2>
-                <div class="notes-container">
-                    <div class="note-card" v-for="(note,index) in notes" :key="note.noteId"
-                         @click="intoSpecificNote(note.noteId)">
-                        <h3>{{note.noteTopic}}</h3>    <!-- 标题 -->
-                        <p>{{note.noteCreateTime}}</p>  <!-- 创建时间 -->
-                    </div>
-                </div>
+
+
+
+        <!-- 笔记区域 -->
+        <section class="notes-section">
+            <div class="section-header">
+                <h2>📝 我的笔记</h2>
+                <a href="/Note/note.html">查看更多 &rarr;</a>
             </div>
 
-            <!-- 博客展示区域 -->
-            <div class="blogs-section">
-                <!-- 标题 -->
-                <h2><a href="/Article/allArticles.html" style="text-decoration: none; color: burlywood">最近博客</a></h2>
+            <div v-if="loading" class="loading">笔记加载中...</div>
+            <div v-else-if="notes.length === 0" class="empty-state">暂无笔记，快去写一篇吧！</div>
+            <div class="notes-container">
+                <div class="note-card" v-for="(note,index) in notes" :key="note.noteId"
+                     @click="intoSpecificNote(note.noteId)">
+                    <h3>{{note.noteTopic}}</h3>    <!-- 标题 -->
+                    <p>{{note.noteCreateTime}}</p>  <!-- 创建时间 -->
+                </div>
+            </div>
+        </section>
 
+        <!-- 分类展示区域 -->
+        <section class="category-section">
+            <div class="section-header">
+                <h2>📝 文章分类</h2>
+            </div>
+
+            <div class="category-tags">
+                <a href="/Article/allArticles.html" class="category-tag active">全部</a>
+                <p v-for="c in category" :key="c.categoryId" class="category-tag">
+                    {{c.categoryName}}
+                </p>
+            </div>
+
+
+        </section>
+
+
+        <!-- 博客展示区域 -->
+        <section class="blogs-section">
+            <!-- 标题 -->
+            <div class="section-header">
+                <h2>🔥 最近博客</h2>
+                <a href="/Article/allArticles.html">查看更多 &rarr;</a>
+            </div>
+
+            <!-- 提示文章加载 -->
+            <div v-if="loading" class="loading">文章加载中...</div>
+            <div v-else-if="blogs.length === 0" class="empty-state">暂无文章，敬请期待！</div>
+            <div v-else>
                 <!-- 博文列表 -->
-                <div class="blog-item" v-for="blog in blogs" :key="blog.articleId"
-                @click="intoSpecificBlog(blog.articleId)">
-                    <!--<img src="https://img.alicdn.com/imgextra/i2/O1CN01VjWLAB21Zb4eAatD8_!!6000000006999-2-tps-928-1232.png"
-                         alt="活力的源泉：健康生活的艺术与科学" class="blog-image">-->
+                <article class="blog-item" v-for="blog in blogs" :key="blog.articleId"
+                         @click="intoSpecificBlog(blog.articleId)">
                     <img :src="'/uploaded-images/'+blog.articleThumbnail" class="blog-image">
                     <div class="blog-content">
                         <h3>{{blog.articleTitle}}</h3>
                         <p>{{blog.articleSummary}}</p>
-                        <span>{{blog.articleCreateTime}}</span>
+                        <div class="blog-meta">
+                            <span>📅 {{ blog.articleCreateTime }}</span>
+                        </div>
                     </div>
-                </div>
-
+                </article>
             </div>
 
-        </div>
+
+
+        </section>
+
+    </main>
+
+
+
 </div>
 
 
 <!-- 页脚个人信息 -->
 <footer>
-    <div class="footer">
-        © 2025 JiaYn | 个人博客 |  联系邮箱： 1317192941@qq.com
+    <div class="footer-text">
+        &copy; 2025 <span>JiaYn</span> | 个人博客 | 联系邮箱：1317192941@qq.com
     </div>
 </footer>
 <!-- 导入axios接口转发请求和vue -->
@@ -257,37 +132,42 @@
 <script>
     /* 获取用户名显示到主页以及文章列表的逻辑 */
     new Vue({
-        el:'#mainP',
-        data:{
-            blogs:[],
-            userNickName:'',
-            notes:[]
+        el: '#mainP',
+        data: {
+            blogs: [],
+            userNickName: '',
+            notes: [],
+            category: [],
+            loading: true
         },
-        methods:{
+        methods: {
             //具体某一篇随笔
-            async intoSpecificNote(id){
-                window.location.href = '/Note/specificNote.html?id='+id;
+            async intoSpecificNote(id) {
+                window.location.href = '/Note/specificNote.html?id=' + id;
             },
             //具体某一篇博文
-            async intoSpecificBlog(id){
+            async intoSpecificBlog(id) {
                 console.log(id);
-                alert("进入文章"+id)
-                window.location.href = '/Article/article.html?id='+id;
+                alert("进入文章" + id)
+                window.location.href = '/Article/article.html?id=' + id;
             },
             //点击主页的”退出登录“，退回到登录页面
-            async logout(){
-                axios.post('/admin/logout')
-                    .then(response => {
-                        console.log(response.data.message)
-                        alert(response.data.code===1?"退出成功":"退出失败")
-                        if (response.data.code === 1) {
-                            sessionStorage.removeItem("user");
-                            window.location.href = '../Login/login.html';
-                        }
-                    }).catch(error=>{
-                    console.error('退出失败:', error);
-                    alert('退出登录失败，请重试');
-                })
+            async logout() {
+                if(confirm("确定要退出登录吗？")){
+                    axios.post('/admin/logout')
+                        .then(response => {
+                            console.log(response.data.message)
+                            alert(response.data.code === 1 ? "退出成功" : "退出失败")
+                            if (response.data.code === 1) {
+                                sessionStorage.removeItem("user");
+                                window.location.href = '../Login/login.html';
+                            }
+                        }).catch(error => {
+                        console.error('退出失败:', error);
+                        alert('退出登录失败，请重试');
+                    })
+                }
+
             }
         },
         //页面加载时渲染数据
@@ -300,9 +180,10 @@
                 })
                 .catch(error => {
                     console.error("请求发送失误", error)
+                    this.loading = false;
                 })
             /* 获取用户昵称 */
-            axios.get('/home/currentUser',{
+            axios.get('/home/currentUser', {
                 credentials: 'include'
             }).then(response => {
                 console.log(response.data.data);
@@ -316,6 +197,30 @@
                 })
                 .catch(error => {
                     console.error("请求发送失误", error)
+                    this.loading = false;
+                })
+                .finally(() => {
+                    this.loading = false;
+                })
+
+
+            /* 获取分类列表 */
+            axios.get('/category/list')
+                .then(response => {
+                    console.log(response.data.data);
+                    if (response.data.code === 1) {
+                        this.category = response.data.data || [];
+                    }else{
+                        alert("获取分类列表失败")
+                        this.category=[];
+                    }
+                })
+                .catch(error => {
+                    console.error("请求发送失误", error)
+                    this.loading = false;
+                })
+                .finally(() => {
+                    this.loading = false;
                 })
         }
     })

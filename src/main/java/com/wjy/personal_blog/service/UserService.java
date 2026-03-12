@@ -33,5 +33,9 @@ public interface UserService {
     //删除用户
     void deleteUser(Integer id);
 
+    //查询用户
     PageResult findSpecificUser(UserDTO userDTO);
+    
+    //根据用户名查询用户
+    User findByUsername(String username);
 }

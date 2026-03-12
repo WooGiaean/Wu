@@ -9,7 +9,4 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface CategoryMapper extends BaseMapper<Category> {
 
-
-    //@Select("select * from category")
-   // Page<Category> categoryList();
 }

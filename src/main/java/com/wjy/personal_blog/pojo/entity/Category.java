@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,4 +28,5 @@ public class Category {
     private String categoryIcon;
     @TableField("category_parent_id")
     private Integer categoryParentId;
+    //非数据库字段，用于关联查询
 }

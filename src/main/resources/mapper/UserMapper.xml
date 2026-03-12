@@ -34,13 +34,19 @@
         select * from user
         <where>
             <if test="userName != null">
-                and user_name = #{userName}
+               or user_name like concat('%', #{userName}, '%')
             </if>
-             <if test="userPassword != null">
-                and user_password = #{userPassword}
+            <if test="userNickname != null">
+
+                or user_nickname like concat('%', #{userNickname}, '%')
+            </if>
+            <if test="userPassword != null">
+
+                or user_password like concat('%', #{userPassword}, '%')
             </if>
             <if test="userEmail != null">
-                and user_email = #{userEmail}
+
+                or user_email like concat('%', #{userEmail}, '%')
             </if>
         </where>
     </select>

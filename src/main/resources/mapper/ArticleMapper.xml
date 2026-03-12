@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.wjy.personal_blog.mapper.ArticleMapper">
-    <!--<insert id="insertArticle"></insert>-->
 
     <!-- 需要用到的公共字段 -->
     <sql id="articleColumns">
@@ -92,36 +91,31 @@
     </select>
 
     <!-- 查询当前用户所有文章 -->
-    <select id="list" resultMap="ArticleWithTag">
+    <select id="list" resultMap="ArticleWithCategory">
         select
             <include refid="articleColumns"/>,
            t.tag_id,
            t.tag_name,
-           t.tag_description
+           t.tag_description,
+           c.category_id,
+           c.category_name,
+           c.category_description,
+           c.category_icon,
+           c.category_parent_id,
+           c.category_order
         from article
         left join user on article.article_user_id = user.user_id
         left join article_tag at on article.article_id = at.article_id
         left join tag t on at.tag_id = t.tag_id
+        left join article_category ac on article.article_id = ac.article_id
+        left join category c on ac.category_id = c.category_id
         where article.article_user_id = #{articleUserId}
         order by article.article_create_time desc
 
     </select>
 
 
-    <!-- 查询对应用户文章数量，返回List<Map>类型 -->
-    <select id="countByArticleUserIdMapList" >
-        select article_user_id ,count(*)
-        from article
-        where article_user_id in
-        <foreach collection="userIds" item="ids" separator="," open="(" close=")">
-            #{ids}
-        </foreach>
-        group by article_user_id
-    </select>
-
-
-    
-    <!-- 查询用户的文章数，返回map类型 -->
+    <!-- 查询用户的文章数，返回map类型（展示在后台管理页面） -->
     <select id="countByArticleUserIdMap" >
         select article_user_id ,count(*) as articleCount
         from article
@@ -133,23 +127,95 @@
     </select>
 
     <!-- 管理员查询所有用户文章 -->
-    <select id="adminSeeArticlesList" resultType="com.wjy.personal_blog.pojo.entity.Article">
+    <select id="adminSeeArticlesList" resultMap="ArticleWithCategory">
         select
         <include refid="articleColumns"/>,
-        user.user_nickname as blogger
+        t.tag_id,
+        t.tag_name,
+        t.tag_description,
+        c.category_id,
+        c.category_name,
+        c.category_description,
+        c.category_icon,
+        c.category_parent_id,
+        c.category_order
         from article
         left join user on article.article_user_id = user.user_id
+        left join article_tag at on article.article_id = at.article_id
+        left join tag t on at.tag_id = t.tag_id
+        left join article_category ac on article.article_id = ac.article_id
+        left join category c on ac.category_id = c.category_id
         order by article.article_update_time desc
     </select>
 
-  <!--  <select id="countArticle" resultType="java.lang.Integer">
-        select count(*) as articleCount from article
-        where article_user_id in
-        <foreach collection="userIds" item="ids" separator="," open="(" close=")">
+    <!-- 根据分类查询文章 -->
+    <select id="getArticlesByCategory" resultMap="ArticleWithCategory">
+        select
+        <include refid="articleColumns"/>,
+        t.tag_id,
+        t.tag_name,
+        t.tag_description,
+        c.category_id,
+        c.category_name,
+        c.category_description,
+        c.category_icon,
+        c.category_parent_id,
+        c.category_order
+        from article
+        left join user on article.article_user_id = user.user_id
+        left join article_tag at on article.article_id = at.article_id
+        left join tag t on at.tag_id = t.tag_id
+        left join article_category ac on article.article_id = ac.article_id
+        left join category c on ac.category_id = c.category_id
+        where ac.category_id = #{categoryId}
+        order by article.article_update_time desc
+    </select>
+
+
+    <!-- 查询分类下的文章数量 -->
+    <select id="getArticleCountByCategories" resultType="java.util.Map">
+        select category_id as categoryId, count(*) as articleCount
+        from category
+        where category_id in
+        <foreach collection="categoryIds" item="ids" separator="," open="(" close=")">
             #{ids}
         </foreach>
-        group by article_user_id
-    </select>-->
+        group by category_id
+    </select>
 
+    <!-- 扩展 ArticleWithTag 结果映射，添加分类列表 -->
+    <resultMap id="ArticleWithCategory" type="com.wjy.personal_blog.pojo.entity.Article" extends="ArticleWithTag">
+        <!-- 关联分类列表 -->
+        <collection property="categoryList" ofType="com.wjy.personal_blog.pojo.entity.Category">
+            <id property="categoryId" column="category_id"/>
+            <result property="categoryName" column="category_name"/>
+            <result property="categoryDescription" column="category_description"/>
+            <result property="categoryIcon" column="category_icon"/>
+            <result property="categoryParentId" column="category_parent_id"/>
+            <result property="categoryOrder" column="category_order"/>
+        </collection>
+    </resultMap>
+    
+    <!-- 查询具体某篇文章 -->
+    <select id="specificArticle" resultMap="ArticleWithCategory">
+        select
+            <include refid="articleColumns"/>,
+            t.tag_id,
+            t.tag_name,
+            t.tag_description,
+            c.category_id,
+            c.category_name,
+            c.category_description,
+            c.category_icon,
+            c.category_parent_id,
+            c.category_order
+        from article
+        left join user on article.article_user_id = user.user_id
+        left join article_tag at on article.article_id = at.article_id
+        left join tag t on at.tag_id = t.tag_id
+        left join article_category ac on article.article_id = ac.article_id
+        left join category c on ac.category_id = c.category_id
+        where article.article_id = #{articleId}
+    </select>
 
 </mapper>

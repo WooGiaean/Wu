@@ -3,43 +3,70 @@ package com.wjy.personal_blog.configs;
 import com.wjy.personal_blog.interceptor.AdminInterceptor;
 import com.wjy.personal_blog.interceptor.LoginInterceptor;
 import com.wjy.personal_blog.json.JacksonObjectMapper;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.*;
-import org.thymeleaf.spring6.SpringTemplateEngine;
-import org.thymeleaf.spring6.view.ThymeleafViewResolver;
+
 
 import java.util.List;
 
 @Configuration
-//@EnableWebMvc
 @Slf4j
 public class WebConfig implements WebMvcConfigurer {
 
-    @Autowired
-    private AdminInterceptor adminInterceptor;
+    // Spring Security 已处理认证和授权，不再需要自定义拦截器
+    // @Autowired
+    // private AdminInterceptor adminInterceptor;
 
-
-    @Autowired
-    private LoginInterceptor loginInterceptor;
+    // @Autowired
+    // private LoginInterceptor loginInterceptor;
     /*
     * 配置静态资源位置
     * */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        //配置静态资源位置
-        registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/");
+        // 优先配置Swagger和Knife4j静态资源
+        registry.addResourceHandler("/doc.html")
+                .addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/swagger-ui/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/swagger-ui/");
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
+        registry.addResourceHandler("/v3/api-docs/**")
+                .addResourceLocations("classpath:/META-INF/resources/");
 
         //配置图片上传路径
         registry.addResourceHandler("/uploaded-images/**")
                 .addResourceLocations("file:///D:/Self_Directory/Pictures/");
 
-            }
+        //配置静态资源位置
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/");
+    }
+
+
+
+
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        //WebMvcConfigurer.super.addViewControllers(registry);
+
+        registry.addViewController("/Login")
+                .setViewName("forward:/Login/login.html");
+
+        registry.addViewController("/Home")
+                .setViewName("forward:/Home/home.html");
+
+        registry.addViewController("/Info")
+                .setViewName("forward:/Admin/infoCenter.html");
+    }
 
     /*
     * 注册拦截器
@@ -47,43 +74,45 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        //注册登录拦截器
-        registry.addInterceptor(loginInterceptor)
-                .addPathPatterns("/Admin/**,/Home/**","/Article/**","/Note/**"
-                        ,"/home/**","/articles/**","/notes/**")
-                .excludePathPatterns("/admin/**","/Login/**")
-                .order(0);
-
-        //注册管理员拦截器
-        registry.addInterceptor(adminInterceptor)
-                //拦截器拦截的路径和页面
-                .addPathPatterns("/Admin/**","/admin/**","/manage/**")
-                //拦截器放行的路径和页面
-                .excludePathPatterns("/admin/",
-                        "/admin/loginCheck",
-                        "/admin/register",
-                        "/admin/logout",
-                        "/admin/code2Email",
-                        "/admin/verifyCodeLogin",
-                        "/Login/login.html",    //登录页面
-                        "/Login/register.html")
-                .order(1);    //注册页面
-
-/*"/admin/loginCheck",   //登录接口
-                        "/admin/register",  //注册接口
-                        "/admin/logout",//退出登录接口
-                        "/admin/code2Email",
-                        "/admin/verifyCodeLogin",*/
+        // Spring Security 已处理认证和授权，不再需要自定义拦截器
+        // 保留此方法以保持配置结构完整
+    }
 
 
-        /*
-        *
-                        ,
-        * */
 
-    }//"/admin/"
+    /**
+     * 全局OpenAPI配置
+     */
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("个人博客系统API文档")
+                        .version("1.0.0")
+                        .description("个人博客系统的完整API文档，包含管理端和用户端接口"));
+    }
 
+    /**
+    * 后台管理端接口文档分组
+    * */
+    @Bean
+    public GroupedOpenApi adminOpenAPI(){
+        return GroupedOpenApi.builder()
+                .group("后台管理端接口")
+                .pathsToMatch("/admin/**","/manage/**")
+                .build();
+    }
 
+    /**
+     * 用户相关操作接口文档分组
+     * */
+    @Bean
+    public GroupedOpenApi userOpenAPI(){
+        return GroupedOpenApi.builder()
+                .group("用户相关操作接口")
+                .pathsToMatch("/articles/**", "/notes/**", "/category/**", "/home/**")
+                .build();
+    }
 
     /*
             * 配置json数据格式的转换

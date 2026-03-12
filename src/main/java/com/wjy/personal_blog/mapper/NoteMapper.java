@@ -19,17 +19,22 @@ public interface NoteMapper {
     Page<Notes> adminSeeNotesList();
 
 
-    /* 通过id搜寻笔记 */
+    /* 通过笔记id搜寻笔记 */
     @Select("select * from notes where note_id=#{id}")
     Notes getNoteById(Integer id);
+
+
+    /* 通过用户id查询用户所有笔记 */
+    @Select("select * from notes where note_user_id=#{noteUserId}")
+    Notes getNoteByUserId(Integer noteUserId);
 
     /* 模糊查询笔记 */
     Page<Notes> queryByKeyWord(Notes notes);
 
     /* 添加新笔记 */
-    @Insert("insert into notes(note_topic,note_content,note_create_time,note_update_time) " +
+    @Insert("insert into notes(note_topic,note_content,note_create_time,note_update_time,note_user_id) " +
             "values(#{noteTopic}," +
-            "#{noteContent},#{noteCreateTime},#{noteUpdateTime})")
+            "#{noteContent},#{noteCreateTime},#{noteUpdateTime},#{noteUserId})")
     void addNewNote(Notes notes);
 
 

@@ -6,4 +6,5 @@ import lombok.Data;
 public class LoginDTO {
     private String username;
     private String password;
+    private Boolean remember; // 添加"记住我"字段
 }

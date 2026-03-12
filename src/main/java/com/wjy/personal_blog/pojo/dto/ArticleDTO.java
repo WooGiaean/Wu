@@ -2,6 +2,8 @@ package com.wjy.personal_blog.pojo.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class ArticleDTO {
     private Integer articleId;
@@ -23,4 +25,7 @@ public class ArticleDTO {
     private String articleSummary;
 
     private String articleThumbnail;
+
+    // 新增：文章所属分类ID列表
+    private List<Integer> categoryIds;
 }

@@ -5,171 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理员中心</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <!--<style>
-        body {
-            font-family: 'Microsoft YaHei', sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-        }
-
-        .sidebar {
-            width: 250px;
-            height: 100vh;
-            background-color: #f8f9fa;
-            border-right: 1px solid #e9ecef;
-            position: fixed;
-            top: 0;
-            left: 0;
-            padding: 20px 0;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar-header {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 1px solid #e9ecef;
-            margin-bottom: 20px;
-        }
-
-        .sidebar-header h4 {
-            color: #8B6A4F;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .sidebar-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin: 0 auto 10px;
-            border: 3px solid #8B6A4F;
-        }
-
-        .sidebar-nav {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .sidebar-nav li {
-            margin-bottom: 15px;
-        }
-
-        .sidebar-nav a {
-            display: block;
-            padding: 10px 20px;
-            color: #8B6A4F;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-        }
-
-        .sidebar-nav a:hover,
-        .sidebar-nav a.active {
-            background-color: #f8f9fa;
-            border-left: 3px solid #8B6A4F;
-            color: #8B6A4F;
-            font-weight: bold;
-        }
-
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .card {
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-header {
-            background-color: #fff;
-            border-bottom: 1px solid #e9ecef;
-            padding: 15px 20px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #8B6A4F;
-        }
-
-        .table th {
-            background-color: #f8f9fa;
-            color: #8B6A4F;
-            font-weight: bold;
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .table td {
-            vertical-align: middle;
-        }
-
-        .user-name {
-            color: #8B6A4F;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .user-name:hover {
-            text-decoration: underline;
-        }
-
-        .btn-primary {
-            background-color: #8B6A4F;
-            border-color: #8B6A4F;
-        }
-
-        .btn-primary:hover {
-            background-color: #7a5c3d;
-            border-color: #7a5c3d;
-        }
-
-        .search-bar {
-            margin-bottom: 20px;
-        }
-
-        .form-control {
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-        }
-
-        .badge {
-            font-size: 12px;
-            padding: 0.3em 0.5em;
-        }
-
-        .status-active {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .status-inactive {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-                border-right: none;
-                border-bottom: 1px solid #e9ecef;
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .sidebar-nav {
-                flex-direction: column;
-            }
-        }
-    </style>-->
     <!-- css样式文件 -->
-    <link rel="stylesheet" href="/css/inforCenter.css">
+    <link rel="stylesheet" href="../css/inforCenter.css">
+    <link rel="stylesheet" href="../css/global.css">
 </head>
 <body>
 
@@ -193,6 +31,15 @@
             <li><a href="#">数据统计</a></li>
             <li><a href="/admin/logout">退出登录</a></li>
         </ul>
+
+        <!-- 切换浅/深色模式 -->
+        <div class="sidebar-footer">
+            <button id="theme-toggle"
+                    class="btn btn-sm btn-outline-secondary w-100 mb-2">
+                🌙 深色模式
+            </button>
+        </div>
+
     </div>
 
     <!-- 主要内容 -->
@@ -217,9 +64,12 @@
                             <div class="search-bar">
                                 <!-- 搜索框 -->
                                 <div class="input-group mb-3">
-                                    <input type="text" class="form-control" placeholder="搜索用户..."
+                                    <input v-model="searchUser"
+                                           type="text" class="form-control" placeholder="搜索用户..."
                                            aria-label="Search user">
-                                    <button class="btn btn-outline-secondary" type="button">搜索</button>
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            @click="searchUserByKeyword">搜索
+                                    </button>
                                 </div>
                             </div>
 
@@ -260,7 +110,9 @@
                                         </td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-primary">编辑</button>
-                                            <button class="btn btn-sm btn-outline-danger">删除</button>
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    @click="deleteUser(user.userId)">删除
+                                            </button>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -306,7 +158,7 @@
                                     </thead>
 
                                     <tbody>
-                                    <tr v-for="article in pageArticles" :key="article.articleId">
+                                    <tr v-for="article in articles" :key="article.articleId">
                                         <td>{{article.articleId}}</td>
                                         <td>{{article.articleTitle}}</td>
                                         <td><span class="user-name">{{article.blogger}}</span></td>
@@ -364,7 +216,7 @@
                                     </thead>
 
                                     <tbody>
-                                    <tr v-for="note in pageNotes" :key="note.noteId">
+                                    <tr v-for="note in notes" :key="note.noteId">
                                         <td>{{note.noteId}}</td>
                                         <td>{{note.noteTopic}}</td>
                                         <td><span class="user-name">{{note.noteAuthor}}</span></td>
@@ -399,17 +251,6 @@
 
                         <!-- 页码显示区域 -->
                         <div class="page-numbers">
-                           <!-- &lt;!&ndash; 首页 &ndash;&gt;
-                            <span
-                                    class="page-item"
-                                    :class="{ 'active': currentPageType.nowPage === 1 }"
-                                    @click="goToPage(1)"
-                            >1</span>
-
-                            &lt;!&ndash; 省略号（如果需要） &ndash;&gt;
-                            <span v-if="pageToShow.length > 2 && pageToShow[0] !== 1"
-                                  class="page-item ellipsis">...</span>-->
-
                             <!-- 中间页码 -->
                             <span
                                     v-for="page in pageToShow"
@@ -419,7 +260,10 @@
                                     @click="page !== '...' ? goToPage(page) : null"
                                     :style="{ cursor: page === '...' ? 'default' : 'pointer' }"
                             >
-        {{ page }}
+
+                                <p class="page-numbers">
+                                  {{ page }}
+                            </p>
       </span>
 
                             <!-- 省略号（如果需要） -->
@@ -462,6 +306,9 @@
 <script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- 切换深色模式的脚本 -->
+<script src="../js/turnTheme.js"></script>
+
 <!-- 前端逻辑脚本 -->
 <script>
     new Vue({
@@ -476,6 +323,7 @@
              loading: false,*/
             /*  */
             users: [], //用户列表展示
+            searchUser: '', //搜索用户
             usersPage: {
                 nowPage: 1,
                 pageSize: 10,
@@ -500,6 +348,7 @@
                 loading: false,
             },
         },
+        //计算属性
         computed: {
             //计算页码
             pageUsers() {
@@ -599,7 +448,6 @@
             }
         },
         methods: {
-
             /* 点击右侧面板切换展示内容 */
             switchPage(page) {
                 switch (page) {
@@ -662,7 +510,7 @@
                             this.usersPage.totalPages = Math.ceil(this.usersPage.totalCount / this.usersPage.pageSize);
                         } else {
                             console.log("用户列表获取失败")
-                            alert('获取用户列表失败: ' + data.message)
+                            alert('获取用户列表失败: ' + result.message)
                             this.users = []
                         }
                     }).catch(error => {
@@ -680,7 +528,7 @@
                 //this.loading = true;
                 this.articlesPage.loading = true;
 
-                axios.get('/manage/allArticles', {
+                axios.get('/manage/articles', {
                     params: {
                         page: this.articlesPage.nowPage,
                         pageSize: this.articlesPage.pageSize
@@ -711,7 +559,7 @@
             allNotes() {
                 this.notesPage.loading = true;
 
-                axios.get('/manage/allNotes', {
+                axios.get('/manage/notes', {
                     params: {
                         page: this.notesPage.nowPage,
                         pageSize: this.notesPage.pageSize
@@ -741,11 +589,13 @@
 
             //跳转到分页中的具体某一页
             goToPage(page) {
+                console.log("跳转到第" + page + "页")
                 if (page === '...' || page === this.currentPageType.nowPage) return;
                 this.currentPageType.nowPage = page;
                 this.getPageType(this.currentPage)
             },
 
+            //上一页
             prePage() {
                 let currentPage = this.currentPageType;
                 if (currentPage.nowPage > 1) {
@@ -755,6 +605,7 @@
 
             },
 
+            //下一页
             nextPage() {
                 let currentPage = this.currentPageType;
                 if (currentPage.nowPage < currentPage.totalPages) {
@@ -762,7 +613,47 @@
                     this.getPageType(this.currentPage)
                 }
             }
+            ,
+            //操作：删除
+            deleteUser(id) {
+                console.log("删除用户：" + id)
+                axios.delete('/manage/delete/user?id=' + id)
+                    .then(res => {
+                        const result = res.data;
+                        if (result.code == 1) {
+                            alert("删除成功");
+                            this.allUsers();
+                        } else {
+                            alert("删除失败");
+                        }
+                    })
+            },
 
+            //关键字搜索用户
+            searchUserByKeyword() {
+                console.log("关键字搜索用户：" + this.searchUser)
+                axios.post('/manage/search/users', {
+                    userName: this.searchUser,
+                    userNickname: this.searchUser,
+                    userEmail: this.searchUser
+                }).then(res => {
+                    const result = res.data;
+                    if (result.code == 1) {
+                        this.users = result.data.records;
+                        this.usersPage.totalCount = result.data.total;
+                        this.usersPage.totalPages = Math.ceil(this.usersPage.totalCount / this.usersPage.pageSize);
+                    } else {
+                        alert("搜索失败");
+                    }
+                }).catch(error => {
+                    console.log(error)
+                    alert("错误信息：" + error)
+                }).finally(() => {
+                    this.searchUser = "";
+                    this.usersPage.loading = false;
+                })
+
+            }
         },
         //页面加载时渲染
         mounted() {

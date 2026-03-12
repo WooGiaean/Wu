@@ -5,6 +5,7 @@ import com.wjy.personal_blog.constants.RedisConstant;
 import com.wjy.personal_blog.context.BaseContext;
 import com.wjy.personal_blog.mapper.NoteMapper;
 import com.wjy.personal_blog.pojo.dto.NotesDTO;
+import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
 import com.wjy.personal_blog.pojo.entity.Notes;
 import com.wjy.personal_blog.result.PageResult;
 import com.wjy.personal_blog.service.NoteService;
@@ -76,7 +77,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    public PageResult adminNoteList() {
+    public PageResult adminNoteList(PageQueryDTO pageQueryDTO) {
         log.info("管理员开始查询所有用户的笔记");
         Page<Notes> notes = noteMapper.adminSeeNotesList();
         if(notes==null){
@@ -105,6 +106,9 @@ public class NoteServiceImpl implements NoteService {
         log.info("关键字查询笔记：{}",notesDTO);
         Notes notes = new Notes();
         BeanUtils.copyProperties(notesDTO,notes);
+        //设置当前用户ID
+        Integer currentId = BaseContext.getCurrentId();
+        notes.setNoteUserId(currentId);
         Page<Notes> result = noteMapper.queryByKeyWord(notes);
         PageResult pageResult = new PageResult(result.getTotal(),result.getResult());
         return pageResult;
@@ -113,8 +117,12 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void addNewNote(NotesDTO notesDTO) {
         log.info("添加新笔记：{}",notesDTO);
+        //添加用户权限管理
+        Integer currentId = BaseContext.getCurrentId();
         Notes notes = new Notes();
         BeanUtils.copyProperties(notesDTO,notes);
+        //设置笔记创建人id
+        notes.setNoteUserId(currentId);
         //设置创建时间
         notes.setNoteCreateTime(LocalDateTime.now());
         notes.setNoteUpdateTime(LocalDateTime.now());
@@ -130,6 +138,19 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void updateNote(NotesDTO notesDTO) {
         log.info("修改笔记:{}",notesDTO);
+        //获取当前用户ID
+        Integer currentId = BaseContext.getCurrentId();
+        //查询笔记信息
+        Notes note = noteMapper.getNoteById(notesDTO.getNoteId());
+        if(note == null){
+            log.warn("笔记不存在");
+            return;
+        }
+        //验证权限
+        if(!note.getNoteUserId().equals(currentId)){
+            log.warn("用户 {} 没有权限修改此笔记", currentId);
+            return;
+        }
         Notes notes = new Notes();
         BeanUtils.copyProperties(notesDTO,notes);
         notes.setNoteUpdateTime(LocalDateTime.now());
@@ -145,6 +166,19 @@ public class NoteServiceImpl implements NoteService {
         log.info("删除笔记：{}",noteId);
         if(noteId==null){
             log.error("删除笔记失败：id为空");
+            return;
+        }
+        //获取当前用户ID
+        Integer currentId = BaseContext.getCurrentId();
+        //查询笔记信息
+        Notes note = noteMapper.getNoteById(noteId);
+        if(note == null){
+            log.warn("笔记不存在");
+            return;
+        }
+        //验证权限
+        if(!note.getNoteUserId().equals(currentId)){
+            log.warn("用户 {} 没有权限删除此笔记", currentId);
             return;
         }
         noteMapper.deleteNote(noteId);

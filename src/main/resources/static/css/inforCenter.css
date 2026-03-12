@@ -65,6 +65,17 @@ body {
     font-weight: bold;
 }
 
+.sidebar-footer {
+    margin-top: auto;
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.sidebar-footer .btn {
+    margin-bottom: 10px;
+    width: 100%;
+}
+
 .main-content {
     margin-left: 250px;
     padding: 20px;

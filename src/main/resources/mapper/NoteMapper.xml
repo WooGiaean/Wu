@@ -19,11 +19,12 @@
     <select id="queryByKeyWord" resultType="com.wjy.personal_blog.pojo.entity.Notes">
         select * from notes
         <where>
+            note_user_id = #{noteUserId}
             <if test="noteTopic != null and noteTopic != ''">
-                or note_topic like concat('%',#{noteTopic},'%')
+                and note_topic like concat('%',#{noteTopic},'%')
             </if>
             <if test="noteContent != null and noteContent != ''">
-                or note_content like concat('%',#{noteContent},'%')
+                and note_content like concat('%',#{noteContent},'%')
             </if>
         </where>
         order by note_create_time desc

@@ -2,6 +2,7 @@ package com.wjy.personal_blog.service;
 
 
 import com.wjy.personal_blog.pojo.dto.ArticleDTO;
+import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
 import com.wjy.personal_blog.pojo.entity.Article;
 import com.wjy.personal_blog.result.PageResult;
 import jakarta.servlet.http.HttpSession;
@@ -17,7 +18,7 @@ public interface ArticleService {
     PageResult list();
 
 
-    PageResult listByAdmin();
+    PageResult listByAdmin(PageQueryDTO pageQueryDTO);
 
 
     /*
@@ -46,4 +47,11 @@ public interface ArticleService {
     * 进入具体文章
     * */
     Article specificArticle(Integer articleId);
+
+    /*
+    * 根据分类查询文章
+    * 需要传递参数：categoryId
+    * */
+    PageResult listArticlesByCategory(Integer categoryId, PageQueryDTO pageQueryDTO);
+
 }

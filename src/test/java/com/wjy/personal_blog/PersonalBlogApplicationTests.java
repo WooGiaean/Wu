@@ -6,22 +6,22 @@ import com.wjy.personal_blog.mapper.NoteMapper;
 import com.wjy.personal_blog.mapper.UserMapper;
 import com.wjy.personal_blog.pojo.dto.ArticleDTO;
 import com.wjy.personal_blog.pojo.dto.LoginDTO;
+import com.wjy.personal_blog.pojo.entity.Category;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.service.NoteService;
+import com.wjy.personal_blog.service.impl.CategoryServiceImpl;
 import com.wjy.personal_blog.utils.GenerateVerifyCode;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.method.MethodDescription;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -42,11 +42,11 @@ class PersonalBlogApplicationTests {
     @Test
     void contextLoads() {
         //	redisTemplate.opsForValue().set("name", "WooGiaean");
-        LoginDTO l = new LoginDTO();
+      /*  LoginDTO l = new LoginDTO();
         l.setUsername("tempLogin");
         l.setPassword("123321");
         redisTemplate.opsForValue().set("login", l);
-        log.info("设置成功");
+        log.info("设置成功");*/
     }
 
 
@@ -140,17 +140,6 @@ class PersonalBlogApplicationTests {
 
 
 
-	/*public Map<Integer,Integer> mapConvert(Map<Integer, Map<String, Object>> map){
-		Map<Integer,Integer> formattedMap=new HashMap<>();
-		for (Map.Entry<Integer, Map<String, Object>> entry : map.entrySet()) {
-			Integer key = entry.getKey();
-			Number countNumber = (Number) entry.getValue().get("count(*)");
-			Integer value = countNumber.intValue(); // 安全转换
-			formattedMap.put(key, value);
-		}
-		return formattedMap;
-	}*/
-
 
     @Test
     void testCode() {
@@ -158,8 +147,48 @@ class PersonalBlogApplicationTests {
     }
 
 
-    @Test
-    void testVersion() {
+    @Value("${blog.upload.path}")
+    private  String UPLOAD_PATH ;
 
+    @Test
+    void testAnnotation() {
+        System.out.println(UPLOAD_PATH);
+    }
+
+    @Autowired
+    private CategoryServiceImpl categoryService;
+
+    @Test
+    void testCategory() {
+        List<Category> list = categoryService.list();
+        // 获取分类ID列表
+        List<Integer> categoryIds = list.stream()
+                .map(Category::getCategoryId)
+                .collect(Collectors.toList());
+
+        List<Map<String, Object>> maps = articleMapper.getArticleCountByCategories(categoryIds);
+
+        // 将分类名称与数量合并
+        Map<Integer, Integer> countMap = new HashMap<>();
+        for (Map<String, Object> map : maps) {
+            Integer categoryId = (Integer) map.get("categoryId");
+            Integer count = ((Long) map.get("articleCount")).intValue();
+            countMap.put(categoryId, count);
+        }
+
+        // 构建结果
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Category category : list) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("categoryId", category.getCategoryId());
+            item.put("categoryName", category.getCategoryName());
+            item.put("articleCount", countMap.getOrDefault(category.getCategoryId(), 0));
+            result.add(item);
+        }
+
+
+
+        System.out.println(maps);
+        System.out.println(result);
     }
 }

@@ -69,16 +69,6 @@ public class ArticleController {
 
 
     /*
-     * 改善前：需要后端控制层控制跳转到具体某篇文章
-     * 改善后：直接在前端进行页面之间的跳转
-     * */
-    /*@GetMapping("/toArticle/{id}")
-    public String turnToSpecificArticle(@PathVariable("id")Integer id,HttpSession session){
-        session.setAttribute("id",id);
-        return "redirect:/Home/article.html";
-    }*/
-
-    /*
      * 点击博文的编辑按钮后跳转到编辑页面
      * */
     @GetMapping("/toEditPage")
@@ -159,6 +149,9 @@ public class ArticleController {
     }
 
 
+    /*
+    * 用户进入到编辑文章页面，加载具体某篇文章内容
+    * */
     @GetMapping("/specificArticleForEdit")
     @ResponseBody
     public Result<Article> specificArticleForEdit(HttpSession session) {

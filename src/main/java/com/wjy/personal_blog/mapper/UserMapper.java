@@ -33,6 +33,12 @@ public interface UserMapper {
     * */
     @Select("select * from user where user_email=#{email}")
     User getUserByEmail(String email);
+    
+    /*
+    * 根据用户名查询用户
+    * */
+    @Select("select * from user where user_name=#{userName}")
+    User findByUsername(String username);
 
     /* 注册新用户 */
     @Insert("insert into user(user_name, user_password, user_nickname, user_email, user_url, user_avatar, " +

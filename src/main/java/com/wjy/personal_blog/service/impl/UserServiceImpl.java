@@ -145,12 +145,33 @@ public class UserServiceImpl implements UserService {
     * */
     @Override
     public void updateUser(UserDTO userDTO) {
-
+        if (userDTO==null||userDTO.getUserId()==null){
+            log.info("用户不存在");
+            return;
+        }
+        User userIfExist = userMapper.getUserById(userDTO.getUserId());
+        if (userIfExist==null){
+            log.info("用户不存在");
+            return;
+        }
+        User user=new User();
+        BeanUtils.copyProperties(userDTO,user);
+        userMapper.updateUser(user);
     }
 
+    /**
+     * 删除用户
+     * */
     @Override
     public void deleteUser(Integer id) {
+        User userById = userMapper.getUserById(id);
+        if (userById==null){
+            log.info("用户不存在");
+            return;
+        }
+        log.info("删除id为{}的用户",id);
         userMapper.deleteUser(id);
+        log.info("删除用户成功");
     }
 
     /*
@@ -163,6 +184,14 @@ public class UserServiceImpl implements UserService {
         Page<User> specificUser = userMapper.findSingleUser(user);
         PageResult pageResult=new PageResult(specificUser.getTotal(),specificUser.getResult());
         return pageResult;
+    }
+
+    /*
+    * 根据用户名查询用户
+    * */
+    @Override
+    public User findByUsername(String username) {
+        return userMapper.findByUsername(username);
     }
 
 

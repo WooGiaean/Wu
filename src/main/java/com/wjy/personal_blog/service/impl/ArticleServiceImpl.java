@@ -4,10 +4,13 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.wjy.personal_blog.constants.RedisConstant;
 import com.wjy.personal_blog.context.BaseContext;
+import com.wjy.personal_blog.mapper.ArticleCategoryMapper;
 import com.wjy.personal_blog.mapper.ArticleMapper;
 import com.wjy.personal_blog.mapper.UserMapper;
 import com.wjy.personal_blog.pojo.dto.ArticleDTO;
+import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
 import com.wjy.personal_blog.pojo.entity.Article;
+import com.wjy.personal_blog.pojo.entity.ArticleCategory;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.PageResult;
 import com.wjy.personal_blog.service.ArticleService;
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -35,6 +39,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private ArticleCategoryMapper articleCategoryMapper;
 
     @Autowired
     private RedisTemplate<String,Object> redisTemplate;
@@ -82,10 +88,14 @@ public class ArticleServiceImpl implements ArticleService {
         return pageResult;
     }
 
+
+    /*
+    * 管理员查询所有用户的所有文章
+    * */
     @Override
-    public PageResult listByAdmin() {
+    public PageResult listByAdmin(PageQueryDTO pageQueryDTO) {
         log.info("管理员查看所有文章");
-        PageHelper.startPage(1,10);
+        PageHelper.startPage(pageQueryDTO.getPage(),pageQueryDTO.getPageSize());
         Page<Article> articles = articleMapper.adminSeeArticlesList();
         log.info("查询成功，返回数据");
         PageResult pageResult = new PageResult(articles.getTotal(),articles.getResult());
@@ -116,6 +126,7 @@ public class ArticleServiceImpl implements ArticleService {
     * 新增文章（单篇）
     * */
     @Override
+    @Transactional
     public void insertNewArticle(ArticleDTO articleDTO) {
         log.info("添加新文章...");
         Article article=new Article();
@@ -150,6 +161,20 @@ public class ArticleServiceImpl implements ArticleService {
         article.setArticleUpdateTime(LocalDateTime.now());
         //所有数据准备完成再插入到数据库中
         articleMapper.insertArticle(article);
+        
+        // 保存文章分类关联
+        if (articleDTO.getCategoryIds() != null && !articleDTO.getCategoryIds().isEmpty()) {
+            List<ArticleCategory> articleCategories = new ArrayList<>();
+            for (Integer categoryId : articleDTO.getCategoryIds()) {
+                ArticleCategory articleCategory = new ArticleCategory();
+                articleCategory.setArticleId(article.getArticleId());
+                articleCategory.setCategoryId(categoryId);
+                articleCategories.add(articleCategory);
+            }
+            // 批量插入文章分类关联
+            articleCategoryMapper.insertBatch(articleCategories);
+        }
+        
         redisTemplate.delete(RedisConstant.RECENT_ARTICLES_KEY);
     }
 
@@ -157,6 +182,7 @@ public class ArticleServiceImpl implements ArticleService {
     * 编辑/更新文章信息
     * */
     @Override
+    @Transactional
     public void updateArticle(ArticleDTO articleDTO) {
         log.info("更新id为{}的文章",articleDTO.getArticleId());
         Article article=new Article();
@@ -175,10 +201,29 @@ public class ArticleServiceImpl implements ArticleService {
             return;
         }
         articleMapper.updateArticle(article);
+        
+        // 更新文章分类关联
+        // 1. 删除该文章所有现有的分类关联
+        articleCategoryMapper.deleteByArticleId(article.getArticleId());
+        
+        // 2. 如果有新的分类ID列表，批量插入新的分类关联
+        if (articleDTO.getCategoryIds() != null && !articleDTO.getCategoryIds().isEmpty()) {
+            List<ArticleCategory> articleCategories = new ArrayList<>();
+            for (Integer categoryId : articleDTO.getCategoryIds()) {
+                ArticleCategory articleCategory = new ArticleCategory();
+                articleCategory.setArticleId(article.getArticleId());
+                articleCategory.setCategoryId(categoryId);
+                articleCategories.add(articleCategory);
+            }
+            // 批量插入文章分类关联
+            articleCategoryMapper.insertBatch(articleCategories);
+        }
+        
         redisTemplate.delete(RedisConstant.RECENT_ARTICLES_KEY);
     }
 
     @Override
+    @Transactional
     public void deleteArticle(Integer articleId) {
         //判断文章id是否为空，如果id为空则退出
         if(articleId==null) return;
@@ -201,6 +246,10 @@ public class ArticleServiceImpl implements ArticleService {
             log.warn("用户 {} 没有权限操作此文章",currentId);
         }
 
+        // 删除文章分类关联
+        articleCategoryMapper.deleteByArticleId(articleId);
+        
+        // 删除文章
         articleMapper.deleteArticle(articleId);
         log.info("成功删除文章：{}",articleId);
         redisTemplate.delete(RedisConstant.RECENT_ARTICLES_KEY);
@@ -222,5 +271,23 @@ public class ArticleServiceImpl implements ArticleService {
         log.info("获取文章：{}",articleId);
         Article article = articleMapper.specificArticle(articleId);
         return article==null?null:article;
+    }
+
+
+     /*
+    * 根据分类查询文章
+    * */
+     @Override
+    public PageResult listArticlesByCategory(Integer categoryId, PageQueryDTO pageQueryDTO) {
+         log.info("根据分类查询文章，分类ID：{}，分页参数：{}", categoryId, pageQueryDTO);
+
+         // 设置分页
+         PageHelper.startPage(pageQueryDTO.getPage(), pageQueryDTO.getPageSize());
+
+         // 执行查询
+         Page<Article> articles = articleMapper.getArticlesByCategory(categoryId);
+
+         // 封装结果
+         return new PageResult(articles.getTotal(), articles.getResult());
     }
 }

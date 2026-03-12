@@ -56,12 +56,8 @@ public interface ArticleMapper {
     @Delete("delete from article where article_id = #{articleId}")
     void deleteArticle(Integer articleId);
 
-    //where article_id=#{articleId}
 
     //查询具体某篇文章
-    @Select("select article.*,user.user_nickname as blogger from article left join" +
-            " user on article_user_id=user.user_id" +
-            "   where article.article_id=#{articleId}")
     Article  specificArticle(Integer articleId);
 
 
@@ -74,8 +70,8 @@ public interface ArticleMapper {
     /*@Select("select article_user_id, count(*) as articlCount from " +
             "article where article_user_id in " +
             "#{userIds} group by article_user_id")*/
-    @MapKey("article_user_id")
-    List<Map<Integer,Integer>> countByArticleUserIdMapList(@Param("userIds") List<Integer> userIds);
+    /*@MapKey("article_user_id")
+    List<Map<Integer,Integer>> countByArticleUserIdMapList(@Param("userIds") List<Integer> userIds);*/
 
    /* @Select("select article_user_id as auId,count(*) as aCount from article where article_user_id in #{userIds} " +
             "group by article_user_id")*/
@@ -84,7 +80,11 @@ public interface ArticleMapper {
     Map<Integer, Map<String, Long>> countByArticleUserIdMap(@Param("userIds")List<Integer> userIds);
 
 
-    //查询用户对应的文章数：不用map，使用list接收
-    //@Select("select count(*) as articleCount from article " )
-    //List<Integer> countArticle(@Param("userIds")List<Integer> userIds);
+   /* 根据分类查询文章 */
+    Page<Article> getArticlesByCategory(Integer categoryId);
+
+
+    /* 计算分类下的文章数量 */
+    @MapKey("category_id")
+    List<Map<String, Object>> getArticleCountByCategories(@Param("categoryIds") List<Integer> categoryIds);
 }

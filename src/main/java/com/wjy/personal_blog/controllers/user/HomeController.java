@@ -89,8 +89,4 @@ public class HomeController {
         return "redirect:/Admin/login.html";
     }
 
-  /*  @GetMapping("/selfIntroduce")
-    public String profile(){
-        return "forward:/Home/profile.html";
-    }*/
 }

@@ -25,7 +25,7 @@ public class NoteController {
     /**/
     @RequestMapping("/")
     public String turnToNoteListPage(){
-        return "redirect:/Home/note.html";
+        return "redirect:/Note/note.html";
     }
 
     /**
