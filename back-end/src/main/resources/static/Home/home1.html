@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人博客</title>
+    <!-- css样式修饰 -->
+    <style>
+        /* --- 全局变量定义 --- */
+        :root {
+            --primary-color: #E1BE97;       /* 主色调：米色 */
+            --primary-dark: #664401;       /* 深棕色文字 */
+            --text-secondary: #666;        /* 次要文字 */
+            --bg-color: #f8f9fa;           /* 页面背景 */
+            --card-bg: #F9F4E9;            /* 卡片背景 */
+            --sidebar-width: 240px;        /* 侧边栏宽度 */
+            --hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- 布局容器 --- */
+        .container {
+            display: flex;
+            margin: 20px auto;
+            padding: 0 20px;
+            width: 100%;
+            max-width: 1400px; /* 限制最大宽度，防止大屏太散 */
+            flex: 1; /* 让内容撑开，使footer沉底 */
+            gap: 20px; /* 左右间距 */
+        }
+
+        /* --- 左侧侧边栏 --- */
+        .left-column {
+            width: var(--sidebar-width);
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            height: fit-content; /* 高度自适应 */
+            position: sticky;
+            top: 20px;
+            flex-shrink: 0; /* 防止被压缩 */
+        }
+
+        .blog-title {
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .blog-title h1 {
+            font-size: 24px;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+            margin-bottom: 10px;
+            background-color: #f0f0f0; /* 图片加载前的背景 */
+        }
+
+        .user-nickname {
+            font-weight: bold;
+            color: var(--primary-dark);
+            font-size: 16px;
+        }
+
+        /* --- 导航菜单 --- */
+        .nav-menu {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 12px 30px;
+            font-size: 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .nav-item a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            width: 100%;
+        }
+
+        .nav-item:hover, .nav-item a:hover {
+            color: var(--primary-dark);
+            background-color: #fffcf5;
+            border-right: 4px solid var(--primary-color);
+        }
+
+        /* --- 右侧主要内容 --- */
+        .right-column {
+            flex: 1;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            min-width: 0; /* 防止flex子元素溢出 */
+        }
+
+        /* 章节标题 */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--card-bg);
+        }
+
+        .section-header h2 {
+            font-size: 22px;
+            color: var(--primary-dark);
+            border-left: 5px solid var(--primary-color);
+            padding-left: 10px;
+        }
+
+        .section-header a {
+            font-size: 14px;
+            color: #999;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .section-header a:hover {
+            color: var(--primary-dark);
+        }
+
+        /* --- 笔记卡片 --- */
+        .notes-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 50px;
+            flex-wrap: wrap;
+        }
+
+        .note-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            flex: 1;
+            min-width: 200px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .note-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-color);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .note-card h3 {
+            font-size: 16px;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .note-card p {
+            font-size: 13px;
+            color: #888;
+        }
+
+
+        /* 分类区域 */
+        .category-section {
+            margin: 30px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .category-tag {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #e9ecef;
+            border-radius: 20px;
+            text-decoration: none;
+            color: #495057;
+            font-size: 14px;
+            transition: all 0.3s;
+            border: 1px solid #dee2e6;
+        }
+
+        .category-tag:hover {
+            background: #f2e9dc;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .category-tag.active {
+            background: #E1BE97;
+            color: white;
+            border-color: #d4b996;
+        }
+
+
+        /* --- 博客列表 --- */
+        .blog-item {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            background-color: #fff;
+        }
+
+        .blog-item:hover {
+            border-color: #eee;
+            box-shadow: var(--hover-shadow);
+            background-color: #fafafa;
+        }
+
+        .blog-image {
+            width: 240px;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+            flex-shrink: 0;
+            background-color: #eee;
+        }
+
+        .blog-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .blog-content h3 {
+            font-size: 20px;
+            color: #222;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .blog-content p {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* 限制显示2行 */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .blog-meta {
+            font-size: 13px;
+            color: #999;
+            margin-top: auto;
+        }
+
+        /* --- 页脚 --- */
+        footer {
+            background-color: white;
+            padding: 30px;
+            text-align: center;
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+        }
+
+        .footer-text {
+            color: #777;
+            font-size: 14px;
+        }
+
+        .footer-text span {
+            color: var(--primary-dark);
+            font-weight: bold;
+        }
+
+        /* --- 加载与空状态 --- */
+        .loading, .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        /* --- 响应式设计 --- */
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+                padding: 10px;
+            }
+
+            .left-column {
+                width: 100%;
+                position: static;
+                margin-bottom: 20px;
+            }
+
+            .right-column {
+                padding: 20px;
+            }
+
+            .blog-item {
+                flex-direction: column;
+            }
+
+            .blog-image {
+                width: 100%;
+                height: 200px;
+            }
+
+            .notes-container {
+                flex-direction: column;
+            }
+
+            .note-card {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="mainP">
+    <!-- 左侧导航栏 -->
+    <aside class="left-column">
+        <div class="blog-title">
+            <h1>个人博客</h1>
+            <!-- 动态显示用户头像 -->
+            <img :src="userInfo && userInfo.userAvatar ? '/touxiang/'+userInfo.userAvatar : '/touxiang/blog_avatar-3.png'" alt="用户头像" class="avatar"
+                 onerror="this.src='https://picsum.photos/seed/avatar/100/100'">
+            <!-- 显示用户昵称 -->
+            <p class="user-nickname" v-text="userNickName">{{userNickName}}</p>
+        </div>
+
+        <!-- 菜单栏 -->
+        <nav class="nav-menu">
+            <div class="nav-item"><a href="/Home/home1.html">🏠 主页</a></div>
+            <div class="nav-item"><a href="/Home/infoProfile.html">👤 关于我</a></div>
+            <div class="nav-item"><a href="/Article/allArticles.html">📚 博客</a></div>
+            <div class="nav-item"><a href="/Note/note.html">✍️ 随笔</a></div>
+            <div class="nav-item"><a href="#">🧠 知识库</a></div>
+            <div class="nav-item" style="color: #d9534f;" @click="logout()">🚪 退出登录</div>
+        </nav>
+    </aside>
+
+    <!-- 右侧文章及笔记 -->
+    <main class="right-column">
+        <!-- 笔记区域 -->
+        <section class="notes-section">
+            <div class="section-header">
+                <h2>📝 我的笔记</h2>
+                <a href="/Note/note.html">查看更多 &rarr;</a>
+            </div>
+
+            <div v-if="loading" class="loading">笔记加载中...</div>
+            <div v-else-if="notes.length === 0" class="empty-state">暂无笔记，快去写一篇吧！</div>
+            <div v-else class="notes-container">
+                <div class="note-card" v-for="(note,index) in notes" :key="note.noteId"
+                     @click="intoSpecificNote(note.noteId)">
+                    <h3>{{note.noteTopic}}</h3>
+                    <p>{{ formatDate(note.noteCreateTime) }}</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 分类展示区域 -->
+        <section class="category-section">
+            <div class="section-header">
+                <h2>📝 文章分类</h2>
+            </div>
+
+            <div class="category-tags">
+                <a href="/Article/allArticles.html" class="category-tag active">全部</a>
+                <p v-for="c in category" :key="c.categoryId" class="category-tag">
+                    {{c.categoryName}}
+                </p>
+            </div>
+
+
+        </section>
+
+        <!-- 博客展示区域 -->
+        <section class="blogs-section">
+            <div class="section-header">
+                <h2>🔥 最近博客</h2>
+                <a href="/Article/allArticles.html">查看更多 &rarr;</a>
+            </div>
+
+            <div v-if="loading" class="loading">文章加载中...</div>
+            <div v-else-if="blogs.length === 0" class="empty-state">暂无文章，敬请期待！</div>
+            <div v-else>
+                <article class="blog-item" v-for="blog in blogs" :key="blog.articleId"
+                         @click="intoSpecificBlog(blog.articleId)">
+                    <!-- 图片添加默认图逻辑 -->
+                    <img :src="blog.articleThumbnail ? '/uploaded-images/'+blog.articleThumbnail : 'https://picsum.photos/seed/blog/300/200'"
+                         class="blog-image"
+                         :alt="blog.articleTitle"
+                         onerror="this.src='https://picsum.photos/seed/error/300/200'">
+
+                    <div class="blog-content">
+                        <h3>{{blog.articleTitle}}</h3>
+                        <p>{{blog.articleSummary}}</p>
+                        <div class="blog-meta">
+                            <span>📅 {{ formatDate(blog.articleCreateTime) }}</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- 页脚个人信息 -->
+<footer>
+    <div class="footer-text">
+        &copy; 2025 <span>{{ userInfo ? userInfo.userName : 'JiaYn' }}</span> | 个人博客 | 联系邮箱：{{ userInfo ? userInfo.userEmail : '1317192941@qq.com' }}
+    </div>
+</footer>
+
+<!-- 导入axios接口转发请求和vue -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+
+<script>
+    new Vue({
+        el:'#mainP',
+        data:{
+            blogs:[],
+            userInfo: null,
+            userNickName:'',
+            notes:[],
+            loading: true, // 新增加载状态
+            category:[]
+        },
+        methods:{
+            // 格式化日期函数
+            formatDate(timeString) {
+                if(!timeString) return '';
+                const date = new Date(timeString);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            },
+
+            //具体某一篇随笔
+            intoSpecificNote(id){
+                window.location.href = '/Note/specificNote.html?id='+id;
+            },
+
+            //具体某一篇博文
+            intoSpecificBlog(id){
+                window.location.href = '/Article/article.html?id='+id;
+            },
+
+            //点击主页的"退出登录"
+            logout(){
+                // 使用 confirm 代替 alert 会更优雅，但这里为了保留原有逻辑，只做微调
+                if(confirm('确定要退出登录吗？')) {
+                    axios.post('/admin/logout')
+                        .then(response => {
+                            if (response.data.code === 1) {
+                                sessionStorage.removeItem("user");
+                                window.location.href = '../Login/login.html';
+                            } else {
+                                alert(response.data.message || "退出失败");
+                            }
+                        }).catch(error => {
+                        console.error('退出失败:', error);
+                        alert('网络错误，退出失败');
+                    })
+                }
+            }
+        },
+        mounted() {
+            // 使用 Promise.all 等待所有请求完成再隐藏 loading
+            Promise.all([
+                axios.get('/home/latestArticles',{ credentials: 'include' }),
+                axios.get('/home/currentUser', { credentials: 'include' }),
+                axios.get('/home/latestNotes',{ credentials: 'include' }),
+                axios.get('/category/list')
+            ]).then(([articlesRes, userRes, notesRes, categoryRes]) => {
+                // 处理文章数据
+                if(articlesRes.data.data && articlesRes.data.data.records) {
+                    console.log("文章数据:", articlesRes.data.data.records)
+                    this.blogs = articlesRes.data.data.records;
+                }
+
+                // 处理用户数据
+                if(userRes.data.data) {
+                    console.log("用户数据:", userRes.data.data)
+                    this.userInfo = userRes.data.data;
+                    this.userNickName = userRes.data.data.userNickname || 'Visitor';
+                }
+
+                // 处理笔记数据
+                if(notesRes.data.data && notesRes.data.data.records) {
+                    console.log("笔记数据:", notesRes.data.data.records)
+                    this.notes = notesRes.data.data.records;
+                }
+
+                //分类数据
+                if(categoryRes.data.data && categoryRes.data.data.records) {
+                    this.category = categoryRes.data.data.records;
+                }
+
+            }).catch(error => {
+                console.error("页面初始化数据请求失败", error);
+                this.loading = false; // 出错也关闭loading
+            }).finally(() => {
+                this.loading = false;
+            })
+        }
+    })
+</script>
+
+</body>
+</html>

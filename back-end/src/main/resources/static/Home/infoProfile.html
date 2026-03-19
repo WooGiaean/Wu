@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人资料 - 我的博客</title>
+    <!-- css样式修饰 -->
+    <link rel="stylesheet" href="../css/home.css">
+    <link rel="stylesheet" href="../css/infoProfile.css">
+</head>
+
+<body>
+<div class="container" id="profileApp">
+    <!-- 左侧导航栏 -->
+    <aside class="left-column">
+        <div class="blog-title">
+            <h1>博客资料</h1>
+            <img :src="userInfo.avatar || '/touxiang/blog_avater2.png'" width="50" height="50" alt="用户头像" style="border-radius: 50%">
+            <p style="font-weight:bold;color:burlywood;flex:auto" v-html="userInfo.nickname || '访客'"></p>
+        </div>
+
+        <!-- 菜单栏 -->
+        <nav class="nav-menu">
+            <div class="nav-item"><a href="/Home/home.html">>🏠 主页</a></div>
+            <div class="nav-item"><a href="/Home/profile.html" style="color: var(--primary-dark); background-color: #fffcf5; border-right: 4px solid var(--primary-color);">👤 关于我</a>
+            </div>
+            <div class="nav-item"><a href="/Article/allArticles.html">📚 博客</a>
+            </div>
+            <div class="nav-item"><a href="/Note/note.html">✍️ 随笔</a>
+            </div>
+            <div class="nav-item"><a href="#">🧠 知识库</a>
+            </div>
+            <div class="nav-item"><a href="#" style="color: #d9534f;"
+                                     @click="logout()">🚪 退出登录</a></div>
+        </nav>
+    </aside>
+
+    <!-- 右侧个人资料内容 -->
+    <main class="right-column">
+        <!-- 编辑模式切换 -->
+        <div style="text-align: right; margin-bottom: 20px;">
+            <button v-if="!isEditMode" @click="isEditMode = true" class="edit-profile-btn">
+                ✏️ 编辑资料
+            </button>
+        </div>
+
+        <!-- 个人资料展示 -->
+        <div v-if="!isEditMode" class="profile-header">
+            <img :src="userInfo.avatar || '/touxiang/blog_avater2.png'" alt="用户头像" class="profile-avatar">
+            <h2 class="profile-name">{{ userInfo.nickname || '未设置昵称' }}</h2>
+            <p class="profile-bio">{{ userInfo.bio || '这个人很懒，还没有填写个人简介' }}</p>
+
+            <!-- 统计信息 -->
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{ userInfo.articleCount || 0 }}</div>
+                    <div class="stat-label">文章</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ userInfo.noteCount || 0 }}</div>
+                    <div class="stat-label">笔记</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ userInfo.followerCount || 0 }}</div>
+                    <div class="stat-label">粉丝</div>
+                </div>
+            </div>
+
+            <!-- 社交链接 -->
+            <div class="social-links">
+                <a v-if="userInfo.github" :href="userInfo.github" class="social-link" target="_blank">
+                    <span>🌐</span> GitHub
+                </a>
+                <a v-if="userInfo.twitter" :href="userInfo.twitter" class="social-link" target="_blank">
+                    <span>🐦</span> Twitter
+                </a>
+                <a v-if="userInfo.website" :href="userInfo.website" class="social-link" target="_blank">
+                    <span>🌍</span> 个人网站
+                </a>
+            </div>
+        </div>
+
+        <!-- 编辑资料表单 -->
+        <div v-else class="edit-form">
+            <h3 class="section-title">编辑个人资料</h3>
+            <div class="form-group">
+                <label>昵称</label>
+                <input v-model="editForm.nickname" type="text" placeholder="请输入昵称">
+            </div>
+            <div class="form-group">
+                <label>头像</label>
+                <input type="file" @change="handleAvatarUpload" placeholder="选择头像">
+            </div>
+            <div class="form-group">
+                <label>个人简介</label>
+                <textarea v-model="editForm.bio" placeholder="介绍一下自己吧"></textarea>
+            </div>
+            <div class="form-group">
+                <label>GitHub</label>
+                <input v-model="editForm.github" type="url" placeholder="https://github.com/yourusername">
+            </div>
+            <div class="form-group">
+                <label>Twitter</label>
+                <input v-model="editForm.twitter" type="url" placeholder="https://twitter.com/yourusername">
+            </div>
+            <div class="form-group">
+                <label>个人网站</label>
+                <input v-model="editForm.website" type="url" placeholder="https://yourwebsite.com">
+            </div>
+            <div class="form-actions">
+                <button @click="saveProfile" class="btn btn-primary">保存修改</button>
+                <button @click="cancelEdit" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+
+        <!-- 最近活动 -->
+        <div class="profile-section">
+            <h3 class="section-title">最近活动</h3>
+            <div v-if="loading" class="loading">加载中...</div>
+            <div v-else-if="activities.length === 0" class="empty-state">暂无活动记录</div>
+            <div v-else>
+                <div v-for="activity in activities" :key="activity.id" class="activity-item">
+                    <div class="activity-icon">
+                        {{ activity.type === 'article' ? '📚' : '✍️' }}
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">
+                            {{ activity.type === 'article' ? '发布了文章' : '发布了笔记' }}: {{ activity.title }}
+                        </div>
+                        <div class="activity-time">{{ activity.time }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 我的文章 -->
+        <div class="profile-section">
+            <div class="section-header">
+                <h3 class="section-title">我的文章</h3>
+                <a href="/Article/allArticles.html">查看全部 &rarr;</a>
+            </div>
+            <div v-if="loading" class="loading">加载中...</div>
+            <div v-else-if="articles.length === 0" class="empty-state">暂无文章</div>
+            <div v-else>
+                <div class="blog-item" v-for="article in articles" :key="article.articleId"
+                     @click="intoSpecificBlog(article.articleId)">
+                    <img :src="'/uploaded-images/'+article.articleThumbnail" class="blog-image">
+                    <div class="blog-content">
+                        <h3>{{ article.articleTitle }}</h3>
+                        <p>{{ article.articleSummary }}</p>
+                        <div class="blog-meta">
+                            <span>📅 {{ article.articleCreateTime }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 我的笔记 -->
+        <div class="profile-section">
+            <div class="section-header">
+                <h3 class="section-title">我的笔记</h3>
+                <a href="/Note/note.html">查看全部 &rarr;</a>
+            </div>
+            <div v-if="loading" class="loading">加载中...</div>
+            <div v-else-if="notes.length === 0" class="empty-state">暂无笔记</div>
+            <div v-else>
+                <div class="notes-container">
+                    <div class="note-card" v-for="note in notes" :key="note.noteId"
+                         @click="intoSpecificNote(note.noteId)">
+                        <h3>{{ note.noteTopic }}</h3>
+                        <p>{{ note.noteCreateTime }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚个人信息 -->
+    <footer>
+        <div class="footer-text">
+            &copy; 2025 <span>{{ userInfo.nickname }}</span> | 个人博客 | 联系邮箱：{{ userInfo.email }}
+        </div>
+    </footer>
+</div>
+
+
+
+<!-- 导入axios接口转发请求和vue -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+
+<!-- 实现页面渲染和跳转的逻辑 -->
+<script>
+    new Vue({
+        el: '#profileApp',
+        data: {
+            userInfo: {
+                nickname: '',
+                avatar: '',
+                bio: '',
+                github: '',
+                twitter: '',
+                website: '',
+                articleCount: 0,
+                noteCount: 0,
+                followerCount: 0
+            },
+            editForm: {
+                nickname: '',
+                avatar: '',
+                bio: '',
+                github: '',
+                twitter: '',
+                website: ''
+            },
+            activities: [],
+            articles: [],
+            notes: [],
+            loading: true,
+            isEditMode: false
+        },
+        methods: {
+            // 获取用户资料
+            async getUserProfile() {
+                try {
+                    const response = await axios.get('/home/currentUser');
+                    if (response.data.code === 1) {
+                        this.userInfo = response.data.data;
+                        // 初始化编辑表单
+                        this.editForm = { ...this.userInfo };
+                    }
+                } catch (error) {
+                    console.error('获取用户资料失败:', error);
+                }
+            },
+
+            // 获取最近活动
+            async getRecentActivities() {
+                try {
+                    const response = await axios.get('/api/user/activities?limit=5');
+                    if (response.data.code === 1) {
+                        this.activities = response.data.data;
+                    }
+                } catch (error) {
+                    console.error('获取活动记录失败:', error);
+                }
+            },
+
+            // 获取最近文章
+            async getRecentArticles() {
+                try {
+                    const response = await axios.get('/articles/list');
+                    if (response.data.code === 1) {
+                        this.articles = response.data.data;
+                    }
+                } catch (error) {
+                    console.error('获取文章失败:', error);
+                }
+            },
+
+            // 获取最近笔记
+            async getRecentNotes() {
+                try {
+                    const response = await axios.get('/notes/list');
+                    if (response.data.code === 1) {
+                        this.notes = response.data.data;
+                    }
+                } catch (error) {
+                    console.error('获取笔记失败:', error);
+                }
+            },
+
+            // 保存资料
+            async saveProfile() {
+                try {
+                    const response = await axios.put('/api/user/profile', this.editForm);
+                    if (response.data.code === 1) {
+                        alert('保存成功');
+                        this.isEditMode = false;
+                        this.getUserProfile();
+                    } else {
+                        alert('保存失败: ' + response.data.msg);
+                    }
+                } catch (error) {
+                    console.error('保存资料失败:', error);
+                    alert('保存失败，请重试');
+                }
+            },
+
+            // 取消编辑
+            cancelEdit() {
+                this.isEditMode = false;
+                this.editForm = { ...this.userInfo };
+            },
+
+            // 上传头像
+            async handleAvatarUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await axios.post('/user/avatar', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+                    if (response.data.code === 1) {
+                        this.editForm.avatar = response.data.data;
+                        this.userInfo.avatar = response.data.data;
+                        alert('头像上传成功');
+                    } else {
+                        alert('头像上传失败: ' + response.data.message);
+                    }
+                } catch (error) {
+                    console.error('上传头像失败:', error);
+                    alert('上传失败，请重试');
+                }
+            },
+
+            // 跳转到文章详情
+            intoSpecificBlog(id) {
+                window.location.href = '/Article/article.html?id=' + id;
+            },
+
+            // 跳转到笔记详情
+            intoSpecificNote(id) {
+                window.location.href = '/Note/specificNote.html?id=' + id;
+            },
+
+            // 退出登录
+            async logout() {
+                if(confirm("确定要退出登录吗？")){
+                    axios.post('/admin/logout')
+                        .then(response => {
+                            console.log(response.data.message)
+                            alert(response.data.code === 1 ? "退出成功" : "退出失败")
+                            if (response.data.code === 1) {
+                                sessionStorage.removeItem("user");
+                                window.location.href = '../Login/login.html';
+                            }
+                        }).catch(error => {
+                        console.error('退出失败:', error);
+                        alert('退出登录失败，请重试');
+                    })
+                }
+            }
+        },
+
+        // 页面加载时渲染数据
+        mounted() {
+            this.loading = true;
+            Promise.all([
+                this.getUserProfile(),
+                this.getRecentActivities(),
+                this.getRecentArticles(),
+                this.getRecentNotes()
+            ]).finally(() => {
+                this.loading = false;
+            });
+        }
+    })
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=minimalist%20blog%20background%20with%20soft%20colors%20and%20subtle%20patterns&image_size=landscape_16_9');
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .register-container {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            width: 320px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-container::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(135deg, #d4b996, #f2e9dc, #d4b996);
+            border-radius: 20px;
+            z-index: -1;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: border 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #d4b996;
+        }
+
+        button {
+            background: linear-gradient(135deg, #d4b996 0%, #d4b996 100%);
+            color: white;
+            border: none;
+            margin-bottom: 10px;
+            padding: 12px 0;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .forgot-password {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .forgot-password a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .alternative-register {
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .alternative-register::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #ddd;
+            z-index: 0;
+        }
+
+        .alternative-register span {
+            background: white;
+            padding: 0 10px;
+            position: relative;
+            z-index: 1;
+            color: #999;
+            font-size: 12px;
+        }
+
+        #password-strength {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="register-container">
+    <h2>用户注册</h2>
+    <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" id="username" required placeholder="请输入用户名">
+    </div>
+
+    <div class="form-group">
+        <label for="userNickName">昵称</label>
+        <input type="text" id="userNickName" required placeholder="请输入昵称">
+    </div>
+
+    <div class="form-group">
+        <label for="email">邮箱</label>
+        <input type="email" id="email" required placeholder="请输入邮箱地址">
+    </div>
+
+    <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" required placeholder="请输入密码">
+        <div id="password-strength" class="mt-2"></div>
+    </div>
+
+    <div class="form-group">
+        <label for="confirm-password">确认密码</label>
+        <input type="password" id="confirm-password" required placeholder="请确认密码">
+    </div>
+
+    <div class="form-group">
+        <div class="form-check">
+            <input type="checkbox" id="agree-terms" class="form-check-input">
+            <label for="agree-terms" class="form-check-label">我已阅读并同意<a href="#" style="color: #667eea;">服务条款</a>和<a href="#" style="color: #667eea;">隐私政策</a></label>
+        </div>
+    </div>
+
+    <button type="submit" id="btn-register">注册账号</button>
+    
+    <div class="alternative-register">
+        <span>或</span>
+    </div>
+    
+    <button type="button" id="btn-email-register"
+            data-bs-toggle="modal" data-bs-target="#emailRegisterModal">邮箱验证码注册</button>
+    
+    <p>已有账号？<a href="/Login/login.html">请登录</a></p>
+</div>
+
+<!-- 邮箱验证码注册模态框 -->
+<div class="modal fade" id="emailRegisterModal" tabindex="-1" aria-labelledby="emailRegisterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailRegisterModalLabel">邮箱验证码注册</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="email-modal">邮箱</label>
+                    <div class="input-group">
+                        <input type="email" id="email-modal" required placeholder="请输入邮箱地址" class="form-control">
+                        <button type="button" class="btn btn-outline-secondary" id="send-captcha-modal">发送验证码</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="captchaCode-modal">验证码</label>
+                    <input type="text" id="captchaCode-modal" required placeholder="请输入验证码" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="username-modal">用户名</label>
+                    <input type="text" id="username-modal" required placeholder="请输入用户名" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="userNickName-modal">昵称</label>
+                    <input type="text" id="userNickName-modal" required placeholder="请输入昵称" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="password-modal">密码</label>
+                    <input type="password" id="password-modal" required placeholder="请输入密码" class="form-control">
+                    <div id="password-strength-modal" class="mt-2"></div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password-modal">确认密码</label>
+                    <input type="password" id="confirm-password-modal" required placeholder="请确认密码" class="form-control">
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" id="agree-terms-modal" class="form-check-input">
+                        <label for="agree-terms-modal" class="form-check-label">我已阅读并同意<a href="#" style="color: #667eea;">服务条款</a>和<a href="#" style="color: #667eea;">隐私政策</a></label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="btn-register-email">注册</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 注册成功提示模态框 -->
+<div class="modal fade" id="registerSuccessModal" tabindex="-1" aria-labelledby="registerSuccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerSuccessModalLabel">注册成功</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div style="font-size: 48px; color: #28a745; margin-bottom: 20px;">🎉</div>
+                    <h4>欢迎加入我们！</h4>
+                    <p class="text-muted">您的账号已成功注册，现在可以开始使用我们的博客系统了。</p>
+                    <div class="mt-4">
+                        <h6>推荐下一步操作：</h6>
+                        <ul class="list-unstyled text-left mt-2">
+                            <li>• 完善个人资料</li>
+                            <li>• 发布第一篇博客</li>
+                            <li>• 关注其他博主</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">稍后再说</button>
+                <button type="button" class="btn btn-primary" id="go-login">去登录</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!--
+ 添加新用户：注册逻辑
+-->
+<script>
+    // 密码强度检测（主表单）
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const strengthDiv = document.getElementById('password-strength');
+        let strength = 0;
+        let message = '';
+        let color = '';
+
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[a-z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+        switch(strength) {
+            case 0:
+                message = '请输入密码';
+                color = '#999';
+                break;
+            case 1:
+            case 2:
+                message = '密码强度：弱';
+                color = '#dc3545';
+                break;
+            case 3:
+                message = '密码强度：中';
+                color = '#ffc107';
+                break;
+            case 4:
+            case 5:
+                message = '密码强度：强';
+                color = '#28a745';
+                break;
+        }
+
+        strengthDiv.textContent = message;
+        strengthDiv.style.color = color;
+    });
+
+    // 密码强度检测（模态框）
+    document.getElementById('password-modal').addEventListener('input', function() {
+        const password = this.value;
+        const strengthDiv = document.getElementById('password-strength-modal');
+        let strength = 0;
+        let message = '';
+        let color = '';
+
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[a-z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+        switch(strength) {
+            case 0:
+                message = '请输入密码';
+                color = '#999';
+                break;
+            case 1:
+            case 2:
+                message = '密码强度：弱';
+                color = '#dc3545';
+                break;
+            case 3:
+                message = '密码强度：中';
+                color = '#ffc107';
+                break;
+            case 4:
+            case 5:
+                message = '密码强度：强';
+                color = '#28a745';
+                break;
+        }
+
+        strengthDiv.textContent = message;
+        strengthDiv.style.color = color;
+    });
+
+    // 发送验证码（模态框）
+    document.getElementById('send-captcha-modal').addEventListener('click', function() {
+        const email = document.getElementById('email-modal').value;
+        if (!email) {
+            alert('请输入邮箱地址');
+            return;
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            alert('请输入有效的邮箱地址');
+            return;
+        }
+
+        // 禁用发送按钮，防止重复点击
+        const sendBtn = this;
+        sendBtn.disabled = true;
+        sendBtn.textContent = '发送中...';
+
+        axios.post('/admin/code2Email', {
+            email: email
+        }).then(response => {
+            if (response.data.code === 1) {
+                alert('验证码已发送到您的邮箱');
+                // 60秒后恢复发送按钮
+                let countdown = 60;
+                sendBtn.textContent = `${countdown}秒后重试`;
+                const timer = setInterval(() => {
+                    countdown--;
+                    sendBtn.textContent = `${countdown}秒后重试`;
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = '发送验证码';
+                    }
+                }, 1000);
+            } else {
+                alert('发送验证码失败：' + response.data.message);
+                sendBtn.disabled = false;
+                sendBtn.textContent = '发送验证码';
+            }
+        }).catch(error => {
+            console.error(error);
+            alert('发送验证码失败，请稍后重试');
+            sendBtn.disabled = false;
+            sendBtn.textContent = '发送验证码';
+        });
+    });
+
+    // 主表单注册验证的逻辑
+    document.getElementById('btn-register').addEventListener('click', function(e) {
+        e.preventDefault(); // 阻止表单提交
+
+        let username = document.getElementById('username').value;
+        let userNickname = document.getElementById('userNickName').value;
+        let password = document.getElementById('password').value;
+        let confirmPassword = document.getElementById('confirm-password').value;
+        let email = document.getElementById('email').value;
+        let agreeTerms = document.getElementById('agree-terms').checked;
+
+        // 表单验证
+        if (!username || !userNickname || !password || !confirmPassword || !email) {
+            alert('请填写完整信息');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            alert('两次密码不一致，请重新填写！');
+            return;
+        }
+
+        if (!agreeTerms) {
+            alert('请阅读并同意服务条款和隐私政策');
+            return;
+        }
+
+        console.log('点击注册');
+        console.log(username + ':' + password + ':' + email);
+
+        axios.post('/admin/register', {
+            userName: username,
+            userNickname: userNickname,
+            userPassword: password,
+            userEmail: email
+        }).then(response => {
+            const data = response.data;
+            console.log('注册响应' + data);
+            if (data.code === 1) {
+                // 注册成功后显示模态框
+                const successModal = new bootstrap.Modal(document.getElementById('registerSuccessModal'));
+                successModal.show();
+            } else {
+                alert('注册失败，' + data.message);
+            }
+        }).catch(error => {
+            console.log(error);
+            if (error.response) {
+                alert('注册失败：' + error.response.data.message);
+            } else {
+                alert('注册失败，请稍后重试');
+            }
+        });
+    });
+
+    // 邮箱验证码注册逻辑（模态框）
+    document.getElementById('btn-register-email').addEventListener('click', function() {
+        let email = document.getElementById('email-modal').value;
+        let captchaCode = document.getElementById('captchaCode-modal').value;
+        let username = document.getElementById('username-modal').value;
+        let userNickname = document.getElementById('userNickName-modal').value;
+        let password = document.getElementById('password-modal').value;
+        let confirmPassword = document.getElementById('confirm-password-modal').value;
+        let agreeTerms = document.getElementById('agree-terms-modal').checked;
+
+        // 表单验证
+        if (!email || !captchaCode || !username || !userNickname || !password || !confirmPassword) {
+            alert('请填写完整信息');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            alert('两次密码不一致，请重新填写！');
+            return;
+        }
+
+        if (!agreeTerms) {
+            alert('请阅读并同意服务条款和隐私政策');
+            return;
+        }
+
+        console.log('点击邮箱验证码注册');
+
+        axios.post('/admin/register', {
+            email: email,
+            captchaCode: captchaCode,
+            userName: username,
+            userNickname: userNickname,
+            userPassword: password
+        }).then(response => {
+            const data = response.data;
+            console.log('注册响应' + data);
+            if (data.code === 1) {
+                // 注册成功后显示模态框
+                const successModal = new bootstrap.Modal(document.getElementById('registerSuccessModal'));
+                successModal.show();
+                // 关闭邮箱注册模态框
+                const emailModal = bootstrap.Modal.getInstance(document.getElementById('emailRegisterModal'));
+                if (emailModal) {
+                    emailModal.hide();
+                }
+            } else {
+                alert('注册失败，' + data.message);
+            }
+        }).catch(error => {
+            console.log(error);
+            if (error.response) {
+                alert('注册失败：' + error.response.data.message);
+            } else {
+                alert('注册失败，请稍后重试');
+            }
+        });
+    });
+
+    // 去登录按钮点击事件
+    document.getElementById('go-login').addEventListener('click', function() {
+        window.location.href = '/Login/login.html';
+    });
+</script>
+
+</body>
+
+</html>
+
+

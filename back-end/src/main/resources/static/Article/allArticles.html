@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人博客 - 所有文章</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/editor.md@1.5.0/css/editormd.min.css" />
+
+    <!-- css样式修饰 -->
+    <link rel="stylesheet" href="../css/allArticles.css">
+</head>
+<body>
+
+<div class="container" id="app">
+    <!-- 左侧导航栏 -->
+    <aside class="left-column">
+        <div class="blog-title">
+            <h1>个人博客</h1>
+            <!-- 添加 onerror 防止图片裂开 -->
+            <img src="/touxiang/blog_avatar-3.png" alt="用户头像" class="avatar"
+                 onerror="this.src='https://picsum.photos/seed/avatar/100/100'">
+            <!-- 显示用户昵称 -->
+            <p v-if="userInfo.userNickName" class="user-nickname">{{userInfo.userNickName}}</p>
+            <p v-else class="user-nickname">{{userInfo.userName}}</p>
+        </div>
+
+        <!-- 菜单栏 -->
+        <nav class="nav-menu">
+            <div class="nav-item"><a href="/Home/home1.html">🏠 主页</a></div>
+            <div class="nav-item"><a href="/Home/profile.html">👤 关于我</a></div>
+            <div class="nav-item"><a href="/Article/allArticles.html">📚 博客</a></div>
+            <div class="nav-item"><a href="/Note/note.html">✍️ 随笔</a></div>
+            <div class="nav-item"><a href="#">🧠 知识库</a></div>
+            <div class="nav-item" style="color: #d9534f;" @click="logout()">🚪 退出登录</div>
+        </nav>
+    </aside>
+
+    <!-- 右侧文章列表 -->
+    <main class="right-column">
+        <!-- 页面标题 -->
+        <div class="section-header">
+            <h2>📚 所有文章</h2>
+        </div>
+
+        <!-- 搜索区域 -->
+        <div class="search-section">
+            <input type="text" v-model="keyword" class="search-bar" placeholder="搜索文章..." @keyup.enter="search"/>
+            <button class="btn btn-primary" @click="search">搜索</button>
+            <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target=".formModal">新增</button>
+        </div>
+
+        <!-- 分类展示区域 -->
+        <div class="category-section">
+            <div class="category-tags">
+                <a href="#" class="category-tag" :class="{ active: selectedCategoryId === null }" 
+                   @click="filterByCategory(null)">全部</a>
+                <a href="#" v-for="c in categories" :key="c.categoryId" 
+                   class="category-tag" 
+                   :class="{ active: selectedCategoryId === c.categoryId }" 
+                   @click="filterByCategory(c.categoryId)">
+                    {{c.categoryName}}
+                </a>
+            </div>
+        </div>
+
+        <!-- 文章列表 -->
+        <div v-if="loading" class="loading">文章加载中...</div>
+        <div v-else-if="articles.length === 0" class="empty-state">暂无文章，快去写一篇吧！</div>
+        <div v-else>
+            <article class="blog-item" v-for="article in articles" :key="article.articleId" 
+                     @click="showSpecificArticle(article.articleId)">
+                <!-- 图片添加默认图逻辑 -->
+                <img :src="article.articleThumbnail ? '/uploaded-images/'+article.articleThumbnail : 'https://picsum.photos/seed/blog/300/200'"
+                     class="blog-image"
+                     :alt="article.articleTitle"
+                     onerror="this.src='https://picsum.photos/seed/error/300/200'">
+
+                <div class="blog-content">
+                    <h3>{{article.articleTitle}}</h3>
+                    <p>{{article.articleSummary}}</p>
+                    <div class="blog-meta">
+                        <span>📅 {{ formatDate(article.articleCreateTime) }}</span>
+                        <span>👁️ {{article.articleReadCount}}</span>
+                        <span>💬 {{article.articleCommentCount}}</span>
+                        <span>❤️ {{article.articleLikeCount}}</span>
+                    </div>
+                    
+                    <!-- 文章分类标签 -->
+                    <div class="article-categories" v-if="article.categoryList && article.categoryList.length > 0">
+                        <span class="article-category" v-for="category in article.categoryList" :key="category.categoryId">
+                            {{category.categoryName}}
+                        </span>
+                    </div>
+                    
+                    <!-- 文章标签 -->
+                    <div class="article-tags" v-if="article.tagList && article.tagList.length > 0">
+                        <span class="article-tag" v-for="tag in article.tagList" :key="tag.tagId">
+                            {{tag.tagName}}
+                        </span>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </main>
+    
+    <!-- 弹窗页面(用于添加新文章) -->
+    <div class="modal formModal" id="addArticleModal"
+         tabindex="-1" aria-labelledby="addArticleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <!-- 头部标题 -->
+                <div class="modal-header">
+                    <h5 class="modal-title">新增文章</h5>
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- 表单开始 -->
+                    <form id="addArticleForm">
+                        <!-- 文章标题输入框 -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">标题</label>
+                            <input type="text" class="form-control" id="title" placeholder="请输入博文标题">
+                        </div>
+
+                        <!-- 博客名称输入框 -->
+                        <div class="mb-3">
+                            <label for="blog-input" class="form-label">博客</label>
+                            <input type="text" class="form-control" id="blog-input" placeholder="请输入博客名称">
+                        </div>
+
+                        <!-- 文章分类选择 -->
+                        <div class="mb-3">
+                            <label class="form-label">文章分类</label>
+                            <div class="category-checkboxes">
+                                <div class="form-check" v-for="category in categories" :key="category.categoryId">
+                                    <input type="checkbox" class="form-check-input" 
+                                           :id="'category-' + category.categoryId"
+                                           :value="category.categoryId"
+                                           v-model="selectedCategoryIds">
+                                    <label class="form-check-label" :for="'category-' + category.categoryId">
+                                        {{category.categoryName}}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文章内容 - Markdown编辑器 -->
+                        <div class="mb-3">
+                            <label class="form-label">内容</label>
+                            <div id="markdown-editor"></div>
+                            <!-- 隐藏的HTML内容存储 -->
+                            <input type="hidden" id="content-input" name="content">
+                        </div>
+
+                        <!-- 文章概要 -->
+                        <div class="mb-3">
+                            <label for="summary-input" class="form-label">博文概要</label>
+                            <input type="text" class="form-control" id="summary-input" placeholder="概要信息">
+                        </div>
+
+                        <!-- 图片上传 -->
+                        <div class="mb-3">
+                            <label for="coverImage" class="form-label">封面图片（可选）</label>
+                            <input type="file" class="form-control" id="coverImage" accept="image/*"/>
+                        </div>
+                    </form>
+                    <!-- 表单结束 -->
+                </div>
+
+                <!-- 底部提交按钮以及取消按钮  -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" @click="submitNew()"
+                            data-bs-dismiss="modal">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页脚个人信息 -->
+<footer>
+    <div class="footer-text">
+        &copy; 2025 <span>JiaYn</span> | 个人博客 | 联系邮箱：1317192941@qq.com
+    </div>
+</footer>
+
+<!-- 导入axios接口转发请求和vue -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+<!-- Editor.md CDN资源 -->
+
+<script src="https://cdn.jsdelivr.net/npm/editor.md@1.5.0/lib/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/editor.md@1.5.0/lib/prettify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/editor.md@1.5.0/editormd.min.js"></script>
+
+<script>
+    // 全局编辑器实例
+    let editor;
+    
+    // 初始化Markdown编辑器
+    function initEditor() {
+        console.log('进入initEditor函数');
+        
+        // 检查编辑器容器是否存在
+        const editorContainer = document.getElementById('markdown-editor');
+        if (!editorContainer) {
+            console.error('未找到编辑器容器#markdown-editor');
+            return;
+        }
+        console.log('找到编辑器容器，开始初始化');
+        
+        if (editor) {
+            console.log('销毁已有编辑器实例');
+            editor.destroy();
+            editor = null;
+        }
+        
+        try {
+            // 直接在容器中显示一些内容，用于调试
+            editorContainer.innerHTML = '<div style="padding: 20px; background: #f0f0f0; color: #333;">正在初始化编辑器...</div>';
+            
+            console.log('开始创建editormd实例');
+            // 简化编辑器配置，先确保基本功能正常
+            editor = editormd({
+                id: "markdown-editor",
+                width: "100%",
+                height: 500,
+                path: "https://cdn.jsdelivr.net/npm/editor.md@1.5.0/lib/",
+                theme: "default",
+                previewTheme: "default",
+                editorTheme: "default",
+                markdown: "# 欢迎使用Markdown编辑器\n\n开始编写你的文章吧！",
+                codeFold: true,
+                saveHTMLToTextarea: true,
+                htmlDecode: "style,script,iframe",
+                onload: function() {
+                    console.log("Editor.md 初始化完成");
+                }
+            });
+        } catch (error) {
+            console.error('初始化编辑器时发生错误:', error);
+            editorContainer.innerHTML = '<div style="padding: 20px; background: #ffebee; color: #c62828;">编辑器初始化失败: ' + error.message + '</div>';
+        }
+    }
+    
+    // 监听模态框显示事件，初始化编辑器
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM加载完成，准备监听模态框事件');
+        
+        // 方式1：直接在DOM加载完成后初始化编辑器（用于测试）
+        console.log('DOM加载完成，直接初始化编辑器');
+        // 延迟1秒，确保Vue实例已经初始化
+        setTimeout(function() {
+            initEditor();
+        }, 1000);
+        
+        // 方式2：使用Bootstrap 5的模态框事件
+        const modal = document.getElementById('addArticleModal');
+        if (modal) {
+            console.log('找到了模态框，添加show.bs.modal事件监听');
+            // 使用show.bs.modal事件，在模态框显示前初始化
+            modal.addEventListener('show.bs.modal', function() {
+                console.log('模态框即将显示，初始化编辑器');
+                initEditor();
+            });
+        } else {
+            console.error('未找到模态框元素addArticleModal');
+        }
+    });
+    
+    new Vue({
+        el: '#app',
+        data: {
+            keyword: '',    //搜索框关键字
+            articles: [],   //文章列表
+            categories: [], //分类列表
+            userInfo: '', //用户信息
+            loading: true, //加载状态
+            selectedCategoryId: null, //选中的分类ID
+            selectedCategoryIds: [], //新增文章时选中的分类ID列表
+        },
+        methods: {
+            //格式化日期函数
+            formatDate(timeString) {
+                if(!timeString) return '';
+                const date = new Date(timeString);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            },
+
+            //获取所有文章
+            getAllArticles() {
+                this.loading = true;
+                axios.get('/articles/list')
+                    .then(response => {
+                        const res = response.data;
+                        console.log(res)
+                        if (res.data && res.data.records) {
+                            this.articles = res.data.records || [];
+                        } else {
+                            this.articles = [];
+                        }
+                    })
+                    .catch(error => {
+                        console.error("请求发送失误", error);
+                        this.articles = [];
+                    })
+                    .finally(() => {
+                        this.loading = false;
+                    });
+            },
+
+            //分类列表获取
+            getCategories() {
+                axios.get('/category/list')
+                    .then(response => {
+                        const result = response.data;
+                        if(result.code===1){
+                            this.categories = result.data.records || [];
+                        }else{
+                            this.categories = [];
+                        }
+                    }).catch( error => {
+                    console.error("请求发送错误", error);
+                    this.categories = [];
+                });
+            },
+
+            //根据分类筛选文章
+            filterByCategory(categoryId) {
+                this.selectedCategoryId = categoryId;
+                this.loading = true;
+                
+                if (categoryId === null) {
+                    //显示所有文章
+                    this.getAllArticles();
+                } else {
+                    //根据分类ID获取文章
+                    axios.get(`/category/articles?categoryId=${categoryId}&page=1&pageSize=10`)
+                        .then(response => {
+                            if (response.data.data && response.data.data.records) {
+                                this.articles = response.data.data.records || [];
+                            } else {
+                                this.articles = [];
+                            }
+                        })
+                        .catch(error => {
+                            console.error("请求发送失误", error);
+                            this.articles = [];
+                        })
+                        .finally(() => {
+                            this.loading = false;
+                        });
+                }
+            },
+
+            //搜索文章
+            search() {
+                const keyWord = this.keyword.trim();
+                if (!keyWord) {
+                    alert("关键字为空");
+                    return;
+                }
+                
+                this.loading = true;
+                //请求转发
+                axios.post('/articles/searchCondition', {
+                    articleTitle: keyWord,
+                    articleContent: keyWord,
+                    articleSummary: keyWord
+                }).then(response => {
+                    if (response.data.code == 1 || response.data.success) {
+                        this.articles = response.data.data || [];
+                    } else {
+                        this.articles = [];
+                    }
+                }).catch(error => {
+                    console.error("请求发送错误", error);
+                    this.articles = [];
+                }).finally(() => {
+                    this.loading = false;
+                });
+            },
+
+            //新增文章
+            async submitNew() {
+                try {
+                    //获取普通文本字段（标题、博主、内容、摘要）
+                    let articleTitle = document.getElementById("title").value.trim();
+                    let articleBlogger = document.getElementById("blog-input").value;
+                    // 获取编辑器生成的HTML内容
+                    let articleContent = editor ? editor.getHTML() : document.getElementById("content-input").value;
+                    let articleSummary = document.getElementById("summary-input").value.trim();
+
+                    //获取图片文件对象
+                    const fileInput = document.getElementById("coverImage");
+                    const file = fileInput.files[0];
+
+                    //默认图片文件为空字符串
+                    let articleThumbnail = "";
+                    if (file) {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        const uploadRes = await axios.post('/images/upload', formData, {
+                            headers: {'Content-Type': 'multipart/form-data'}
+                        });
+
+                        //图片上传失败
+                        if (uploadRes.data.code == 0) {
+                            alert("图片上传失败：" + (uploadRes.data.msg || "Unknown errors"));
+                            return;
+                        }
+                        articleThumbnail = uploadRes.data.data;  //获取返回的文件名
+                    }
+
+                    //上传博文内容
+                    const insertRes = await axios.post('/articles/insert', {
+                        articleTitle: articleTitle,
+                        blogger: articleBlogger,
+                        articleContent: articleContent,
+                        articleSummary: articleSummary,
+                        articleThumbnail: articleThumbnail,
+                        categoryIds: this.selectedCategoryIds //新增：传递选中的分类ID列表
+                    });
+
+                    if (insertRes.data.code === 1) {
+                        alert("文章添加成功");
+                        //重新刷新文章列表
+                        this.getAllArticles();
+                        // 清空编辑器内容
+                        if (editor) {
+                            editor.setValue('');
+                        }
+                        // 清空表单
+                        document.getElementById("addArticleForm").reset();
+                        // 清空选中的分类ID
+                        this.selectedCategoryIds = [];
+                    } else {
+                        alert("文章添加失败：" + (insertRes.data.msg || "Unknown errors"));
+                    }
+                } catch (error) {
+                    console.error("请求发送错误", error);
+                    alert("请求发送错误：" + (error.message || "Unknown errors"));
+                }
+            },
+
+            //跳转到文章详情页面
+            showSpecificArticle(id) {
+                window.location.href = '/Article/article.html?id=' + id;
+            },
+
+            //退出登录
+            logout() {
+                if(confirm('确定要退出登录吗？')) {
+                    axios.post('/admin/logout')
+                        .then(response => {
+                            if (response.data.code === 1) {
+                                window.location.href = '../Login/login.html';
+                            } else {
+                                alert(response.data.message || "退出失败");
+                            }
+                        }).catch(error => {
+                        console.error('退出失败:', error);
+                        alert('网络错误，退出失败');
+                    })
+                }
+            }
+        },
+
+        // 页面渲染后立即执行
+        mounted() {
+            // 使用 Promise.all 等待所有请求完成再隐藏 loading
+            Promise.all([
+                this.getAllArticles(),
+                this.getCategories(),
+                axios.get('/home/currentUser', { credentials: 'include' })
+            ]).then(([_, __, userRes]) => {
+                // 处理用户数据
+                if(userRes.data.data) {
+                    this.userInfo = userRes.data.data;
+                }
+            }).catch(error => {
+                console.error("页面初始化数据请求失败", error);
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

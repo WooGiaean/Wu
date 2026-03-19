@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wjy.personal_blog.mapper.ArticleCategoryMapper">
+    
+    <!-- 批量插入文章分类关联 -->
+    <insert id="insertBatch">
+        insert into article_category (article_id, category_id) values
+        <foreach collection="articleCategories" item="item" separator=",">
+            (#{item.articleId}, #{item.categoryId})
+        </foreach>
+    </insert>
+</mapper>

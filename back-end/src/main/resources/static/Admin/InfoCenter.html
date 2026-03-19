@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员中心</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- css样式文件 -->
+    <link rel="stylesheet" href="../css/inforCenter.css">
+    <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+
+<div id="main_Content">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h4>管理员中心</h4>
+            <img src="/touxiang/blog_avater1.png" alt="管理员头像" class="sidebar-avatar">
+            <p style="margin: 0; color: #8B6A4F;">管理员</p>
+        </div>
+
+        <ul class="sidebar-nav">
+            <li><a href="#">仪表盘</a></li>
+            <li><a href="#" @click.prevent="switchPage('user')"
+                   :class="{active:currentPage==='user'}">用户管理</a></li>
+            <li><a href="#" @click.prevent="switchPage('article')"
+                   :class="{active:currentPage==='article'}">文章管理</a></li>
+            <li><a href="#" @click.prevent="switchPage('note')"
+                   :class="{active:currentPage==='note'}">笔记管理</a></li>
+            <li><a href="#">数据统计</a></li>
+            <li><a href="/admin/logout">退出登录</a></li>
+        </ul>
+
+        <!-- 切换浅/深色模式 -->
+        <div class="sidebar-footer">
+            <button id="theme-toggle"
+                    class="btn btn-sm btn-outline-secondary w-100 mb-2">
+                🌙 深色模式
+            </button>
+        </div>
+
+    </div>
+
+    <!-- 主要内容 -->
+    <div class="main-content">
+
+        <div class="container-fluid">
+
+            <div class="row">
+
+                <div class="col-12">
+
+                    <!-- 用户展示列表 -->
+                    <div class="card" v-if="currentPage==='user'">
+                        <div class="card-header">
+                            <!-- 导航头和标题 -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5>用户管理</h5>
+                                <div>
+                                    <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal"
+                                            data-bs-target="#addUserModal">添加用户
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" v-if="selectedUsers.length > 0"
+                                            @click="batchDeleteUsers">批量删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="search-bar">
+                                <!-- 搜索框 -->
+                                <div class="input-group mb-3">
+                                    <input v-model="searchUser"
+                                           type="text" class="form-control" placeholder="搜索用户..."
+                                           aria-label="Search user">
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            @click="searchUserByKeyword">搜索
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <!-- 标题和内容 -->
+                                <table class="table table-hover">
+                                    <thead>
+                                    <!-- 列标题 -->
+                                    <tr>
+                                        <th><input type="checkbox" v-model="selectAll" @change="selectAllUsers"></th>
+                                        <th>用户ID</th>
+                                        <th>用户名</th>
+                                        <th>邮箱</th>
+                                        <th>角色</th>
+                                        <th>注册时间</th>
+                                        <th>文章数</th>
+                                        <th>笔记数</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                    <!---->
+                                    </thead>
+
+                                    <tbody>
+                                    <tr v-for="user in pageUsers" :key="user.userId">
+                                        <td><input type="checkbox" v-model="selectedUsers" :value="user.userId"></td>
+                                        <td>{{user.userId}}</td>
+                                        <td><span class="user-name">{{user.userName}}</span></td>
+                                        <td>{{user.userEmail}}</td>
+                                        <td>{{user.userRole}}</td>
+                                        <td>{{user.userRegisterTime}}</td>
+                                        <td>{{user.articleCount}}</td>
+                                        <td>{{user.noteCount}}</td>
+                                        <td>
+                                            <span class="badge bg-success status-active"
+                                                  v-if="user.userStatus==1">活跃</span>
+                                            <span class="badge bg-danger status-active"
+                                                  v-if="user.userStatus==0">禁用</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1" @click="editUser(user)"
+                                                    data-bs-toggle="modal" data-bs-target="#editUserModal">编辑
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info me-1" @click="viewUser(user)"
+                                                    data-bs-toggle="modal" data-bs-target="#viewUserModal">详情
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    @click="deleteUser(user.userId)">删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文章展示列表 -->
+                    <div class="card" v-if="currentPage=='article'">
+                        <div class="card-header">
+                            <!-- 导航头和标题 -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5>文章管理</h5>
+                                <button class="btn btn-primary btn-sm">添加文章</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="search-bar">
+                                <!-- 搜索框 -->
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" placeholder="搜索文章..."
+                                           aria-label="Search user">
+                                    <button class="btn btn-outline-secondary" type="button">搜索</button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <!-- 标题和内容 -->
+                                <table class="table table-hover">
+                                    <thead>
+                                    <!-- 列标题 -->
+                                    <tr>
+                                        <th>文章ID</th>
+                                        <th>文章标题</th>
+                                        <th>用户名</th>
+                                        <th>创建时间</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                    <!---->
+                                    </thead>
+
+                                    <tbody>
+                                    <tr v-for="article in articles" :key="article.articleId">
+                                        <td>{{article.articleId}}</td>
+                                        <td>{{article.articleTitle}}</td>
+                                        <td><span class="user-name">{{article.blogger}}</span></td>
+                                        <td>{{article.articleUpdateTime}}</td>
+                                        <td>
+                                        <span class="badge bg-success status-active"
+                                              v-if="article.articleStatus==1">发布</span>
+                                            <span class="badge bg-danger status-active"
+                                                  v-if="article.articleStatus==0">草稿</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">编辑</button>
+                                            <button class="btn btn-sm btn-outline-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 笔记展示列表 -->
+                    <div class="card" v-if="currentPage=='note'">
+                        <div class="card-header">
+                            <!-- 导航头和标题 -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5>笔记管理</h5>
+                                <button class="btn btn-primary btn-sm">添加笔记</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="search-bar">
+                                <!-- 搜索框 -->
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" placeholder="搜索笔记..."
+                                           aria-label="Search user">
+                                    <button class="btn btn-outline-secondary" type="button">搜索</button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <!-- 标题和内容 -->
+                                <table class="table table-hover">
+                                    <thead>
+                                    <!-- 列标题 -->
+                                    <tr>
+                                        <th>笔记ID</th>
+                                        <th>笔记标题</th>
+                                        <th>用户名</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                    <!---->
+                                    </thead>
+
+                                    <tbody>
+                                    <tr v-for="note in notes" :key="note.noteId">
+                                        <td>{{note.noteId}}</td>
+                                        <td>{{note.noteTopic}}</td>
+                                        <td><span class="user-name">{{note.noteAuthor}}</span></td>
+                                        <td>{{note.noteUpdateTime}}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">编辑</button>
+                                            <button class="btn btn-sm btn-outline-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+
+                <div class="pagination-container" v-if="currentPageType.totalPages >= 1">
+                    <div class="pagination">
+                        <!-- 上一页按钮 -->
+                        <button
+                                id="prev-page"
+                                class="page-btn"
+                                :disabled="currentPageType.nowPage === 1"
+                                @click="prePage()"
+                        >
+                            <span class="icon">❮</span> 上一页
+                        </button>
+
+                        <!-- 页码显示区域 -->
+                        <div class="page-numbers">
+                            <!-- 中间页码 -->
+                            <span
+                                    v-for="page in pageToShow"
+                                    :key="page"
+                                    class="page-item"
+                                    :class="{ 'active': currentPageType.nowPage === page }"
+                                    @click="page !== '...' ? goToPage(page) : null"
+                                    :style="{ cursor: page === '...' ? 'default' : 'pointer' }"
+                            >
+
+                                <p class="page-numbers">
+                                  {{ page }}
+                            </p>
+      </span>
+
+                            <!-- 省略号（如果需要） -->
+                            <span v-if="pageToShow.length > 2 && pageToShow[pageToShow.length - 1] !== currentPageType.totalPages"
+                                  class="page-item ellipsis">...</span>
+
+                            <!-- 尾页 -->
+                            <!--<span
+                                    class="page-item"
+                                    :class="{ 'active': currentPageType.nowPage === currentPageType.totalPages }"
+                                    @click="goToPage(currentPageType.totalPages)"
+                            >{{ currentPageType.totalPages }}</span>-->
+                        </div>
+
+                        <!-- 下一页按钮 -->
+                        <button
+                                id="next-page"
+                                class="page-btn"
+                                :disabled="currentPageType.nowPage === currentPageType.totalPages"
+                                @click="nextPage()"
+                        >
+                            下一页 <span class="icon">❯</span>
+                        </button>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 添加用户模态框 -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">添加用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="userName" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="userName" v-model="newUser.userName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userPassword" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="userPassword" v-model="newUser.userPassword"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userEmail" class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="userEmail" v-model="newUser.userEmail"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userRole" class="form-label">角色</label>
+                            <select class="form-select" id="userRole" v-model="newUser.userRole">
+                                <option value="user">普通用户</option>
+                                <option value="admin">管理员</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" @click="addUser">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑用户模态框 -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">编辑用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="editUserName" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="editUserName" v-model="editUserForm.userName"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUserEmail" class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="editUserEmail" v-model="editUserForm.userEmail"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUserRole" class="form-label">角色</label>
+                            <select class="form-select" id="editUserRole" v-model="editUserForm.userRole">
+                                <option value="user">普通用户</option>
+                                <option value="admin">管理员</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUserStatus" class="form-label">状态</label>
+                            <select class="form-select" id="editUserStatus" v-model="editUserForm.userStatus">
+                                <option value="1">活跃</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" @click="updateUser">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查看用户详情模态框 -->
+    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewUserModalLabel">用户详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">用户ID</label>
+                        <p class="form-control-plaintext">{{viewUserForm.userId}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">用户名</label>
+                        <p class="form-control-plaintext">{{viewUserForm.userName}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">邮箱</label>
+                        <p class="form-control-plaintext">{{viewUserForm.userEmail}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">角色</label>
+                        <p class="form-control-plaintext">{{viewUserForm.userRole}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">注册时间</label>
+                        <p class="form-control-plaintext">{{viewUserForm.userRegisterTime}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">文章数</label>
+                        <p class="form-control-plaintext">{{viewUserForm.articleCount}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">笔记数</label>
+                        <p class="form-control-plaintext">{{viewUserForm.noteCount}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">状态</label>
+                        <p class="form-control-plaintext">
+                            <span v-if="viewUserForm.userStatus==1" class="badge bg-success">活跃</span>
+                            <span v-else class="badge bg-danger">禁用</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 侧边栏 -->
+
+
+<!-- 导入axios接口转发请求和vue -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 切换深色模式的脚本 -->
+<script src="../js/turnTheme.js"></script>
+
+<!-- 前端逻辑脚本 -->
+<script>
+    new Vue({
+        el: '#main_Content',
+        data: {
+            currentPage: 'user',
+            /* 用于分页展示的两个变量 */
+            /* nowPage: 1,
+             pageSize: 10,
+             totalCount: 0,
+             totalPages: 0,
+             loading: false,*/
+            /*  */
+            users: [], //用户列表展示
+            searchUser: '', //搜索用户
+            usersPage: {
+                nowPage: 1,
+                pageSize: 10,
+                totalCount: 0,
+                totalPages: 0,
+                loading: false,
+            },
+            articles: [], //文章列表展示
+            articlesPage: {
+                nowPage: 1,
+                pageSize: 10,
+                totalCount: 0,
+                totalPages: 0,
+                loading: false,
+            },
+            notes: [],
+            notesPage: {
+                nowPage: 1,
+                pageSize: 10,
+                totalCount: 0,
+                totalPages: 0,
+                loading: false,
+            },
+            // 用户管理相关
+            selectedUsers: [], // 选中的用户ID
+            selectAll: false, // 全选状态
+            newUser: {      //新增用户表单
+                userName: '',
+                userPassword: '',
+                userEmail: '',
+                userRole: 'user',
+                userStatus: 1
+            },
+            editUserForm: {
+                userId: '',
+                userName: '',
+                userEmail: '',
+                userRole: '',
+                userStatus: ''
+            },
+            viewUserForm: {}
+        },
+        //计算属性
+        computed: {
+            //计算页码
+            pageUsers() {
+                const {nowPage, pageSize} = this.usersPage
+                const start = (nowPage - 1) * pageSize;
+                return this.users.slice(start, start + pageSize)
+            },
+            pageArticles() {
+                const {nowPage, pageSize} = this.articlesPage;
+                const start = (nowPage - 1) * pageSize
+                return this.articles.slice(start, start + pageSize)
+            },
+            pageNotes() {
+                const {nowPage, pageSize} = this.notesPage;
+                const start = (nowPage - 1) * pageSize
+                return this.notes.slice(start, start + pageSize)
+            },
+
+            //获取当前页面的分页位置
+            getCurrentPage() {
+                switch (this.currentPage) {
+                    case 'user':
+                        return this.pageUsers();
+                    case 'article':
+                        return this.pageArticles();
+                    case 'note':
+                        return this.pageNotes();
+                    default:
+                        return [];
+                }
+            },
+
+            //判断当前页面类型
+            currentPageType() {
+                switch (this.currentPage) {
+                    case 'user':
+                        return this.usersPage;
+                    case 'article':
+                        return this.articlesPage;
+                    case 'note':
+                        return this.notesPage;
+                    default:
+                        return this.usersPage;
+                }
+            },
+
+            //展示页面
+            pageToShow() {
+                const pages = [] //如果记录不多，用户存放每一个显示的页码
+
+                const maxPage = 5   //默认最大5
+
+                const currentPage = this.currentPageType;
+
+                if (!currentPage) {
+                    console.error("currentPageType is undefined");
+                    return [];
+                }
+
+                const nowPage = currentPage.nowPage
+                const totalPages = currentPage.totalPages
+
+                console.log(nowPage + "=" + totalPages)
+
+                if (totalPages <= maxPage) {
+                    for (let i = 1; i <= totalPages; i++) {
+                        pages.push(i)
+                    }
+                } else {
+                    const startPage = Math.max(1, nowPage - Math.floor(maxPage / 2))
+                    const endPage = Math.min(totalPages, startPage + maxPage - 1,)
+
+                    pages.push(1)
+
+                    if (startPage > 2) {
+                        pages.push('...')
+                    }
+
+                    for (let i = startPage; i <= endPage; i++) {
+                        pages.push(i);
+                    }
+
+                    // 添加省略号（如果需要）
+                    if (endPage < totalPages - 1) {
+                        pages.push('...');
+                    }
+
+                    // 添加最后一个页码
+                    if (endPage < totalPages) {
+                        pages.push(totalPages);
+                    }
+
+
+                }
+
+                return pages;
+            }
+        },
+        methods: {
+            /* 点击右侧面板切换展示内容 */
+            switchPage(page) {
+                switch (page) {
+                    case 'user':
+                        this.currentPage = 'user';
+                        this.allUsers();
+                        break;
+                    case 'article':
+                        this.currentPage = 'article';
+                        this.allArticles();
+                        break;
+                    case 'note':
+                        this.currentPage = 'note';
+                        this.allNotes();
+                        break;
+                    case 'info':
+                        this.currentPage = 'info';
+                        break;
+                    default:
+                        this.currentPage = 'user';
+                }
+            },
+
+            /* 获取页面数据类型，进行对应的请求 */
+            getPageType() {
+                switch (this.currentPage) {
+                    case 'user':
+                        this.allUsers();
+                        break;
+                    case 'article':
+                        this.allArticles();
+                        break;
+                    case 'note':
+                        this.allNotes();
+                        break;
+                    default:
+                        this.allUsers();
+                }
+            },
+
+            //所有用户
+            allUsers() {
+                //this.loading = true;
+                this.usersPage.loading = true;
+
+                //页面加载时，获取用户列表
+                axios.get('/manage/users', {
+                    params: {
+                        page: this.usersPage.nowPage,
+                        pageSize: this.usersPage.pageSize
+                    }
+                })
+                    .then(res => {
+                        const result = res.data;
+                        console.log(result);
+                        if (result.code == 1) {
+                            console.log("用户列表获取成功")
+                            this.users = result.data.records;
+                            this.usersPage.totalCount = result.data.total;
+                            this.usersPage.totalPages = Math.ceil(this.usersPage.totalCount / this.usersPage.pageSize);
+                        } else {
+                            console.log("用户列表获取失败")
+                            alert('获取用户列表失败: ' + result.message)
+                            this.users = []
+                        }
+                    }).catch(error => {
+                    console.log(error)
+                    alert("错误信息：" + error)
+                }).finally(() => {
+                    this.usersPage.loading = false;
+                })
+
+
+            },
+
+            //所有文章
+            allArticles() {
+                //this.loading = true;
+                this.articlesPage.loading = true;
+
+                axios.get('/manage/articles', {
+                    params: {
+                        page: this.articlesPage.nowPage,
+                        pageSize: this.articlesPage.pageSize
+                    }
+                })
+                    .then(response => {
+                        const result = response.data
+                        console.log(result.code)
+                        if (result.code === 1) {
+                            console.log("文章列表获取成功")
+                            this.articles = result.data.records;
+                            this.articlesPage.totalCount = result.data.total;
+                            this.articlesPage.totalPages = Math.ceil(this.articlesPage.totalCount / this.articlesPage.pageSize);
+                            console.log(this.articlesPage.totalCount + ":" + this.articlesPage.totalPages)
+                        } else {
+                            console.log("文章列表获取失败")
+                            this.articles = []
+                        }
+                    }).catch(error => {
+                    console.log(error)
+                    alert("错误信息：" + error)
+                }).finally(() => {
+                    this.articlesPage.loading = false;
+                })
+            },
+
+            //所有笔记
+            allNotes() {
+                this.notesPage.loading = true;
+
+                axios.get('/manage/notes', {
+                    params: {
+                        page: this.notesPage.nowPage,
+                        pageSize: this.notesPage.pageSize
+                    }
+                })
+                    .then(response => {
+                        const result = response.data
+                        console.log(result.code)
+                        if (result.code === 1) {
+                            console.log("笔记列表获取成功")
+                            this.notes = result.data.records;
+                            this.notesPage.totalCount = result.data.total;
+                            this.notesPage.totalPages = Math.ceil(this.notesPage.totalCount / this.notesPage.pageSize);
+                            console.log(this.notesPage.totalCount + ":" + this.notesPage.totalPages)
+                        } else {
+                            console.log("笔记列表获取失败")
+                            this.notes = []
+                        }
+                    }).catch(error => {
+                    console.log(error)
+                    alert("错误信息：" + error)
+                }).finally(() => {
+                    this.notesPage.loading = false;
+                })
+            }
+            ,
+
+            //跳转到分页中的具体某一页
+            goToPage(page) {
+                console.log("跳转到第" + page + "页")
+                if (page === '...' || page === this.currentPageType.nowPage) return;
+                this.currentPageType.nowPage = page;
+                this.getPageType(this.currentPage)
+            },
+
+            //上一页
+            prePage() {
+                let currentPage = this.currentPageType;
+                if (currentPage.nowPage > 1) {
+                    currentPage.nowPage--;
+                    this.getPageType(this.currentPage)
+                }
+
+            },
+
+            //下一页
+            nextPage() {
+                let currentPage = this.currentPageType;
+                if (currentPage.nowPage < currentPage.totalPages) {
+                    currentPage.nowPage++;
+                    this.getPageType(this.currentPage)
+                }
+            }
+            ,
+            //操作：删除
+            deleteUser(id) {
+                console.log("删除用户：" + id)
+                axios.delete('/manage/delete/user?id=' + id)
+                    .then(res => {
+                        const result = res.data;
+                        if (result.code == 1) {
+                            alert("删除成功");
+                            this.allUsers();
+                        } else {
+                            alert("删除失败");
+                        }
+                    })
+            },
+
+            //关键字搜索用户
+            searchUserByKeyword() {
+                console.log("关键字搜索用户：" + this.searchUser)
+                axios.post('/manage/search/users', {
+                    userName: this.searchUser,
+                    userNickname: this.searchUser,
+                    userEmail: this.searchUser
+                }).then(res => {
+                    const result = res.data;
+                    if (result.code == 1) {
+                        this.users = result.data.records;
+                        this.usersPage.totalCount = result.data.total;
+                        this.usersPage.totalPages = Math.ceil(this.usersPage.totalCount / this.usersPage.pageSize);
+                    } else {
+                        alert("搜索失败");
+                    }
+                }).catch(error => {
+                    console.log(error)
+                    alert("错误信息：" + error)
+                }).finally(() => {
+                    this.searchUser = "";
+                    this.usersPage.loading = false;
+                })
+
+            }
+            ,
+            //编辑用户信息
+            editUser(user) {
+                this.editUserForm = {
+                    userId: user.userId,
+                    userName: user.userName,
+                    userEmail: user.userEmail,
+                    userRole: user.userRole,
+                    userStatus: user.userStatus
+                };
+            },
+
+            //查看用户详情
+            viewUser(user) {
+                this.viewUserForm = user;
+            },
+
+            //全选/取消全选
+            selectAllUsers() {
+                if (this.selectAll) {
+                    this.selectedUsers = this.pageUsers.map(user => user.userId);
+                } else {
+                    this.selectedUsers = [];
+                }
+            },
+
+            //批量删除用户
+            batchDeleteUsers() {
+                if (confirm('确定要删除选中的用户吗？')) {
+                    axios.delete('/manage/delete/users', {
+                        params: {
+                            ids: this.selectedUsers.join(',')
+                        }
+                    }).then(res => {
+                        const result = res.data;
+                        if (result.code == 1) {
+                            alert('批量删除成功');
+                            this.allUsers();
+                            this.selectedUsers = [];
+                            this.selectAll = false;
+                        } else {
+                            alert('批量删除失败');
+                        }
+                    }).catch(error => {
+                        console.log(error);
+                        alert("错误信息：" + error);
+                    });
+                }
+            },
+
+            //添加用户
+            addUser() {
+                axios.post('/manage/add/user', this.newUser)
+                    .then(res => {
+                        const result = res.data;
+                        if (result.code == 1) {
+                            alert('添加用户成功');
+                            this.allUsers();
+                            // 重置表单
+                            this.newUser = {
+                                userName: '',
+                                userPassword: '',
+                                userEmail: '',
+                                userRole: 'user'
+                            };
+                            // 关闭模态框
+                            document.getElementById('addUserModal').querySelector('.btn-close').click();
+                        } else {
+                            alert('添加用户失败：' + result.message);
+                        }
+                    }).catch(error => {
+                    console.log(error);
+                    alert('错误信息：' + error);
+                });
+            },
+
+            //更新用户信息
+            updateUser() {
+                axios.put('/manage/update/user', this.editUserForm)
+                    .then(res => {
+                        const result = res.data;
+                        console.log( result.data)
+                        if (result.code == 1) {
+                            alert('更新用户成功');
+                            this.allUsers();
+                            // 关闭模态框
+                            document.getElementById('editUserModal').querySelector('.btn-close').click();
+                        } else {
+                            alert('更新用户失败：' + result.message);
+                        }
+                    }).catch(error => {
+                    console.log(error);
+                    alert('错误信息：' + error);
+                });
+            }
+        },
+        //页面加载时渲染
+        mounted() {
+            //this.allUsers();
+            this.usersPage.nowPage = 1;
+
+            this.getPageType();
+        }
+    })
+</script>
+
+
+</body>
+</html>

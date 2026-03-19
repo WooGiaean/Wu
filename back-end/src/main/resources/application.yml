@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: Personal_Blog
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/personal_blog?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+#文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 5MB    #单个文件上传大小限制
+      max-request-size: 10MB  #
+#邮箱验证配置
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: 2939958861@qq.com  #发件人的邮箱地址
+    password: ouwvahghmcfbdfee  #发件人的邮箱密码
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
+          auth: true
+          starttls:
+            enable: true
+          requied: true
+#web资源配置路径
+  web:
+    resources:
+      static-locations: classpath:/static
+      add-mappings: true
+  thymeleaf:
+    check-template-location: false
+
+
+  data:
+    #配置redis
+    redis:
+      host: localhost
+      port: 6379
+      database: 1
+      password: ''
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 1
+#配置图片上传存放路径
+blog:
+  upload:
+    path: "D:/Self_Directory/Pictures/"
+
+#配置端口号
+server:
+  port: 8008
+
+#配置mybatis
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath:mapper/*.xml
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+
+
