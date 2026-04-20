@@ -11,9 +11,12 @@ import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.PageResult;
 import com.wjy.personal_blog.service.UserService;
+import com.wjy.personal_blog.service.custom.UserStatisticsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,10 +49,20 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
 
 
-    private static final String UPLOAD_PATH = "classpath:/static/img";
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    //private static final String UPLOAD_PATH = "classpath:/static/img";
 
     //在新增文章时添加图片，图片的上传路径
-    private static final String UPLOAD_IMG_PATH = "src/main/resources/static/touxiang/";
+   // private static final String UPLOAD_IMG_PATH = "src/main/resources/static/touxiang/";
+
+    @Value("${blog.upload.path}")
+    private  String UPLOAD_IMG_PATH;
+
+
+    @Autowired
+    private UserStatisticsService userStatistics;
 
     /*
      * 登录验证
@@ -67,6 +80,7 @@ public class UserServiceImpl implements UserService {
     public PageResult getAllUsers(PageQueryDTO pageQueryDTO) {
         log.info("获取所有用户");
 
+        log.info("分页查询参数：{}", pageQueryDTO);
         int page = pageQueryDTO.getPage() != null ? pageQueryDTO.getPage() : 1;
         int pageSize = pageQueryDTO.getPageSize() != null ? pageQueryDTO.getPageSize() : 10;
 
@@ -76,17 +90,19 @@ public class UserServiceImpl implements UserService {
         //获取所有用户
         Page<User> allUsers = userMapper.getAllUsers();
 
-        //获取所有用户id
+      /*  //获取所有用户id
         List<Integer> allUserIds = allUsers.stream()
                 .map(User::getUserId)
                 .collect(Collectors.toList());
+
+
 
         //获取用户对应的文章数
         Map<Integer, Map<String, Long>> articles = articleMapper.countByArticleUserIdMap(allUserIds);
         Map<Integer, Integer> articleMap = mapConvert(articles, "articleCount");
 
         //获取用户对应的笔记数
-        Map<Integer, Map<String, Long>> notes = noteMapper.countNoteByUserId(allUserIds);
+        Map<Integer, Map<String, Long>> notes = noteMapper.countNoteByUserIdMaps(allUserIds);
         Map<Integer, Integer> noteMap = mapConvert(notes, "noteCount");
 
         //设置用户文章数和笔记数
@@ -94,6 +110,8 @@ public class UserServiceImpl implements UserService {
             user.setArticleCount(articleMap.getOrDefault(user.getUserId(), 0));
             user.setNoteCount(noteMap.getOrDefault(user.getUserId(), 0));
         }
+*/
+        userStatistics.setUsersStatistics(allUsers);
 
         PageResult pageResult = new PageResult(allUsers.getTotal(), allUsers.getResult());
         return pageResult;
@@ -117,6 +135,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserById(Integer id) {
         User userById = userMapper.getUserById(id);
+        if (userById == null) {
+            log.error("用户不存在");
+            return null;
+        }
+        /*//获取用户对应的文章数
+        Integer articleCount = articleMapper.countArticleByUserId(id);
+        userById.setArticleCount(articleCount);
+        //获取用户对应的笔记数
+        Integer noteCount = noteMapper.countNoteByUserId(id);
+        userById.setNoteCount(noteCount);*/
+        userStatistics.setUserStatistics(userById);
         return userById;
     }
 
@@ -133,6 +162,11 @@ public class UserServiceImpl implements UserService {
         BeanUtils.copyProperties(userDTO, user);
         List<User> singleUser = userMapper.findSingleUser(user);
         return singleUser;
+    }
+
+    @Override
+    public User findUserByEmail(String email) {
+        return userMapper.findUserByEmail(email);
     }
 
     /*
@@ -188,7 +222,7 @@ public class UserServiceImpl implements UserService {
         log.info("删除用户成功");
     }
 
-    /*
+    /**
      * 关键字/词查找用户
      * */
     @Override
@@ -196,6 +230,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         BeanUtils.copyProperties(userDTO, user);
         Page<User> specificUser = userMapper.findSingleUser(user);
+        userStatistics.setUsersStatistics(specificUser);
         PageResult pageResult = new PageResult(specificUser.getTotal(), specificUser.getResult());
         return pageResult;
     }
@@ -300,6 +335,17 @@ public class UserServiceImpl implements UserService {
            e.printStackTrace();
            throw new RuntimeException("上传失败" + e.getMessage());
         }
+    }
+
+    @Override
+    public void resetPasswordByEmail(String email, String newPassword) {
+        User userByEmail = userMapper.findUserByEmail(email);
+        if(userByEmail==null){
+            throw new RuntimeException("用户不存在");
+        }
+        //更新密码
+        userMapper.resetPasswordByEmail(email,passwordEncoder.encode(newPassword));
+        log.info("邮箱为：{} 的用户密码重置成功",email);
     }
 
 }

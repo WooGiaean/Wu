@@ -64,4 +64,12 @@ public interface UserMapper {
     @Delete("delete from user where user_id in (#{userIds})")
     void deleteUserBatch(Integer[] userIds);
 
+    /*
+    * 通过邮箱查询用户
+    * */
+    @Select("select * from user where user_email=#{email}")
+    User findUserByEmail(String email);
+
+    @Update("update user set user_password=#{encode} where user_email=#{email}")
+    void resetPasswordByEmail(String email, String encode);
 }

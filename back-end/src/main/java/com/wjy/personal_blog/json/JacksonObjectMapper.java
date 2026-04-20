@@ -9,6 +9,11 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.context.annotation.Bean;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,7 +22,15 @@ import java.time.format.DateTimeFormatter;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
+
+/*
+* 处理时间日期格式的转换
+* */
 public class JacksonObjectMapper extends ObjectMapper {
+
+
+    private RabbitTemplate rabbitTemplate;
+
     /*
      * 分别设置各种常用的日期格式用于转换
      * */
@@ -46,4 +59,6 @@ public class JacksonObjectMapper extends ObjectMapper {
 
         this.registerModule(simpleModule);
     }
+
+
 }

@@ -28,4 +28,7 @@ public class ArticleDTO {
 
     // 新增：文章所属分类ID列表
     private List<Integer> categoryIds;
+
+    // 新增：文章所属标签ID列表
+    private List<Integer> tagIds;
 }

@@ -46,7 +46,10 @@
         </collection>
      </resultMap>
 
+    <!--<insert id="insertArticle">
 
+    </insert>
+-->
     <!-- 修改文章信息 -->
     <update id="updateArticle">
         update article
@@ -77,6 +80,7 @@
     <select id="queryConditional" resultType="com.wjy.personal_blog.pojo.entity.Article">
         select * from article
         <where>
+            article_user_id=#{articleUserId}
             <if test="articleTitle != null and articleTitle != ''">
                 and article_title like concat('%',#{articleTitle},'%')
             </if>
@@ -87,7 +91,7 @@
                 or article_summary like concat('%',#{articleSummary},'%')
             </if>
         </where>
-            where article_user_id=#{articleUserId}
+
     </select>
 
     <!-- 查询当前用户所有文章 -->
@@ -195,6 +199,9 @@
         </collection>
     </resultMap>
     
+    
+    <!-- 查询公开文章具体详情 -->
+    
     <!-- 查询具体某篇文章 -->
     <select id="specificArticle" resultMap="ArticleWithCategory">
         select
@@ -216,5 +223,40 @@
         left join category c on ac.category_id = c.category_id
         where article.article_id = #{articleId}
     </select>
+
+    <!--
+     查询文章：使用全文索引fulltext
+    -->
+    <select id="searchArticles" resultType="com.wjy.personal_blog.pojo.entity.Article">
+        select  * from article
+        where match(article_title,article_content)
+        against(#{keyword} in boolean mode)
+        and article.article_status = 1
+        order by match(article_title,article_content)
+        aginst(#{keyword} in boolean mode) desc ,
+        article_create_time desc
+        limit 10
+    </select>
+
+    <!-- <select id="publicArticle" resultType="com.wjy.personal_blog.pojo.entity.Article">
+         select
+         <include refid="articleColumns"/>,
+         t.tag_id,
+         t.tag_name,
+         t.tag_description,
+         c.category_id,
+         c.category_name,
+         c.category_description,
+         c.category_icon,
+         c.category_parent_id,
+         c.category_order
+         from article
+         left join user on article.article_user_id = user.user_id
+         left join article_tag at on article.article_id = at.article_id
+         left join tag t on at.tag_id = t.tag_id
+         left join article_category ac on article.article_id = ac.article_id
+         left join category c on ac.category_id = c.category_id
+         where article.article_id = #{articleId} and article.article_status = 1
+     </select>-->
 
 </mapper>

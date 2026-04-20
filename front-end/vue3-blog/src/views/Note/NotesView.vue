@@ -73,9 +73,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import axiosAPI from '@/utils/api/axios.js'
 import leftNav from '@/components/layout/leftNav.vue'
-import '../../assets/css/home.css'
+//import '../../assets/css/home.css'
 
 const router = useRouter()
 
@@ -112,9 +112,9 @@ const search = () => {
     alert("请输入关键字！")
     return
   }
-  
+
   loading.value = true
-  axios.post('/notes/query', {
+  axiosAPI.post('/notes/query', {
     noteTopic: word,
     noteContent: word
   })
@@ -143,7 +143,7 @@ const search = () => {
 // 添加新笔记
 const insertNew = () => {
   console.log("点击了新增按钮")
-  axios.post('/notes/insert', {
+  axiosAPI.post('/user/notes', {
     noteTopic: newNote.value.topic,
     noteContent: newNote.value.content,
   }).then(res => {
@@ -167,7 +167,7 @@ const insertNew = () => {
 // 获取笔记列表
 const getNotes = () => {
   loading.value = true
-  axios.get('/notes/list')
+  axiosAPI.get('/user/notes/list')
     .then(res => {
       console.log(res.data.data.records)
       notes.value = res.data.data.records || []
@@ -198,6 +198,84 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 容器布局 */
+.container {
+  display: flex;
+  flex: 1;
+  padding: 20px;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+/* 左侧导航栏 */
+.left-column {
+  width: 250px;
+  flex-shrink: 0;
+}
+
+/* 主内容区域 */
+.right-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .container {
+    padding: 15px;
+    gap: 20px;
+  }
+
+  .left-column {
+    width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    padding: 10px;
+    gap: 20px;
+  }
+
+  .left-column {
+    width: 100%;
+  }
+
+  .right-column {
+    width: 100%;
+  }
+}
+
+/* 内容包装器 */
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 页面标题 */
+.section-header {
+  text-align: center;
+  padding: 30px 0;
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+}
+
+.section-header h2 {
+  color: var(--text-primary);
+  font-size: 28px;
+  font-weight: bold;
+}
+
 .controls {
   display: flex;
   justify-content: space-between;
@@ -346,18 +424,49 @@ onMounted(() => {
   color: var(--text-primary);
 }
 
+/* 加载和空状态 */
+.loading,
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+}
+
 /* 响应式设计 */
+@media (max-width: 1200px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .left-column {
+    width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
+  .container {
+    padding: 10px;
+    gap: 20px;
+  }
+
   .controls {
     flex-direction: column;
   }
-  
+
   .search-bar {
     width: 100%;
   }
-  
+
   .btn {
     width: 100%;
+  }
+
+  .section-header h2 {
+    font-size: 24px;
   }
 }
 </style>

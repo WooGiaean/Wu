@@ -1,18 +1,22 @@
 import axios from 'axios'
 import router from '@/router'
 
-
 // 创建axios实例
 const axiosAPI = axios.create({
-  baseURL: 'http://localhost:8008', // 后端服务地址
-  timeout: 10000, // 请求超时时间
+  baseURL: 'http://localhost:8008/api', // 后端服务地址
+  timeout: 10000, // 请求超时时间：10s
   withCredentials: true // 允许携带cookie
 })
 
 // 请求拦截器
 axiosAPI.interceptors.request.use(
   config => {
-    // 可以在这里添加token等认证信息
+    // 添加token到请求头
+    const token = localStorage.getItem('token')
+    
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`
+    }
     return config
   },
   error => {
@@ -38,8 +42,8 @@ axiosAPI.interceptors.response.use(
       //window.location.href = '/login'
 
       router.push('/login')
-    }
 
+    }
     return Promise.reject(error)
   }
 )

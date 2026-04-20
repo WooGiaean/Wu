@@ -1,20 +1,24 @@
 package com.wjy.personal_blog.controllers.user;
 
-import com.wjy.personal_blog.context.BaseContext;
+import com.wjy.personal_blog.constants.RedisConstant;
 import com.wjy.personal_blog.pojo.dto.UserDTO;
+import com.wjy.personal_blog.pojo.dto.VerifyCodeDTO;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.Result;
 import com.wjy.personal_blog.service.UserService;
+import com.wjy.personal_blog.service.email.EmailService;
+import com.wjy.personal_blog.utils.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
 
-@Controller
+@RestController
 @RequestMapping("/user")
 @Slf4j
 public class UserController {
@@ -23,13 +27,24 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+
+    @Autowired
+    private EmailService emailService;
+
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     /*
     * 查询用户资料（获取当前用户信息）
     * */
 
     @GetMapping("/profile")
     public Result<User> getUserProfile(){
-        Integer userId = BaseContext.getCurrentId();
+        Integer userId = SecurityUtil.getCurrentUserId();
         User userById = userService.getUserById(userId);
         if(userById == null){
             return Result.error("用户不存在");
@@ -43,7 +58,7 @@ public class UserController {
      */
     @PutMapping("/profile")
     public Result updateProfile(@RequestBody UserDTO userDTO) {
-        Integer userId = BaseContext.getCurrentId();
+        Integer userId = SecurityUtil.getCurrentUserId();
         if(userDTO.getUserId() == null||!userDTO.getUserId().equals(userId)){
             return Result.error("无权修改他人资料");
         }
@@ -57,10 +72,13 @@ public class UserController {
      */
     @PutMapping("/password")
     public Result updatePassword(@RequestBody Map<String, String> params) {
-        Integer userId = BaseContext.getCurrentId();
+        //获取登录用户的id
+        Integer userId = SecurityUtil.getCurrentUserId();
         String oldPassword = params.get("oldPassword");
         String newPassword = params.get("newPassword");
-        userService.updatePassword(userId, oldPassword, newPassword);
+        // 加密新密码
+        String encryptedPassword = passwordEncoder.encode(newPassword);
+        userService.updatePassword(userId, oldPassword, encryptedPassword);
         return Result.success();
     }
 
@@ -68,15 +86,19 @@ public class UserController {
      * 上传头像
      */
     @PostMapping("/avatar")
-    @ResponseBody
-    public Result uploadAvatar(@RequestParam("file") MultipartFile file) {
+   public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
         try {
-            Integer userId = BaseContext.getCurrentId();
+            Integer userId = SecurityUtil.getCurrentUserId();
             String avatarUrl = userService.uploadAvatar(userId, file);
             return Result.success(avatarUrl);
         } catch (RuntimeException e) {
             log.error("上传头像失败：{}", e.getMessage());
             return Result.error(e.getMessage());
         }
+    }
+
+    @GetMapping("/statics")
+    public Result<User> getUserStatistics(){
+        return Result.success();
     }
 }

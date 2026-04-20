@@ -1,7 +1,11 @@
 package com.wjy.personal_blog.configs;
 
-import com.wjy.personal_blog.interceptor.JwtAuthenticationFilter;
-import com.wjy.personal_blog.service.impl.AuthorizeService;
+
+import com.wjy.personal_blog.filter.JwtAuthenticationFilter;
+import com.wjy.personal_blog.handler.CustomFailureHandler;
+import com.wjy.personal_blog.handler.CustomLogoutSuccessHandler;
+import com.wjy.personal_blog.handler.CustomSuccessHandler;
+import com.wjy.personal_blog.service.auth.AuthorizeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +32,18 @@ public class SecurityConfig {
 
     @Autowired
     private AuthorizeService authorizeService;
-    
+
+
+    @Autowired
+    private CustomSuccessHandler customSuccessHandler;
+
+    @Autowired
+    private CustomFailureHandler customFailureHandler;
+
+
+    @Autowired
+    private CustomLogoutSuccessHandler customLogoutSuccessHandler;
+
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -39,20 +54,26 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder MypasswordEncoder() {
         return new PasswordEncoder() {
+
+            // 使用BCryptPasswordEncoder进行加密
+            private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
             @Override
             public String encode(CharSequence rawPassword) {
-                return rawPassword.toString();
+                //新密码进行加密
+                return bCryptPasswordEncoder.encode(rawPassword);
             }
 
             @Override
             public boolean matches(CharSequence rawPassword, String encodedPassword) {
-                // 直接比较明文密码
-                String raw = rawPassword.toString();
-                String encoded = encodedPassword;
-                System.out.println("Raw password: " + raw);
-                System.out.println("Encoded password: " + encoded);
-                System.out.println("Password match: " + raw.equals(encoded));
-                return raw.equals(encoded);
+                // 检查密码是否已经加密（BCrypt加密的密码以$2a$开头）
+                if (encodedPassword.startsWith("$2a$")) {
+                    // 对已加密的密码使用BCrypt验证
+                    return bCryptPasswordEncoder.matches(rawPassword, encodedPassword);
+                } else {
+                    // 对明文密码直接比较
+                    return rawPassword.equals(encodedPassword);
+                }
+
             }
         };
     }
@@ -73,32 +94,32 @@ public class SecurityConfig {
             session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         }).formLogin(form -> {
             form
-                .loginProcessingUrl("/api/login") //后端登录验证接口
-                .successHandler((request, response, authentication) -> {
-                    // 返回登录成功的JSON响应
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"code\": 1, \"message\": \"登录成功\"}");
-                })
-                .failureHandler((request, response, exception) -> {
-                    // 返回登录失败的JSON响应
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"code\": 0, \"message\": \"登录失败: " + exception.getMessage() + "\"}");
-                })
-                .permitAll();
+                .loginProcessingUrl("/api/login") //前端页面表单请求登录验证的路径
+                .successHandler(customSuccessHandler)
+                .failureHandler(customFailureHandler)
+                    .permitAll();
         }).logout(logout -> {
             logout.logoutUrl("/api/logout")
-                .logoutSuccessHandler((request, response, authentication) -> {
-                    // 返回退出成功的JSON响应
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"code\": 1, \"message\": \"退出成功\"}");
-                })
+                .logoutSuccessHandler(customLogoutSuccessHandler)
                 .permitAll();
-        }).csrf(csf -> {
+        }).csrf(csf -> {    // 关闭CSRF保护
             csf.disable();
         }).authorizeHttpRequests(authz -> {
-            authz.requestMatchers("/api/v1/auth/**", "/api/login", "/api/logout", "/api/register").permitAll()
-                .requestMatchers("/api/admin/**").hasAuthority("admin")
-                .anyRequest().permitAll();
+            // 公开接口
+            authz.requestMatchers("/api/auth/**", "/api/articles/**",
+                            "/api/comments/article/**", "/api/category/**",
+                            "/api/tags/list","/uploaded-images/**").permitAll()
+                    // 接口文档无需认证权限
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
+                            "/doc.html", "/webjars/**", "/swagger-resources/**",
+                            "/swagger-config/**", "/swagger-ui.html", "/favicon.ico",
+                            "/knife4j/**").permitAll()
+                // 用户权限接口
+                .requestMatchers("/api/user/**","/api/home/**").authenticated()
+                // 管理员权限接口
+                .requestMatchers("/api/admin/**", "/api/manage/**").hasAuthority("admin")
+                // 其他所有请求需要认证
+                .anyRequest().authenticated();
         });
 
         // 添加JWT认证过滤器
@@ -107,13 +128,16 @@ public class SecurityConfig {
         return http.build();
     }
 
-
+    /**
+     * 配置CORS跨域
+     * */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         //允许本地开发前端访问
         configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173"
+                "http://localhost:5173",
+                "http://localhost:5174"
         ));
         //允许所有请求方法
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

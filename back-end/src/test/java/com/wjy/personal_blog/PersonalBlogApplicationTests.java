@@ -1,6 +1,9 @@
 package com.wjy.personal_blog;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.Page;
+import com.wjy.personal_blog.configs.RabbitMQConfig;
+import com.wjy.personal_blog.json.JacksonObjectMapper;
 import com.wjy.personal_blog.mapper.ArticleMapper;
 import com.wjy.personal_blog.mapper.NoteMapper;
 import com.wjy.personal_blog.mapper.UserMapper;
@@ -11,10 +14,15 @@ import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.service.NoteService;
 import com.wjy.personal_blog.service.impl.CategoryServiceImpl;
 import com.wjy.personal_blog.utils.GenerateVerifyCode;
+import com.wjy.personal_blog.utils.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.method.MethodDescription;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +32,8 @@ import org.springframework.web.servlet.resource.VersionResourceResolver;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.wjy.personal_blog.constants.RedisConstant.USER_TOKEN_PREFIX;
 
 @SpringBootTest
 @Slf4j
@@ -108,7 +118,7 @@ class PersonalBlogApplicationTests {
     @Autowired
     private NoteMapper noteMapper;
 
-    @Test
+  /*  @Test
     void testNote(){
         Page<User> allUsers = userMapper.getAllUsers();
         //获取所有用户id
@@ -135,7 +145,7 @@ class PersonalBlogApplicationTests {
         });
 
     }
-
+*/
 
 
 
@@ -192,9 +202,80 @@ class PersonalBlogApplicationTests {
         System.out.println(result);
     }
 
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Test
     void testJWT() {
+        //System.out.println(jwtUtil.generateSecretKey());
+        System.out.println(jwtUtil.generateToken(1,"Wuhu","admin"));
 
     }
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Test
+    void testSendEmail() {
+
+        String exchangeName="test.fanout";
+
+        String testMessage="这是一段测试文本，测试Java客户端是否能成功向RabbitMQ发送并接收消息。";
+
+        try {
+            rabbitTemplate.convertAndSend(exchangeName,
+                    "",
+                    testMessage);
+            log.info("成功发送消息："+testMessage) ;
+        } catch (AmqpException e) {
+            log.error("发送消息失败："+e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    @RabbitListener(queues = "test.queue")
+    void testReceive(String msg){
+        log.info("收到消息："+msg);
+    }
+
+
+
+    @Test
+    void testRedis(){
+        String username="Giaean";
+        // 查询用户信息
+        User user = userMapper.findByUsername(username);
+        log.info("查询用户:{}", user.getUserName());
+
+        //用户存在，生成JWT令牌信息
+        //生成JWT令牌信息
+        String token = jwtUtil.generateToken(user.getUserId(), user.getUserName(), user.getUserRole());
+        Map<String, Object> map = new HashMap<>();
+        map.put("token", token);
+        map.put("user", user);
+
+        redisTemplate.opsForValue().set("token:userId:"+user.getUserId(), map);
+
+    }
+
+
+    private JacksonObjectMapper jacksonObjectMapper;
+
+    @Test
+    void testRedisGet(){
+    Map<String, Object> userMap =(Map<String, Object>) redisTemplate.opsForValue().get("token:userId:12");
+        if(userMap!=null&&userMap.containsKey("user")){
+            log.info("用户信息存在");
+           // User user = objectMapper.convertValue(userMap.get("user"), User.class);
+            User user1 = (User)userMap.get("user");
+            log.info("用户信息:{}", user1.getUserName());
+        }else{
+            log.info("用户信息不存在");
+            System.out.println(userMap);
+            //System.out.println("用户user："+userMap.get("user"));
+            //System.out.println("token："+userMap.get("token"));
+        }
+
+    }
+
 }

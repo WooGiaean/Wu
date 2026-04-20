@@ -1,142 +1,125 @@
 <template>
   <div class="register-container">
     <h2>用户注册</h2>
-    <div class="form-group">
-      <label for="username">用户名</label>
-      <input type="text" id="username" v-model="registerForm.username" required placeholder="请输入用户名">
-    </div>
+    <el-form :model="registerForm" class="register-form">
+      <el-form-item label="用户名" required>
+        <el-input v-model="registerForm.username" placeholder="请输入用户名" />
+      </el-form-item>
 
-    <div class="form-group">
-      <label for="userNickName">昵称</label>
-      <input type="text" id="userNickName" v-model="registerForm.userNickname" required placeholder="请输入昵称">
-    </div>
+      <el-form-item label="昵称" required>
+        <el-input v-model="registerForm.userNickname" placeholder="请输入昵称" />
+      </el-form-item>
 
-    <div class="form-group">
-      <label for="email">邮箱</label>
-      <input type="email" id="email" v-model="registerForm.userEmail" required placeholder="请输入邮箱地址">
-    </div>
+      <el-form-item label="邮箱" required>
+        <el-input v-model="registerForm.userEmail" type="email" placeholder="请输入邮箱地址" />
+      </el-form-item>
 
-    <div class="form-group">
-      <label for="password">密码</label>
-      <input type="password" id="password" v-model="registerForm.userPassword" required placeholder="请输入密码" @input="checkPasswordStrength">
-      <div id="password-strength" class="mt-2" :style="{ color: passwordStrength.color }">{{ passwordStrength.message }}</div>
-    </div>
+      <el-form-item label="密码" required>
+        <el-input v-model="registerForm.userPassword" type="password" placeholder="请输入密码" show-password @input="checkPasswordStrength" />
+        <div class="mt-2" :style="{ color: passwordStrength.color }">{{ passwordStrength.message }}</div>
+      </el-form-item>
 
-    <div class="form-group">
-      <label for="confirm-password">确认密码</label>
-      <input type="password" id="confirm-password" v-model="registerForm.confirmPassword" required placeholder="请确认密码">
-    </div>
+      <el-form-item label="确认密码" required>
+        <el-input v-model="registerForm.confirmPassword" type="password" placeholder="请确认密码" show-password />
+      </el-form-item>
 
-    <div class="form-group">
-      <div class="form-check">
-        <input type="checkbox" id="agree-terms" v-model="registerForm.agreeTerms" class="form-check-input">
-        <label for="agree-terms" class="form-check-label">我已阅读并同意<a href="#" style="color: #667eea;">服务条款</a>和<a href="#" style="color: #667eea;">隐私政策</a></label>
-      </div>
-    </div>
+      <el-form-item>
+        <el-checkbox v-model="registerForm.agreeTerms">我已阅读并同意<a href="#" style="color: #667eea;">服务条款</a>和<a href="#" style="color: #667eea;">隐私政策</a></el-checkbox>
+      </el-form-item>
 
-    <button type="submit" id="btn-register" @click="handleRegister">注册账号</button>
-    
+      <el-form-item>
+        <el-button type="primary" @click="handleRegister" class="register-button">注册账号</el-button>
+      </el-form-item>
+    </el-form>
+
     <div class="alternative-register">
       <span>或</span>
     </div>
-    
-    <button type="button" id="btn-email-register" @click="showEmailRegisterModal = true">邮箱验证码注册</button>
-    
+
+    <el-button type="info" @click="showEmailRegisterModal = true" class="email-register-button">邮箱验证码注册</el-button>
+
     <p>已有账号？<a href="#" @click.prevent="goToLogin">请登录</a></p>
   </div>
 
   <!-- 邮箱验证码注册模态框 -->
-  <div class="modal" v-if="showEmailRegisterModal" tabindex="-1" aria-labelledby="emailRegisterModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="emailRegisterModalLabel">邮箱验证码注册</h5>
-          <button type="button" class="btn-close" @click="showEmailRegisterModal = false" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="email-modal">邮箱</label>
-            <div class="input-group">
-              <input type="email" id="email-modal" v-model="emailRegisterForm.email" required placeholder="请输入邮箱地址" class="form-control">
-              <button type="button" class="btn btn-outline-secondary" id="send-captcha-modal" @click="sendCaptcha" :disabled="isSendingCaptcha">
-                {{ sendCaptchaText }}
-              </button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="captchaCode-modal">验证码</label>
-            <input type="text" id="captchaCode-modal" v-model="emailRegisterForm.captchaCode" required placeholder="请输入验证码" class="form-control">
-          </div>
-          <div class="form-group">
-            <label for="username-modal">用户名</label>
-            <input type="text" id="username-modal" v-model="emailRegisterForm.userName" required placeholder="请输入用户名" class="form-control">
-          </div>
-          <div class="form-group">
-            <label for="userNickName-modal">昵称</label>
-            <input type="text" id="userNickName-modal" v-model="emailRegisterForm.userNickname" required placeholder="请输入昵称" class="form-control">
-          </div>
-          <div class="form-group">
-            <label for="password-modal">密码</label>
-            <input type="password" id="password-modal" v-model="emailRegisterForm.userPassword" required placeholder="请输入密码" class="form-control" @input="checkEmailPasswordStrength">
-            <div id="password-strength-modal" class="mt-2" :style="{ color: emailPasswordStrength.color }">{{ emailPasswordStrength.message }}</div>
-          </div>
-          <div class="form-group">
-            <label for="confirm-password-modal">确认密码</label>
-            <input type="password" id="confirm-password-modal" v-model="emailRegisterForm.confirmPassword" required placeholder="请确认密码" class="form-control">
-          </div>
-          <div class="form-group">
-            <div class="form-check">
-              <input type="checkbox" id="agree-terms-modal" v-model="emailRegisterForm.agreeTerms" class="form-check-input">
-              <label for="agree-terms-modal" class="form-check-label">我已阅读并同意<a href="#" style="color: #667eea;">服务条款</a>和<a href="#" style="color: #667eea;">隐私政策</a></label>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="showEmailRegisterModal = false">取消</button>
-          <button type="button" class="btn btn-primary" id="btn-register-email" @click="handleEmailRegister">注册</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <el-dialog
+    v-model="showEmailRegisterModal"
+    title="邮箱验证码注册"
+    width="500px"
+  >
+    <el-form :model="emailRegisterForm">
+      <el-form-item label="邮箱" required>
+        <el-input v-model="emailRegisterForm.email" type="email" placeholder="请输入邮箱地址">
+          <template #append>
+            <el-button @click="sendCaptcha" :disabled="isSendingCaptcha">{{ sendCaptchaText }}</el-button>
+          </template>
+        </el-input>
+      </el-form-item>
+      <el-form-item label="验证码" required>
+        <el-input v-model="emailRegisterForm.captchaCode" placeholder="请输入验证码" />
+      </el-form-item>
+      <el-form-item label="用户名" required>
+        <el-input v-model="emailRegisterForm.userName" placeholder="请输入用户名" />
+      </el-form-item>
+      <el-form-item label="昵称" required>
+        <el-input v-model="emailRegisterForm.userNickname" placeholder="请输入昵称" />
+      </el-form-item>
+      <el-form-item label="密码" required>
+        <el-input v-model="emailRegisterForm.userPassword" type="password" placeholder="请输入密码" show-password @input="checkEmailPasswordStrength" />
+        <div class="mt-2" :style="{ color: emailPasswordStrength.color }">{{ emailPasswordStrength.message }}</div>
+      </el-form-item>
+      <el-form-item label="确认密码" required>
+        <el-input v-model="emailRegisterForm.confirmPassword" type="password" placeholder="请确认密码" show-password />
+      </el-form-item>
+      <el-form-item>
+        <el-checkbox v-model="emailRegisterForm.agreeTerms">我已阅读并同意<a href="#" style="color: #667eea;">服务条款</a>和<a href="#" style="color: #667eea;">隐私政策</a></el-checkbox>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="showEmailRegisterModal = false">取消</el-button>
+        <el-button type="primary" @click="handleEmailRegister">注册</el-button>
+      </span>
+    </template>
+  </el-dialog>
 
   <!-- 注册成功提示模态框 -->
-  <div class="modal" v-if="showSuccessModal" tabindex="-1" aria-labelledby="registerSuccessModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="registerSuccessModalLabel">注册成功</h5>
-          <button type="button" class="btn-close" @click="showSuccessModal = false" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="text-center">
-            <div style="font-size: 48px; color: #28a745; margin-bottom: 20px;">🎉</div>
-            <h4>欢迎加入我们！</h4>
-            <p class="text-muted">您的账号已成功注册，现在可以开始使用我们的博客系统了。</p>
-            <div class="mt-4">
-              <h6>推荐下一步操作：</h6>
-              <ul class="list-unstyled text-left mt-2">
-                <li>• 完善个人资料</li>
-                <li>• 发布第一篇博客</li>
-                <li>• 关注其他博主</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="showSuccessModal = false">稍后再说</button>
-          <button type="button" class="btn btn-primary" id="go-login" @click="goToLogin">去登录</button>
-        </div>
+  <el-dialog
+    v-model="showSuccessModal"
+    title="注册成功"
+    width="400px"
+  >
+    <div class="text-center">
+      <div style="font-size: 48px; color: #28a745; margin-bottom: 20px;">🎉</div>
+      <h4>欢迎加入我们！</h4>
+      <p class="text-muted">您的账号已成功注册，现在可以开始使用我们的博客系统了。</p>
+      <div class="mt-4">
+        <h6>推荐下一步操作：</h6>
+        <ul class="list-unstyled text-left mt-2">
+          <li>• 完善个人资料</li>
+          <li>• 发布第一篇博客</li>
+          <li>• 关注其他博主</li>
+        </ul>
       </div>
     </div>
-  </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="showSuccessModal = false">稍后再说</el-button>
+        <el-button type="primary" @click="goToLogin">去登录</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+//import { useRouter } from 'vue-router'
+import router from '@/router/index.js'
 import axios from 'axios'
-
-const router = useRouter()
+import { useUserInfoStore } from '@/stores/modules/userInfo.js'
+import { ElForm, ElFormItem, ElInput, ElButton, ElDialog, ElCheckbox, ElMessage } from 'element-plus'
+const userStore=useUserInfoStore();
+//const router = useRouter()
 
 // 主注册表单数据
 const registerForm = ref({
@@ -256,12 +239,12 @@ const checkEmailPasswordStrength = (event) => {
 const sendCaptcha = async () => {
   const email = emailRegisterForm.value.email
   if (!email) {
-    alert('请输入邮箱地址')
+    ElMessage.error('请输入邮箱地址')
     return
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    alert('请输入有效的邮箱地址')
+    ElMessage.error('请输入有效的邮箱地址')
     return
   }
 
@@ -269,12 +252,12 @@ const sendCaptcha = async () => {
   sendCaptchaText.value = '发送中...'
 
   try {
-    const response = await axios.post('/admin/code2Email', {
+    const response = await axios.post('/auth/code2Email', {
       email: email
     })
 
     if (response.data.code === 1) {
-      alert('验证码已发送到您的邮箱')
+      ElMessage.success('验证码已发送到您的邮箱')
       // 60秒后恢复发送按钮
       let countdown = 60
       sendCaptchaText.value = `${countdown}秒后重试`
@@ -288,13 +271,13 @@ const sendCaptcha = async () => {
         }
       }, 1000)
     } else {
-      alert('发送验证码失败：' + response.data.message)
+      ElMessage.error('发送验证码失败：' + response.data.message)
       isSendingCaptcha.value = false
       sendCaptchaText.value = '发送验证码'
     }
   } catch (error) {
     console.error(error)
-    alert('发送验证码失败，请稍后重试')
+    ElMessage.error('发送验证码失败，请稍后重试')
     isSendingCaptcha.value = false
     sendCaptchaText.value = '发送验证码'
   }
@@ -304,22 +287,22 @@ const sendCaptcha = async () => {
 const handleRegister = async () => {
   // 表单验证
   if (!registerForm.value.username || !registerForm.value.userNickname || !registerForm.value.userPassword || !registerForm.value.confirmPassword || !registerForm.value.userEmail) {
-    alert('请填写完整信息')
+    ElMessage.error('请填写完整信息')
     return
   }
 
   if (registerForm.value.userPassword !== registerForm.value.confirmPassword) {
-    alert('两次密码不一致，请重新填写！')
+    ElMessage.error('两次密码不一致，请重新填写！')
     return
   }
 
   if (!registerForm.value.agreeTerms) {
-    alert('请阅读并同意服务条款和隐私政策')
+    ElMessage.error('请阅读并同意服务条款和隐私政策')
     return
   }
 
   try {
-    const response = await axios.post('/admin/register', {
+    const response = await axios.post('/auth/register', {
       userName: registerForm.value.username,
       userNickname: registerForm.value.userNickname,
       userPassword: registerForm.value.userPassword,
@@ -330,14 +313,14 @@ const handleRegister = async () => {
       // 注册成功后显示模态框
       showSuccessModal.value = true
     } else {
-      alert('注册失败，' + response.data.message)
+      ElMessage.error('注册失败，' + response.data.message)
     }
   } catch (error) {
     console.log(error)
     if (error.response) {
-      alert('注册失败：' + error.response.data.message)
+      ElMessage.error('注册失败：' + error.response.data.message)
     } else {
-      alert('注册失败，请稍后重试')
+      ElMessage.error('注册失败，请稍后重试')
     }
   }
 }
@@ -346,22 +329,22 @@ const handleRegister = async () => {
 const handleEmailRegister = async () => {
   // 表单验证
   if (!emailRegisterForm.value.email || !emailRegisterForm.value.captchaCode || !emailRegisterForm.value.userName || !emailRegisterForm.value.userNickname || !emailRegisterForm.value.userPassword || !emailRegisterForm.value.confirmPassword) {
-    alert('请填写完整信息')
+    ElMessage.error('请填写完整信息')
     return
   }
 
   if (emailRegisterForm.value.userPassword !== emailRegisterForm.value.confirmPassword) {
-    alert('两次密码不一致，请重新填写！')
+    ElMessage.error('两次密码不一致，请重新填写！')
     return
   }
 
   if (!emailRegisterForm.value.agreeTerms) {
-    alert('请阅读并同意服务条款和隐私政策')
+    ElMessage.error('请阅读并同意服务条款和隐私政策')
     return
   }
 
   try {
-    const response = await axios.post('/admin/register', {
+    const response = await axios.post('/auth/register', {
       email: emailRegisterForm.value.email,
       captchaCode: emailRegisterForm.value.captchaCode,
       userName: emailRegisterForm.value.userName,
@@ -375,14 +358,14 @@ const handleEmailRegister = async () => {
       // 关闭邮箱注册模态框
       showEmailRegisterModal.value = false
     } else {
-      alert('注册失败，' + response.data.message)
+      ElMessage.error('注册失败，' + response.data.message)
     }
   } catch (error) {
     console.log(error)
     if (error.response) {
-      alert('注册失败：' + error.response.data.message)
+      ElMessage.error('注册失败：' + error.response.data.message)
     } else {
-      alert('注册失败，请稍后重试')
+      ElMessage.error('注册失败，请稍后重试')
     }
   }
 }
@@ -412,7 +395,8 @@ body {
   padding: 30px 40px;
   border-radius: 15px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-  width: 320px;
+  width: 100%;
+  max-width: 400px;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -436,62 +420,27 @@ h2 {
   font-weight: 500;
 }
 
-.form-group {
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-label {
-  display: block;
-  margin-bottom: 8px;
+/* Element Plus 表单样式调整 */
+:deep(.el-form-item__label) {
   color: #555;
-  font-size: 14px;
 }
 
-input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  box-sizing: border-box;
-  font-size: 14px;
-  transition: border 0.3s ease;
-}
-
-input:focus {
-  outline: none;
+:deep(.el-button--primary) {
+  background: linear-gradient(135deg, #d4b996 0%, #d4b996 100%);
   border-color: #d4b996;
 }
 
-button {
-  background: linear-gradient(135deg, #d4b996 0%, #d4b996 100%);
-  color: white;
-  border: none;
-  margin-bottom: 10px;
-  padding: 12px 0;
+:deep(.el-button--info) {
+  background: linear-gradient(135deg, #6c757d 0%, #6c757d 100%);
+  border-color: #6c757d;
+}
+
+.register-button,
+.email-register-button {
   width: 100%;
-  border-radius: 5px;
+  padding: 12px 0;
   font-size: 16px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-button:hover {
-  transform: translateY(-2px);
-}
-
-.forgot-password {
-  margin-top: 15px;
-  font-size: 14px;
-}
-
-.forgot-password a {
-  color: #667eea;
-  text-decoration: none;
-}
-
-.forgot-password a:hover {
-  text-decoration: underline;
+  margin-bottom: 10px;
 }
 
 .alternative-register {
@@ -519,83 +468,21 @@ button:hover {
   font-size: 12px;
 }
 
-#password-strength {
-  font-size: 12px;
-  margin-top: 5px;
-}
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .register-container {
+    padding: 20px;
+    margin: 0 20px;
+  }
 
-/* 模态框样式 */
-.modal {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-}
+  h2 {
+    font-size: 24px;
+  }
 
-.modal-dialog {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 15px;
-  border-bottom: 1px solid #e9ecef;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-footer {
-  padding: 15px;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-
-.btn-primary {
-  background-color: #d4b996;
-  color: white;
-}
-
-.btn-outline-secondary {
-  background-color: transparent;
-  border: 1px solid #6c757d;
-  color: #6c757d;
-}
-
-.input-group {
-  display: flex;
-  gap: 10px;
-}
-
-.input-group input {
-  flex: 1;
+  .register-button,
+  .email-register-button {
+    padding: 10px 0;
+    font-size: 14px;
+  }
 }
 </style>

@@ -1,3 +1,8 @@
+#配置后端服务器端口号
+server:
+  port: 8008
+
+#spring相关配置
 spring:
   application:
     name: Personal_Blog
@@ -29,13 +34,28 @@ spring:
             enable: true
           requied: true
 #web资源配置路径
-  web:
-    resources:
-      static-locations: classpath:/static
-      add-mappings: true
-  thymeleaf:
-    check-template-location: false
+#  web:
+#    resources:
+#      static-locations: classpath:/static
+#      add-mappings: true
+#  thymeleaf:
+#    check-template-location: false
 
+#接口文档配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    enable-footer: false
 
   data:
     #配置redis
@@ -50,14 +70,28 @@ spring:
           max-active: 8
           max-idle: 8
           min-idle: 1
+
+
+#RabbitMQ异步请求配置
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+
 #配置图片上传存放路径
 blog:
   upload:
     path: "D:/Self_Directory/Pictures/"
 
-#配置端口号
-server:
-  port: 8008
+#jwt令牌的密钥和过期时间
+jwt:
+  secret: "2bCpaRzrNb/5ZV3fmJ5VuUxKUb+N3UEseubJJaLKwxk="
+  expiration: 86400000 # 1天（24小时）
+  token-header: Authorization
+
+
 
 #配置mybatis
 mybatis-plus:

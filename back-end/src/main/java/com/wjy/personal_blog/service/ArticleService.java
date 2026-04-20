@@ -28,6 +28,13 @@ public interface ArticleService {
 
 
     /*
+    * 查询文章：使用全文索引fulltext
+    * */
+    // ArticleService.java
+    List<Article> searchArticles(String keyword, int page, int pageSize);
+
+
+    /*
     * 添加新文章
     * */
     void insertNewArticle(ArticleDTO articleDTO);
@@ -49,10 +56,17 @@ public interface ArticleService {
     Article specificArticle(Integer articleId);
 
     /*
+    * 进入公开的具体文章
+    * */
+    Article publicSpecificArticle(Integer articleId);
+
+
+    /*
     * 根据分类查询文章
     * 当前用户id: currentUserId
     * 需要传递参数：categoryId
     * */
     PageResult listArticlesByCategory(Integer currentUserId,Integer categoryId, PageQueryDTO pageQueryDTO);
 
+    PageResult getPublicArticles(PageQueryDTO pageQueryDTO);
 }

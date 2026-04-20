@@ -3,73 +3,78 @@
     <div class="login-form">
       <h2>Sign In</h2>
       <!-- 表单提交 -->
-      <form id="loginForm" @submit.prevent="handleLogin">
-        <div class="form-group">
-          <input type="text" id="username" v-model="loginForm.username" placeholder="Username" required>
-        </div>
-        <div class="form-group">
-          <input type="password" id="password" v-model="loginForm.password" placeholder="Password" required>
-        </div>
+      <el-form :model="loginForm" @submit.prevent="handleLogin" class="login-form">
+        <el-form-item label="Username" required>
+          <el-input v-model="loginForm.username" :suffix-icon="User" type="text"
+                    placeholder="Username" />
+        </el-form-item>
+        <el-form-item label="Password" required>
+<!--          <el-icon><Lock /></el-icon>-->
+          <el-input v-model="loginForm.password"   type="password"
+                    placeholder="Password"
+                    :suffix-icon="Lock"
+                    show-password   />
+        </el-form-item>
         <!-- “记住我” 复选框 -->
-        <div class="form-group remember-me">
-          <div class="form-check">
-            <input type="checkbox" id="remember" v-model="loginForm.remember" class="form-check-input">
-            <label for="remember" class="form-check-label">Remember me</label>
-          </div>
-        </div>
-        <!-- 登录按钮 -->
-        <button type="submit" id="submit_btn">Login</button>
-      </form>
+        <el-form-item>
+          <el-checkbox v-model="loginForm.remember">Remember me</el-checkbox>
+        </el-form-item>
+        <!-- 登录按钮
+
+         -->
+        <el-form-item>
+          <el-button type="primary" native-type="submit" @click="handleLogin" class="login-button">Login</el-button>
+        </el-form-item>
+      </el-form>
       <div class="form-footer">
-        <a href="#" @click.prevent="goToForgotPassword">Forget Password</a>
-        <a href="#" @click.prevent="goToRegister">Signup</a>
+        <el-button type="success"  @click="goToForgotPassword"  >Forget Password</el-button>
+        <el-button type="success"  @click="goToRegister" >Sign up</el-button>
+<!--        <a href="#" @click.prevent="goToForgotPassword">Forget Password</a>
+        <a href="#" @click.prevent="goToRegister">Signup</a>-->
       </div>
     </div>
   </div>
 
   <!-- 邮箱验证码登录Modal -->
-  <div class="modal" v-if="showCaptchaModal" tabindex="-1" aria-labelledby="captchaModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <!-- modal标题 -->
-        <div class="modal-header">
-          <h5 class="modal-title" id="captchaModalLabel">验证码登录</h5>
-          <button type="button" class="btn-close" @click="showCaptchaModal = false" aria-label="Close"></button>
-        </div>
-
-        <!-- modal主体 -->
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="captchaEmail" class="form-label">邮箱</label>
-            <input type="email" id="captchaEmail" v-model="captchaForm.email" placeholder="请输入注册邮箱">
-          </div>
-          <div class="mb-3">
-            <label for="captchaCode" class="form-label">验证码</label>
-            <div class="input-group">
-              <input type="text" id="captchaCode" v-model="captchaForm.code" placeholder="请输入验证码">
-              <button class="btn btn-outline-secondary" type="button" id="sendCaptchaBtn" @click="sendCaptcha">发送验证码</button>
-            </div>
-          </div>
-
-          <div id="captchaMessage" class="text-danger">{{ captchaMessage }}</div>
-        </div>
-
-        <!-- modal底部组件footer -->
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="showCaptchaModal = false">关闭</button>
-          <button type="button" class="btn btn-primary" id="verifyCaptchaBtn" @click="verifyCaptcha">验证</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <el-dialog
+    v-model="showCaptchaModal"
+    title="验证码登录"
+    width="500px"
+  >
+    <el-form :model="captchaForm">
+      <el-form-item label="邮箱" required>
+        <el-input v-model="captchaForm.email" placeholder="请输入注册邮箱" />
+      </el-form-item>
+      <el-form-item label="验证码" required>
+        <el-input v-model="captchaForm.code" placeholder="请输入验证码">
+          <template #append>
+            <el-button @click="sendCaptcha" :disabled="isSending">发送验证码</el-button>
+          </template>
+        </el-input>
+      </el-form-item>
+      <el-form-item>
+        <div class="text-danger">{{ captchaMessage }}</div>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="showCaptchaModal = false">关闭</el-button>
+        <el-button type="primary" @click="verifyCaptcha">验证</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import axiosAPI  from "@/utils/api/axios.js";
-
-const router = useRouter()
+import  router  from '@/router/index.js'
+import axiosAPI  from "@/utils/api/axios.js"
+import { useUserInfoStore } from '@/stores/modules/userInfo.js'
+import { ElForm, ElFormItem, ElInput, ElButton
+  , ElDialog, ElCheckbox, ElMessage,ElIcon} from 'element-plus'
+import { Lock,User} from '@element-plus/icons-vue'
+// 初始化用户信息存储
+const userStore = useUserInfoStore()
 
 // 登录表单数据
 const loginForm = ref({
@@ -86,30 +91,65 @@ const captchaForm = ref({
 
 const showCaptchaModal = ref(false)
 const captchaMessage = ref('')
+const isSending = ref(false)
 
 // 处理登录
 const handleLogin = async () => {
+  console.log('登录表单数据:', loginForm.value)
   try {
-    const response = await axiosAPI.post('/login', {
-      username: loginForm.value.username,
-      password: loginForm.value.password,
-      remember: loginForm.value.remember
-    })
+    // 使用URLSearchParams格式发送登录请求
+    const params = new URLSearchParams()
+    params.append('username', loginForm.value.username)
+    params.append('password', loginForm.value.password)
+    params.append('remember', loginForm.value.remember)
 
-    if (response.data.code === 1) {
-      // 登录成功，根据角色跳转
-      const userRole = response.data.data.userRole
-      if (userRole === 'admin') {
-        router.push('/admin')
-      } else {
-        router.push('/home')
+    //发送请求
+    const response = await axiosAPI.post('/login', params, {
+      //设置表单提交-》SpringSecurity的登录接口
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
       }
+    })
+    console.log('登录结果:', response.data)
+    if (response.data.code === 1) {
+      //userTempInfo用于存储用户角色
+      const userTempInfo = response.data.data.user
+      const userToken= response.data.data.token
+      console.log('用户信息:{}，token:{}', userTempInfo,userToken)
+      // 登录成功，存储用户信息和token到pinia
+      userStore.setUserAndToken(userTempInfo, userToken)
+      // 根据角色跳转
+      const userRole = userTempInfo.userRole
+      if (userRole === 'admin') {
+        ElMessage.success({
+          type: 'success',
+          message: '管理员登录成功',
+          duration: 1000
+        })
+        await router.push('/admin')
+      } else {
+        ElMessage.success({
+          type: 'success',
+          message: '用户登录成功',
+          duration: 1000
+        })
+        await router.push('/home')
+      }
+      // 移除成功消息提示，避免可能的图标显示问题
     } else {
-      alert(response.data.message)
+      ElMessage({
+        type: 'error',
+        message: response.data.msg,
+        duration: 3000
+      })
     }
   } catch (error) {
     console.error('登录失败:', error)
-    alert('登录失败，请稍后重试')
+    ElMessage({
+      type: 'error',
+      message: '登录失败，请稍后重试',
+      duration: 3000
+    })
   }
 }
 
@@ -120,16 +160,24 @@ const sendCaptcha = async () => {
     return
   }
 
+  isSending.value = true
   try {
-    const response = await axios.post('/admin/code2Email', {
+    const response = await axiosAPI.post('/auth/code2Email', {
       email: captchaForm.value.email
     })
     if (response.data.code === 1) {
-      alert('验证码发送成功')
+      ElMessage.success('验证码发送成功')
+      ElMessage({
+        type: 'success',
+        message: '验证码发送成功',
+        duration: 3000
+      })
     }
   } catch (error) {
     console.error('发送验证码失败:', error)
     captchaMessage.value = '发送验证码失败'
+  } finally {
+    isSending.value = false
   }
 }
 
@@ -141,15 +189,16 @@ const verifyCaptcha = async () => {
   }
 
   try {
-    const response = await axios.post('/admin/verifyCodeLogin', {
+    const response = await axiosAPI.post('/auth/verifyCodeLogin', {
       email: captchaForm.value.email,
       code: captchaForm.value.code
     })
 
     if (response.data.code === 1) {
-      alert('验证成功')
+      // 登录成功，存储用户信息和token到pinia
+      userStore.setUserAndToken(response.data.data.user, response.data.data.token)
       showCaptchaModal.value = false
-      router.push('/home')
+      await router.push('/home')
     } else {
       captchaMessage.value = response.data.message
     }
@@ -168,6 +217,8 @@ const goToRegister = () => {
 const goToForgotPassword = () => {
   router.push('/forgot-password')
 }
+
+
 </script>
 
 <style scoped>
@@ -212,69 +263,46 @@ h2 {
   text-align: left;
 }
 
-.form-group {
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-input {
-  width: 100%;
-  padding: 15px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-sizing: border-box;
-  font-size: 16px;
-  transition: all 0.3s ease;
-  background: var(--bg-primary);
+/* Element Plus 表单样式调整 */
+:deep(.el-form-item__label) {
   color: var(--text-primary);
 }
 
-input:focus {
-  outline: none;
+:deep(.el-input__wrapper) {
+  background: var(--bg-primary);
+}
+
+:deep(.el-input__inner) {
+  color: var(--text-primary);
+}
+
+:deep(.el-input__suffix-inner) {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.el-input__suffix-inner svg) {
+  width: 16px;
+  height: 16px;
+}
+
+:deep(.el-button--primary) {
+  background-color: var(--button-bg);
+  border-color: var(--button-bg);
+}
+
+:deep(.el-button--primary:hover) {
+  background-color: var(--accent-color);
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
-.remember-me {
-  display: flex;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
-.form-check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.form-check-input {
-  width: auto;
-  margin: 0;
-}
-
-.form-check-label {
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-button {
-  background: var(--button-bg);
-  color: var(--button-text);
-  border: none;
-  padding: 15px 0;
+.login-button {
   width: 100%;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 20px;
-}
-
-button:hover {
-  background: var(--accent-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+  padding: 12px 0;
+  font-size: 16px;
 }
 
 .form-footer {
@@ -286,107 +314,13 @@ button:hover {
 .form-footer a {
   color: var(--accent-color);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 24px;
   transition: color 0.3s ease;
 }
 
-.form-footer a:hover {
+.form-footer .el-button--success :hover {
   color: var(--text-primary);
   text-decoration: underline;
-}
-
-/* 模态框样式 */
-.modal {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-}
-
-.modal-dialog {
-  background: var(--bg-secondary);
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-}
-
-.modal-header {
-  padding: 15px;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--bg-primary);
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-footer {
-  padding: 15px;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  background: var(--bg-primary);
-}
-
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.btn-secondary {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-  background-color: var(--bg-primary);
-  border-color: var(--accent-color);
-}
-
-.btn-primary {
-  background-color: var(--button-bg);
-  color: var(--button-text);
-}
-
-.btn-primary:hover {
-  background-color: var(--accent-color);
-}
-
-.btn-outline-secondary {
-  background-color: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-}
-
-.btn-outline-secondary:hover {
-  border-color: var(--accent-color);
-  color: var(--text-primary);
-}
-
-.input-group {
-  display: flex;
-  gap: 10px;
-}
-
-.input-group input {
-  flex: 1;
 }
 
 .text-danger {
@@ -406,13 +340,9 @@ button:hover {
     font-size: 24px;
   }
 
-  input {
-    padding: 12px;
-  }
-
-  button {
-    padding: 12px 0;
-    font-size: 16px;
+  .login-button {
+    padding: 10px 0;
+    font-size: 14px;
   }
 }
 </style>

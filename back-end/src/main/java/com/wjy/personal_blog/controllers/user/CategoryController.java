@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@RestController
-@RequestMapping("/category")
+@RestController("userCategoryController")
+@RequestMapping("/user/category")
 @Slf4j
 public class CategoryController {
 
@@ -33,25 +33,12 @@ public class CategoryController {
 
 
     /**
-    * 展示分类列表
-    * */
-    @GetMapping("/list")
-    public Result<PageResult> getCategoryList()
-    {
-        log.info("获取分类列表");
-        Page<Category> allCategories = categoryService.getAllCategories();
-        PageResult pageResult=new PageResult(allCategories.getTotal(),allCategories.getResult());
-        return Result.success(pageResult);
-    }
-
-
-    /**
     * 根据分类查询文章
     * */
 
     @GetMapping("/articles")
     public Result<PageResult> getArticlesByCategory(
-            @RequestParam Integer categoryId,
+            @RequestParam(required = false) Integer categoryId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer pageSize) {
         log.info("根据分类查询文章，分类ID：{}，页码：{}，每页数量：{}", categoryId, page, pageSize);
@@ -61,17 +48,6 @@ public class CategoryController {
         Integer currentUserId = SecurityUtil.getCurrentUserId();
         PageResult pageResult = articleService.listArticlesByCategory(currentUserId,categoryId, pageQueryDTO);
         return Result.success(pageResult);
-    }
-
-
-    /**
-     * 获取分类及对应文章数量
-     */
-    @GetMapping("/withArticleCount")
-    public Result<List<Map<String, Object>>> getCategoriesWithArticleCount() {
-        log.info("获取分类及对应文章数量");
-        List<Map<String, Object>> categories = categoryService.getCategoriesWithArticleCount();
-        return Result.success(categories);
     }
 
 

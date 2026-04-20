@@ -14,7 +14,7 @@ public interface UserService {
     //用户登录认证
     User loginVerify(LoginDTO loginDTO);
 
-    //用户列表
+    //管理员查看用户列表
     PageResult getAllUsers(PageQueryDTO pageQueryDTO);
 
     //通过id查询用户
@@ -22,6 +22,8 @@ public interface UserService {
 
     //通过名字/邮箱查找用户
     List<User> getUserByNameOrEmail(UserDTO userDTO);
+
+    User findUserByEmail(String email);
 
     //添加新用户（注册）
     void insertNewUser(User user);
@@ -48,4 +50,6 @@ public interface UserService {
     void updatePassword(Integer userId, String oldPassword, String newPassword);
 
     String uploadAvatar(Integer userId, MultipartFile file);
+
+    void resetPasswordByEmail(String email, String newPassword);
 }

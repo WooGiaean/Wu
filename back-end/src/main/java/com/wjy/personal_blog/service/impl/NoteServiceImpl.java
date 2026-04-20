@@ -1,6 +1,7 @@
 package com.wjy.personal_blog.service.impl;
 
 import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.wjy.personal_blog.constants.RedisConstant;
 import com.wjy.personal_blog.context.BaseContext;
 import com.wjy.personal_blog.mapper.NoteMapper;
@@ -42,23 +43,20 @@ public class NoteServiceImpl implements NoteService {
         //获取当前用户id
         //笔记列表键，加入用户ID确保每个用户有自己的缓存
         String recentNotesKey = RECENT_NOTES_KEY + currentId;
-        //过期时间：5min
-        long expiredSeconds = RedisConstant.TEST_EXPIRED_SECONDS;
+        //过期时间：10min
+        long expiredMinutes = RedisConstant.HOT_DATA_EXPIRED_MINUTES;
         //获取redis操作对象
         ValueOperations<String, Object> ops = redisTemplate.opsForValue();
 
-        //从缓存中获取数据，并计算耗时时间
+        //从缓存中获取数据
         Object cacheNotes = ops.get(recentNotesKey);
-
         //如果缓存中有数据则直接返回缓存数据
-        if(cacheNotes!=null){
-            if(cacheNotes instanceof PageResult){
-                log.info("从缓存中查询笔记数据");
-                return (PageResult) cacheNotes;
-            }else{
-                log.warn("缓存数据格式错误，清除key：{}",recentNotesKey);
-                redisTemplate.delete(recentNotesKey);
-            }
+        if(cacheNotes!=null && cacheNotes instanceof PageResult){
+            log.info("从缓存中查询笔记数据");
+            return (PageResult) cacheNotes;
+        }else{
+            log.warn("缓存数据格式错误，清除key：{}",recentNotesKey);
+            redisTemplate.delete(recentNotesKey);
         }
 
         //没有则到数据库查询
@@ -67,7 +65,7 @@ public class NoteServiceImpl implements NoteService {
         PageResult pageResult = new PageResult(list.getTotal(),list.getResult());
 
         //将数据写入redis缓存
-        ops.set(recentNotesKey,pageResult,expiredSeconds, TimeUnit.SECONDS);
+        ops.set(recentNotesKey,pageResult,expiredMinutes, TimeUnit.MINUTES);
 
         return pageResult;
     }
@@ -75,6 +73,12 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public PageResult adminNoteList(PageQueryDTO pageQueryDTO) {
         log.info("管理员开始查询所有用户的笔记");
+
+        log.info("分页查询参数：{}", pageQueryDTO);
+        int page = pageQueryDTO.getPage() != null ? pageQueryDTO.getPage() : 1;
+        int pageSize = pageQueryDTO.getPageSize() != null ? pageQueryDTO.getPageSize() : 10;
+
+        PageHelper.startPage(page, pageSize);
         Page<Notes> notes = noteMapper.adminSeeNotesList();
         if(notes==null){
             log.warn("没有查询到笔记数据");
@@ -90,7 +94,7 @@ public class NoteServiceImpl implements NoteService {
     * */
     @Override
     public Notes getNoteById(Integer id) {
-        return noteMapper.getNoteById(id);
+        return id!=null?noteMapper.getNoteById(id):null;
     }
 
 
@@ -103,7 +107,7 @@ public class NoteServiceImpl implements NoteService {
         Notes notes = new Notes();
         BeanUtils.copyProperties(notesDTO,notes);
         //设置当前用户ID
-        Integer currentId = BaseContext.getCurrentId();
+        Integer currentId = SecurityUtil.getCurrentUserId();
         notes.setNoteUserId(currentId);
         Page<Notes> result = noteMapper.queryByKeyWord(notes);
         PageResult pageResult = new PageResult(result.getTotal(),result.getResult());
@@ -165,7 +169,7 @@ public class NoteServiceImpl implements NoteService {
             return;
         }
         //获取当前用户ID
-        Integer currentId = BaseContext.getCurrentId();
+        Integer currentId = SecurityUtil.getCurrentUserId();
         //查询笔记信息
         Notes note = noteMapper.getNoteById(noteId);
         if(note == null){

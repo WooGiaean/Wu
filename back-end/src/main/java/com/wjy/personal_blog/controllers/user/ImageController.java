@@ -64,8 +64,5 @@ public class ImageController {
 
     }
 
-    /*
-    * 展示图片
-    * */
 
 }

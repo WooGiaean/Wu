@@ -5,6 +5,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 /*
 * 生成验证码
 * */
+
 public class GenerateVerifyCode {
 
 

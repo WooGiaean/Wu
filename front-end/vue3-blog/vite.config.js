@@ -6,6 +6,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
+  //base: '/vue3-blog/',
   plugins: [
     vue(),
     vueDevTools(),
@@ -15,4 +16,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  //代理配置
+  server: {
+    proxy: {
+      '/uploaded-images': {
+        target: 'http://localhost:8008',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  }
 })

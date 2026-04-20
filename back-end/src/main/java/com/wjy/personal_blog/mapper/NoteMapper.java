@@ -43,7 +43,15 @@ public interface NoteMapper {
     @Delete("delete from notes where note_id=#{noteId}")
     void deleteNote(Integer noteId);
 
-
+    /*
+    * 查询每个用户
+    * */
     @MapKey("note_user_id")
-    Map<Integer, Map<String, Long>> countNoteByUserId(@Param("userIds") List<Integer> userIds);
+    Map<Integer, Map<String, Long>> countNoteByUserIdMaps(@Param("userIds") List<Integer> userIds);
+
+    @Select("select count(*) from notes where note_user_id=#{noteUserId}")
+    Integer countNoteByUserId(Integer noteUserId);
+
+
+    //int countByUserId(Integer userId);
 }

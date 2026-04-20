@@ -36,13 +36,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import axios from 'axios'
+//import { useRouter, useRoute } from 'vue-router'
+import router from '@/router/index.js'
+import axiosAPI from '@/utils/api/axios.js'
 import leftNav from '@/components/layout/leftNav.vue'
-import '../../assets/css/home.css'
+//import '@/assets/css/home.css'
 
-const router = useRouter()
-const route = useRoute()
+/*const router = useRouter()
+const route = useRoute()*/
 
 // 数据状态
 const note = ref(null)
@@ -68,7 +69,7 @@ const editNote = (id) => {
 // 删除笔记
 const deleteNote = (id) => {
   if(confirm('确定要删除这篇笔记吗？')) {
-    axios.delete('/notes/delete/'+id)
+    axiosAPI.delete(`/user/notes/${id}`)
       .then(res => {
         console.log(res.data.code==1?"删除成功":"删除失败")
         if(res.data.code==1) {
@@ -87,7 +88,7 @@ const deleteNote = (id) => {
 // 页面加载时获取笔记详情
 onMounted(() => {
   // 获取笔记ID
-  const id = route.params.id
+  const id = router.currentRoute.value.params.id;
   if (!id) {
     alert("笔记id无效")
     router.push('/notes')
@@ -97,7 +98,7 @@ onMounted(() => {
 
   // 获取笔记详情
   loading.value = true
-  axios.get('/notes/noteId?id='+id)
+  axiosAPI.get(`/user/notes/${id}`)
     .then(res => {
       if (res.data.code === 1) {
         note.value = res.data.data
@@ -214,11 +215,11 @@ h1 {
   h1 {
     font-size: 20px;
   }
-  
+
   .actions {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
     text-align: center;

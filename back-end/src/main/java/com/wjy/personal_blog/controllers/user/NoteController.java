@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
-@RequestMapping("/notes")
+@RestController
+@RequestMapping("/user/notes")
 @Slf4j
 public class NoteController {
 
@@ -23,17 +23,11 @@ public class NoteController {
     private NoteService noteService;
 
 
-    /**/
- /*   @RequestMapping("/")
-    public String turnToNoteListPage(){
-        return "redirect:/Note/note.html";
-    }*/
-
     /**
     * 展示所有笔记（在note页面）
     * */
     @GetMapping("/list")
-    @ResponseBody
+
     public Result<PageResult> listNotes( @RequestParam(defaultValue = "1")Integer page,
                                          @RequestParam(defaultValue = "10")Integer pageSize){
         log.info("开始查询笔记列表，页码：{}，数量{}",page,pageSize);
@@ -47,9 +41,9 @@ public class NoteController {
     * 根据id获取笔记
     * */
 
-    @GetMapping("/noteId")
-    @ResponseBody
-    public Result<Notes> getNote(@RequestParam("id")Integer id){
+    @GetMapping("/{id}")
+
+    public Result<Notes> getNote(@PathVariable("id")Integer id){
         log.info("查询id为的笔记:{}",id);
         Notes note = noteService.getNoteById(id);
         return Result.success(note);
@@ -59,7 +53,7 @@ public class NoteController {
      * 关键字搜索
      * */
     @PostMapping("/query")
-    @ResponseBody
+
     public Result<PageResult> queryNoteByKeyWord(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
@@ -83,7 +77,7 @@ public class NoteController {
      * @return
      */
     @PostMapping("/insert")
-    @ResponseBody
+
     public Result insertNewNote(@RequestBody NotesDTO notesDTO){
         log.info("添加新笔记：{}",notesDTO);
         noteService.addNewNote(notesDTO);
@@ -91,7 +85,7 @@ public class NoteController {
     }
 
     @PutMapping("/update")
-    @ResponseBody
+
     public Result updateNote(@RequestBody NotesDTO notesDTO){
         log.info("修改笔记:{}",notesDTO);
         noteService.updateNote(notesDTO);
@@ -100,7 +94,7 @@ public class NoteController {
 
 
     @DeleteMapping("/delete/{id}")
-    @ResponseBody
+
     public Result deleteNote(@PathVariable("id") Integer noteId){
         log.info("删除笔记：{}",noteId);
         noteService.deleteNote(noteId);

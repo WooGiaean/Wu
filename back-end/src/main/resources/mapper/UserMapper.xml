@@ -18,6 +18,12 @@
             <if test="userEmail != null">
                 user_email = #{userEmail},
             </if>
+            <if test="userUrl != null">
+                user_url = #{userUrl},
+            </if>
+            <if test="userAvatar != null">
+                user_avatar = #{userAvatar},
+            </if>
             <if test="userRole != null">
                 user_role = #{userRole},
             </if>

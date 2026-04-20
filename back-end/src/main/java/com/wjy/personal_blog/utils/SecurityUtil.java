@@ -1,12 +1,16 @@
 package com.wjy.personal_blog.utils;
 
-import com.wjy.personal_blog.service.impl.CustomUserDetails;
+import com.wjy.personal_blog.service.custom.CustomerUserDetails;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 
 /*
 * 该方法用户验证用户
 * */
+@Component
+@Slf4j
 public class SecurityUtil {
 
     /**
@@ -17,8 +21,8 @@ public class SecurityUtil {
         if (authentication != null && authentication.isAuthenticated()) {
             // 这里需要根据你的UserDetails实现来获取用户ID
             // 假设你的UserDetails实现类是CustomUserDetails
-            if (authentication.getPrincipal() instanceof CustomUserDetails) {
-                return ((CustomUserDetails) authentication.getPrincipal()).getUserId();
+            if (authentication.getPrincipal() instanceof CustomerUserDetails) {
+                return ((CustomerUserDetails) authentication.getPrincipal()).getUserId();
             }
         }
         return null;
@@ -27,11 +31,12 @@ public class SecurityUtil {
     /**
     * 获取当前用户的所有信息
     * */
-    public static CustomUserDetails getCurrentUser() {
+    public static CustomerUserDetails getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("获取当前用户信息:{}",authentication.getPrincipal());
         if (authentication != null && authentication.isAuthenticated()) {
-            if (authentication.getPrincipal() instanceof CustomUserDetails) {
-                return (CustomUserDetails) authentication.getPrincipal();
+            if (authentication.getPrincipal() instanceof CustomerUserDetails) {
+                return (CustomerUserDetails) authentication.getPrincipal();
             }
         }
         return null;

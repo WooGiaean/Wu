@@ -4,14 +4,18 @@ import com.wjy.personal_blog.interceptor.AdminInterceptor;
 import com.wjy.personal_blog.interceptor.LoginInterceptor;
 import com.wjy.personal_blog.json.JacksonObjectMapper;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.method.HandlerTypePredicate;
 import org.springframework.web.servlet.config.annotation.*;
 
 
@@ -30,43 +34,50 @@ public class WebConfig implements WebMvcConfigurer {
     /*
     * 配置静态资源位置
     * */
+
+    @Value("${blog.upload.path}")
+    private String UPLOAD_PATH;
+
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        //配置图片上传路径
+        registry.addResourceHandler("/uploaded-images/**")
+                .addResourceLocations("file:"+UPLOAD_PATH);
+
         // 优先配置Swagger和Knife4j静态资源
         registry.addResourceHandler("/doc.html")
                 .addResourceLocations("classpath:/META-INF/resources/");
-        registry.addResourceHandler("/swagger-ui/**")
+        /*registry.addResourceHandler("/swagger-ui/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/swagger-ui/");
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
         registry.addResourceHandler("/v3/api-docs/**")
-                .addResourceLocations("classpath:/META-INF/resources/");
+                .addResourceLocations("classpath:/META-INF/resources/");*/
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
 
-        //配置图片上传路径
-        registry.addResourceHandler("/uploaded-images/**")
-                .addResourceLocations("file:///D:/Self_Directory/Pictures/");
+        registry.addResourceHandler("/knife4j/**")
+                .addResourceLocations("classpath:/META-INF/resources/knife4j/");
+
+
 
         //配置静态资源位置
-        registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/");
+        /*registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/");*/
     }
 
 
-
-
+    /*
+    * 为RestController类添加前缀 /api
+    * */
     @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        //WebMvcConfigurer.super.addViewControllers(registry);
-
-        registry.addViewController("/Login")
-                .setViewName("forward:/Login/login.html");
-
-        registry.addViewController("/Home")
-                .setViewName("forward:/Home/home.html");
-
-        registry.addViewController("/Info")
-                .setViewName("forward:/Admin/infoCenter.html");
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        configurer.addPathPrefix("/api",
+                HandlerTypePredicate.forAnnotation(RestController.class));
     }
+
+
 
     /*
     * 注册拦截器
@@ -89,31 +100,32 @@ public class WebConfig implements WebMvcConfigurer {
                 .info(new Info()
                         .title("个人博客系统API文档")
                         .version("1.0.0")
-                        .description("个人博客系统的完整API文档，包含管理端和用户端接口"));
+                        .description("个人博客系统的完整API文档，包含管理端和用户端接口")
+                        .contact(new Contact().name("WuJY")));
     }
 
     /**
     * 后台管理端接口文档分组
     * */
-    @Bean
+    /*@Bean
     public GroupedOpenApi adminOpenAPI(){
         return GroupedOpenApi.builder()
                 .group("后台管理端接口")
                 .pathsToMatch("/admin/**","/manage/**")
                 .build();
-    }
+    }*/
 
     /**
      * 用户相关操作接口文档分组
      * */
-    @Bean
-    public GroupedOpenApi userOpenAPI(){
+    //@Bean
+   /* public GroupedOpenApi userOpenAPI(){
         return GroupedOpenApi.builder()
                 .group("用户相关操作接口")
                 .pathsToMatch("/articles/**", "/notes/**", "/category/**", "/home/**")
                 .build();
     }
-
+*/
     /*
             * 配置json数据格式的转换
             * */

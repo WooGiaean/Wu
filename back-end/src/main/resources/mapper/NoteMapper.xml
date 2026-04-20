@@ -31,7 +31,7 @@
     </select>
 
 
-    <select id="countNoteByUserId" >
+    <select id="countNoteByUserIdMaps" >
         select note_user_id,count(*) as noteCount
         from notes
         where note_user_id in
