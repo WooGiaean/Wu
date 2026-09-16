@@ -10,12 +10,14 @@ public class Result<T> implements Serializable {
     private String msg;
     private T data;
 
+    // 成功响应：不包含数据
     public static <T> Result<T> success() {
         Result<T> result = new Result<T>();
         result.code = 1;
         return result;
     }
 
+    // 成功响应：包含数据
     public static <T> Result<T> success(T object) {
         Result<T> result = new Result<T>();
         result.data = object;
@@ -27,6 +29,14 @@ public class Result<T> implements Serializable {
         Result result = new Result();
         result.msg = msg;
         result.code = 0;
+        return result;
+    }
+
+    // 新增：带自定义错误码的方法
+    public static <T> Result<T> error(Integer code, String msg) {
+        Result<T> result = new Result<T>();
+        result.code = code;
+        result.msg = msg;
         return result;
     }
 

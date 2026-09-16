@@ -9,6 +9,8 @@ import com.wjy.personal_blog.result.PageResult;
 import com.wjy.personal_blog.result.Result;
 import com.wjy.personal_blog.service.NoteService;
 import com.wjy.personal_blog.utils.SecurityUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/user/notes")
 @Slf4j
+@Tag(name = "笔记管理", description = "用户笔记相关接口")
 public class NoteController {
 
     @Autowired
@@ -27,7 +30,7 @@ public class NoteController {
     * 展示所有笔记（在note页面）
     * */
     @GetMapping("/list")
-
+    @Operation(summary = "查看笔记列表", description = "查看当前用户的笔记列表")
     public Result<PageResult> listNotes( @RequestParam(defaultValue = "1")Integer page,
                                          @RequestParam(defaultValue = "10")Integer pageSize){
         log.info("开始查询笔记列表，页码：{}，数量{}",page,pageSize);
@@ -42,7 +45,7 @@ public class NoteController {
     * */
 
     @GetMapping("/{id}")
-
+    @Operation(summary = "获取笔记详情", description = "根据ID获取笔记详情")
     public Result<Notes> getNote(@PathVariable("id")Integer id){
         log.info("查询id为的笔记:{}",id);
         Notes note = noteService.getNoteById(id);
@@ -53,7 +56,7 @@ public class NoteController {
      * 关键字搜索
      * */
     @PostMapping("/query")
-
+    @Operation(summary = "搜索笔记", description = "根据关键字搜索笔记")
     public Result<PageResult> queryNoteByKeyWord(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
@@ -77,7 +80,7 @@ public class NoteController {
      * @return
      */
     @PostMapping("/insert")
-
+    @Operation(summary = "添加新笔记", description = "创建新笔记")
     public Result insertNewNote(@RequestBody NotesDTO notesDTO){
         log.info("添加新笔记：{}",notesDTO);
         noteService.addNewNote(notesDTO);
@@ -85,7 +88,7 @@ public class NoteController {
     }
 
     @PutMapping("/update")
-
+    @Operation(summary = "修改笔记", description = "修改指定笔记内容")
     public Result updateNote(@RequestBody NotesDTO notesDTO){
         log.info("修改笔记:{}",notesDTO);
         noteService.updateNote(notesDTO);
@@ -94,7 +97,7 @@ public class NoteController {
 
 
     @DeleteMapping("/delete/{id}")
-
+    @Operation(summary = "删除笔记", description = "删除指定笔记")
     public Result deleteNote(@PathVariable("id") Integer noteId){
         log.info("删除笔记：{}",noteId);
         noteService.deleteNote(noteId);

@@ -13,7 +13,7 @@ import java.util.List;
 public interface ArticleService {
 
     /*
-    * 查询当前用户所有历史文章
+    * 查询当前用户所有历史文章（包括公开、私有）
     * */
     PageResult list(Integer currentId);
 
@@ -69,4 +69,52 @@ public interface ArticleService {
     PageResult listArticlesByCategory(Integer currentUserId,Integer categoryId, PageQueryDTO pageQueryDTO);
 
     PageResult getPublicArticles(PageQueryDTO pageQueryDTO);
+
+
+    /**
+     * 统计所有文章数量
+     * */
+    Integer countArticles();
+
+    /**
+     * 统计公开状态下的文章数量
+     * */
+    Integer countPublicArticles();
+
+    void deleteArticleByAdmin(Integer articleId);
+
+    void batchDeleteArticlesByAdmin(List<Integer> articleIdList);
+
+
+    /**
+     * 设置文章置顶状态
+     * @param articleId 文章ID
+     * @param isTop 是否置顶
+     */
+    void setArticleTop(Integer articleId, boolean isTop);
+
+
+    /**
+     * 批量设置文章排序
+     * @param articleIds 按排序顺序排列的文章ID列表
+     */
+    void batchSetArticleOrder(List<Integer> articleIds);
+
+    /**
+     * 查询文章列表（按置顶排序，时间倒序）
+     * @return 文章列表
+     * */
+    List<Article> listArticlesOrderByTop();
+
+
+    /**
+     * 标签搜索：根据标签名称搜索文章
+     */
+    List<Article> searchByTag(String tagName);
+
+
+    /**
+     * 分类+标签组合搜索
+     */
+    List<Article> searchByCategoryAndTag(Integer categoryId, String tagName);
 }

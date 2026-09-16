@@ -20,6 +20,15 @@
         user.user_nickname AS blogger
     </sql>
 
+
+    <!-- 批量删除 -->
+    <delete id="deleteBatchArticles">
+        delete from article where article_id in
+        <foreach item="articleId" collection="articleIds" separator="," open="(" close=")">
+            #{articleId}
+        </foreach>
+    </delete>
+
     <!-- 联合查询，加上标签 -->
     <resultMap id="ArticleWithTag" type="com.wjy.personal_blog.pojo.entity.Article">
         <!-- article的相关字段 -->
@@ -42,7 +51,7 @@
         <collection property="tagList" ofType="com.wjy.personal_blog.pojo.entity.Tag">
             <id property="tagId" column="tag_id"/>
             <result property="tagName" column="tag_name"/>
-            <result property="tagDescription" column="tag_description"/>
+            <result property="tagCount" column="tag_count"/>
         </collection>
      </resultMap>
 
@@ -72,6 +81,9 @@
             <if test="articleStatus != null">
                 article_status = #{articleStatus},
             </if>
+            <if test="articleOrder != null">
+                article_order = #{articleOrder},
+            </if>
         </set>
         where article_id = #{articleId}
     </update>
@@ -79,16 +91,17 @@
     <!-- 模糊查询文章，根据关键字进行查询 -->
     <select id="queryConditional" resultType="com.wjy.personal_blog.pojo.entity.Article">
         select * from article
+
         <where>
-            article_user_id=#{articleUserId}
-            <if test="articleTitle != null and articleTitle != ''">
-                and article_title like concat('%',#{articleTitle},'%')
-            </if>
-            <if test="articleContent != null and articleContent != ''">
-                or article_content like concat('%',#{articleContent},'%')
-            </if>
-            <if test="articleSummary != null and articleSummary != ''">
-                or article_summary like concat('%',#{articleSummary},'%')
+            article_user_id = #{articleUserId}
+            <if test="(articleTitle != null and articleTitle != '')
+                or (articleContent != null and articleContent != '')
+                or (articleSummary != null and articleSummary != '')">
+                and (
+                    article_title like concat('%',#{articleTitle},'%')
+                    or article_content like concat('%',#{articleContent},'%')
+                    or article_summary like concat('%',#{articleSummary},'%')
+                )
             </if>
         </where>
 
@@ -96,11 +109,11 @@
 
     <!-- 查询当前用户所有文章 -->
     <select id="list" resultMap="ArticleWithCategory">
-        select
+        select distinct
             <include refid="articleColumns"/>,
            t.tag_id,
            t.tag_name,
-           t.tag_description,
+            t.tag_count,
            c.category_id,
            c.category_name,
            c.category_description,
@@ -130,12 +143,12 @@
     </select>
 
     <!-- 管理员查询所有用户文章 -->
-    <select id="adminSeeArticlesList" resultMap="ArticleWithCategory">
+   <!-- <select id="adminSeeArticlesList" resultMap="ArticleWithCategory">
         select
         <include refid="articleColumns"/>,
         t.tag_id,
         t.tag_name,
-        t.tag_description,
+        ,
         c.category_id,
         c.category_name,
         c.category_description,
@@ -148,8 +161,9 @@
         left join tag t on at.tag_id = t.tag_id
         left join article_category ac on article.article_id = ac.article_id
         left join category c on ac.category_id = c.category_id
+
         order by article.article_update_time desc
-    </select>
+    </select>-->
 
     <!-- 根据分类查询文章 -->
     <select id="getArticlesByCategory" resultMap="ArticleWithCategory">
@@ -157,7 +171,7 @@
         <include refid="articleColumns"/>,
         t.tag_id,
         t.tag_name,
-        t.tag_description,
+        t.tag_count,
         c.category_id,
         c.category_name,
         c.category_description,
@@ -187,7 +201,8 @@
     </select>
 
     <!-- 扩展 ArticleWithTag 结果映射，添加分类列表 -->
-    <resultMap id="ArticleWithCategory" type="com.wjy.personal_blog.pojo.entity.Article" extends="ArticleWithTag">
+    <resultMap id="ArticleWithCategory" type="com.wjy.personal_blog.pojo.entity.Article"
+               extends="ArticleWithTag">
         <!-- 关联分类列表 -->
         <collection property="categoryList" ofType="com.wjy.personal_blog.pojo.entity.Category">
             <id property="categoryId" column="category_id"/>
@@ -208,7 +223,7 @@
             <include refid="articleColumns"/>,
             t.tag_id,
             t.tag_name,
-            t.tag_description,
+            t.tag_count,
             c.category_id,
             c.category_name,
             c.category_description,
@@ -221,42 +236,96 @@
         left join tag t on at.tag_id = t.tag_id
         left join article_category ac on article.article_id = ac.article_id
         left join category c on ac.category_id = c.category_id
+
         where article.article_id = #{articleId}
     </select>
 
     <!--
      查询文章：使用全文索引fulltext
-    -->
-    <select id="searchArticles" resultType="com.wjy.personal_blog.pojo.entity.Article">
-        select  * from article
+     /*  select  * from article
         where match(article_title,article_content)
         against(#{keyword} in boolean mode)
         and article.article_status = 1
         order by match(article_title,article_content)
-        aginst(#{keyword} in boolean mode) desc ,
+        against(#{keyword} in boolean mode) desc ,
         article_create_time desc
-        limit 10
+        limit 10*/
+    -->
+    <select id="searchArticles" resultType="com.wjy.personal_blog.pojo.entity.Article">
+        select * from article
+        where (article_title like concat('%', #{keyword}, '%')
+            or article_content like concat('%', #{keyword}, '%'))
+          and article.article_status = 1
+        order by article_create_time desc
+            limit 10
     </select>
 
-    <!-- <select id="publicArticle" resultType="com.wjy.personal_blog.pojo.entity.Article">
-         select
-         <include refid="articleColumns"/>,
-         t.tag_id,
-         t.tag_name,
-         t.tag_description,
-         c.category_id,
-         c.category_name,
-         c.category_description,
-         c.category_icon,
-         c.category_parent_id,
-         c.category_order
-         from article
-         left join user on article.article_user_id = user.user_id
-         left join article_tag at on article.article_id = at.article_id
-         left join tag t on at.tag_id = t.tag_id
-         left join article_category ac on article.article_id = ac.article_id
-         left join category c on ac.category_id = c.category_id
-         where article.article_id = #{articleId} and article.article_status = 1
-     </select>-->
+     <select id="getPublicArticles" resultType="com.wjy.personal_blog.pojo.entity.Article">
+        select * from article
+         where article.article_status = 1
+        order by article.article_create_time desc
+     </select>
+
+
+    <!--
+        id列表查询文章
+    -->
+    <select id="selectArticlesByIds" resultType="com.wjy.personal_blog.pojo.entity.Article"
+    resultMap="ArticleWithCategory">
+       select distinct
+           <include refid="articleColumns"/>
+           t.tag_id,
+           t.tag_name,
+           t.tag_count,
+           c.category_id,
+           c.category_name,
+           c.category_description,
+           c.category_icon,
+           c.category_parent_id,
+           c.category_order
+       from article
+       left join user on article.article_user_id = user.user_id
+       left join article_tag a_t on article.article_id = a_t.article_id
+       left join tag t on at.tag_id = t.tag_id
+       left join article_category ac on article.article_id = ac.article_id
+       left join category c on ac.category_id = c.category_id
+       where article.article_id in
+       <foreach item="articleId" collection="articleIds" separator="," open="(" close=")" index="">
+           #{articleId}
+       </foreach>
+       and article.article_status = 1
+       order by article.article_create_time desc
+    </select>
+
+    <!--
+    分类+标签查询文章
+    -->
+    <select id="selectArticlesByCategoryAndTag" resultType="com.wjy.personal_blog.pojo.entity.Article"
+    resultMap="ArticleWithCategory">
+        SELECT DISTINCT
+        <include refid="articleColumns"/>,
+        t.tag_id,
+        t.tag_name,
+        t.tag_count,
+        c.category_id,
+        c.category_name,
+        c.category_description,
+        c.category_icon,
+        c.category_parent_id,
+        c.category_order
+        FROM article
+        LEFT JOIN user ON article.article_user_id = user.user_id
+        LEFT JOIN article_tag a_t ON article.article_id = a_t.article_id
+        LEFT JOIN tag t ON a_t.tag_id = t.tag_id
+        LEFT JOIN article_category ac ON article.article_id = ac.article_id
+        LEFT JOIN category c ON ac.category_id = c.category_id
+        WHERE article.article_id IN
+        <foreach collection="articleIds" item="articleId" separator="," open="(" close=")">
+            #{articleId}
+        </foreach>
+        AND ac.category_id = #{categoryId}
+        AND article.article_status = 1
+        ORDER BY article.article_create_time DESC
+    </select>
 
 </mapper>

@@ -1,8 +1,11 @@
 package com.wjy.personal_blog.mapper;
 
 import com.github.pagehelper.Page;
+import com.wjy.personal_blog.pojo.dto.UserStatisticsDTO;
 import com.wjy.personal_blog.pojo.entity.User;
 import org.apache.ibatis.annotations.*;
+
+import java.util.List;
 
 @Mapper
 public interface UserMapper {
@@ -61,8 +64,8 @@ public interface UserMapper {
     /*
     * 批量删除用户
      */
-    @Delete("delete from user where user_id in (#{userIds})")
-    void deleteUserBatch(Integer[] userIds);
+    //@Delete("delete from user where user_id in (#{userIds})")
+    void deleteUserBatch(List<Integer> userIds);
 
     /*
     * 通过邮箱查询用户
@@ -72,4 +75,16 @@ public interface UserMapper {
 
     @Update("update user set user_password=#{encode} where user_email=#{email}")
     void resetPasswordByEmail(String email, String encode);
+
+    @Select("select count(*) from user")
+    Integer countAllUsers();
+
+
+
+   /* 一次性统计用户文章数、笔记数、评论数
+
+   @Select("select (select count(*) from article where article_user_id=#{userId}) as articleCount," +
+            "(select count(*) from notes where note_user_id=#{userId}) as articleCount," +
+            "(select count(*) from comment where user_id=#{userId}) as articleCount")
+    UserStatisticsDTO getStatistics(Integer userId);*/
 }

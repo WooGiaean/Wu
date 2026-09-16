@@ -24,13 +24,6 @@ import java.util.List;
 @Configuration
 @Slf4j
 public class WebConfig implements WebMvcConfigurer {
-
-    // Spring Security 已处理认证和授权，不再需要自定义拦截器
-    // @Autowired
-    // private AdminInterceptor adminInterceptor;
-
-    // @Autowired
-    // private LoginInterceptor loginInterceptor;
     /*
     * 配置静态资源位置
     * */

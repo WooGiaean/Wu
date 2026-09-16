@@ -12,5 +12,23 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface autoCheck {
+    /**
+     * 是否需要登录认证
+     */
+    boolean requireLogin() default true;
 
+    /**
+     * 是否打印日志
+     */
+    boolean logEnabled() default true;
+
+    /**
+     * 日志级别
+     */
+  //  String logLevel() default "INFO";
+
+    /**
+     * 操作描述
+     */
+    String description() default "";
 }

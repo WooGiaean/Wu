@@ -1,8 +1,9 @@
-import { createApp } from 'vue'
+import router from '@/router/index.js'
 import { createPinia } from 'pinia'
 import piniaPersist from 'pinia-plugin-persistedstate'
+import { createApp } from 'vue'
 import App from './App.vue'
-import router from '@/router/index.js'
+//import './assets/css/tw_style.css'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -14,7 +15,7 @@ app.use(pinia)
 app.use(router)
 
 // 在 Pinia 应用之后再使用 store
-import { useUserInfoStore } from "@/stores/modules/userInfo.js";
+import { useUserInfoStore } from "@/stores/modules/userInfo.js"
 const userInfoStore = useUserInfoStore()
 userInfoStore.initUserAndToken()
 

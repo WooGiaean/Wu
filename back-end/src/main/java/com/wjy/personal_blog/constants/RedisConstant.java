@@ -7,6 +7,7 @@ package com.wjy.personal_blog.constants;
 *
 * */
 public class RedisConstant {
+
     //定义当前登录用户的key
     public static final String CURRENT_USER_KEY = "current:user:";
 
@@ -18,8 +19,6 @@ public class RedisConstant {
 
     // Token黑名单键前缀
     public static final String TOKEN_BLACKLIST_PREFIX = "token:blacklist:";
-
-
 
     //定义键的常量值：最新文章列表
     public static final String RECENT_ARTICLES_KEY = "blog:recent_articles:";
@@ -33,6 +32,15 @@ public class RedisConstant {
 
     //定义键的常量值：用户笔记数量
     public static final String USER_NOTE_COUNT_KEY = "user:note:count:";
+
+    //定义键的常量值：用户评论数量
+    public static final String USER_COMMENT_COUNT_KEY = "user:comment:count:";
+
+    //定义文章浏览量的key，只有当用户第一次访问文章时，才会增加浏览量，后续访问文章时，浏览量不会增加
+    public static final String ARTICLE_READ_KEY = "article:read:";
+
+
+
 
     //热门数据：博文、笔记过期时间 10 min
     public static final long HOT_DATA_EXPIRED_MINUTES=10;
@@ -48,4 +56,6 @@ public class RedisConstant {
 
     //邮箱发送频率限制
     public static final String EMAIL_SEND_RATE_LIMIT="email_send_rate_limit:";
+
+
 }

@@ -2,12 +2,14 @@ package com.wjy.personal_blog.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.wjy.personal_blog.exceptions.BusinessException;
 import com.wjy.personal_blog.mapper.ArticleMapper;
 import com.wjy.personal_blog.mapper.NoteMapper;
 import com.wjy.personal_blog.mapper.UserMapper;
 import com.wjy.personal_blog.pojo.dto.LoginDTO;
 import com.wjy.personal_blog.pojo.dto.UserDTO;
 import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
+import com.wjy.personal_blog.pojo.dto.UserStatisticsDTO;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.PageResult;
 import com.wjy.personal_blog.service.UserService;
@@ -89,45 +91,11 @@ public class UserServiceImpl implements UserService {
 
         //获取所有用户
         Page<User> allUsers = userMapper.getAllUsers();
-
-      /*  //获取所有用户id
-        List<Integer> allUserIds = allUsers.stream()
-                .map(User::getUserId)
-                .collect(Collectors.toList());
-
-
-
-        //获取用户对应的文章数
-        Map<Integer, Map<String, Long>> articles = articleMapper.countByArticleUserIdMap(allUserIds);
-        Map<Integer, Integer> articleMap = mapConvert(articles, "articleCount");
-
-        //获取用户对应的笔记数
-        Map<Integer, Map<String, Long>> notes = noteMapper.countNoteByUserIdMaps(allUserIds);
-        Map<Integer, Integer> noteMap = mapConvert(notes, "noteCount");
-
-        //设置用户文章数和笔记数
-        for (User user : allUsers) {
-            user.setArticleCount(articleMap.getOrDefault(user.getUserId(), 0));
-            user.setNoteCount(noteMap.getOrDefault(user.getUserId(), 0));
-        }
-*/
         userStatistics.setUsersStatistics(allUsers);
 
         PageResult pageResult = new PageResult(allUsers.getTotal(), allUsers.getResult());
         return pageResult;
     }
-
-    /*
-     * map格式转换的方法
-     * */
-    private Map<Integer, Integer> mapConvert(Map<Integer, Map<String, Long>> map, String str) {
-        Map<Integer, Integer> tempMap = new HashMap<>();
-        for (Map.Entry<Integer, Map<String, Long>> entry : map.entrySet()) {
-            tempMap.put(entry.getKey(), entry.getValue().get(str).intValue());
-        }
-        return tempMap;
-    }
-
 
     /*
      * 根据id查找用户
@@ -139,12 +107,6 @@ public class UserServiceImpl implements UserService {
             log.error("用户不存在");
             return null;
         }
-        /*//获取用户对应的文章数
-        Integer articleCount = articleMapper.countArticleByUserId(id);
-        userById.setArticleCount(articleCount);
-        //获取用户对应的笔记数
-        Integer noteCount = noteMapper.countNoteByUserId(id);
-        userById.setNoteCount(noteCount);*/
         userStatistics.setUserStatistics(userById);
         return userById;
     }
@@ -247,12 +209,12 @@ public class UserServiceImpl implements UserService {
      * 批量删除用户
      * */
     @Override
-    public void batchDeleteUsers(Integer[] userIds) {
-        if (userIds == null || userIds.length == 0) {
+    public void batchDeleteUsers(List<Integer> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
             throw new RuntimeException("请选择要删除的用户");
         }
         userMapper.deleteUserBatch(userIds);
-        log.info("删除了{}个用户", userIds.length);
+        log.info("删除了{}个用户", userIds.size());
     }
 
     /*
@@ -267,9 +229,12 @@ public class UserServiceImpl implements UserService {
         user.setUserLastLoginTime(LocalDateTime.now());
         user.setUserStatus(1);
         user.setUserUrl("");
-        user.setUserAvatar(UPLOAD_IMG_PATH+"blog_avatar-3.png");
+        user.setUserAvatar("blog_avatar-3.png");    // UPLOAD_IMG_PATH+
         user.setUserLastLoginIp(null);
         user.setUserNickname(user.getUserName());
+        if(user.getUserEmail() == null || user.getUserEmail().isEmpty()){
+            user.setUserEmail(null);
+        }
         // 密码加密
         user.setUserPassword(passwordEncoder.encode(user.getUserPassword()));
         userMapper.insertNewUser(user);
@@ -312,6 +277,12 @@ public class UserServiceImpl implements UserService {
         String originalFilename = file.getOriginalFilename();
         //获取后缀
         String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
+        // 在获取 suffix 之后加入
+        List<String> allowedSuffixes = List.of(".jpg", ".jpeg", ".png", ".gif", ".webp");
+        String lowerSuffix = suffix.toLowerCase();
+        if (!allowedSuffixes.contains(lowerSuffix)) {
+            throw new RuntimeException("仅支持 jpg/jpeg/png/gif/webp 格式");
+        }
         //随机生成图片文件名称
         String imgName = UUID.randomUUID().toString() + suffix;
 
@@ -332,7 +303,7 @@ public class UserServiceImpl implements UserService {
             userMapper.updateUser(user);
             return imgName;
         } catch (IOException e) {
-           e.printStackTrace();
+            log.error("上传失败", e);
            throw new RuntimeException("上传失败" + e.getMessage());
         }
     }
@@ -346,6 +317,11 @@ public class UserServiceImpl implements UserService {
         //更新密码
         userMapper.resetPasswordByEmail(email,passwordEncoder.encode(newPassword));
         log.info("邮箱为：{} 的用户密码重置成功",email);
+    }
+
+    @Override
+    public int countUsers() {
+        return userMapper.countAllUsers();
     }
 
 }

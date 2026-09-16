@@ -1,7 +1,10 @@
 package com.wjy.personal_blog.rabbitmq;
 
+import com.rabbitmq.client.Channel;
 import com.wjy.personal_blog.configs.RabbitMQConfig;
+import com.wjy.personal_blog.exceptions.BusinessException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -12,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
 
 /**
 * 邮件消息消费者
@@ -40,8 +45,10 @@ public class EmailConsumer {
             value = @Queue(name = RabbitMQConfig.EMAIL_QUEUE) ,
             exchange = @Exchange(name = RabbitMQConfig.EMAIL_EXCHANGE),
             key = RabbitMQConfig.EMAIL_ROUTING_KEY
-    ))
-    public void emailListener(EmailMessage emailMessage){
+    ),ackMode = "MANUAL") //设置手动确认
+    public void emailListener(EmailMessage emailMessage, Channel channel, Message message){
+        // 获取消息的唯一标识
+        long deliveryTag = message.getMessageProperties().getDeliveryTag();
         try {
             log.info("开始处理邮件发送任务：{}", emailMessage.getToEmail());
 
@@ -55,9 +62,18 @@ public class EmailConsumer {
             // 发送邮件
             mailSender.send(msg);
             log.info("邮件成功发送至邮箱：{}", emailMessage.getToEmail());
+            //手动确认消息
+            channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
             log.error("邮件发送失败：{}，错误信息：{}", emailMessage.getToEmail(), e.getMessage());
             //后续可添加重试机制
+            try {
+                channel.basicNack(deliveryTag, false, false);
+                log.warn("消息已拒绝并进入死信队列: {}", deliveryTag);
+            } catch (IOException ex) {
+                log.error("消息拒绝失败: {}", ex.getMessage());
+                throw new BusinessException(ex);
+            }
         }
     }
 }

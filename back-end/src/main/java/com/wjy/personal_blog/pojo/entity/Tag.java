@@ -11,11 +11,9 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Tag implements Serializable {
+    private static final long serialVersionUID = 1L;
     private Integer tagId;
     private String tagName;
-    private String tagDescription;
-
-    /* 非数据库字段 */
-    //private Integer articleCount;
+    private Integer tagCount;
 
 }

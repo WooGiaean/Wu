@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { useUserInfoStore } from '@/stores/modules/userInfo.js';
+import { createRouter, createWebHistory } from 'vue-router';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,7 +19,7 @@ const router = createRouter({
       component: () => import('@/views/Home/HomeView.vue'),
       meta: { requiresAuth: true }
     },
-    {
+    { 
       path: '/profile',
       name: 'profile',
       component: () => import('@/views/Home/ProfileView.vue'),
@@ -55,6 +56,11 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/comments',
+      name: 'comments',
+      component: () => import('@/views/Comment/CommentsView.vue')
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/Login/LoginView.vue')
@@ -70,22 +76,12 @@ const router = createRouter({
       component: () => import('@/views/Login/ForgotPasswordView.vue')
     },
     {
-      path: '/admin',
-      name: 'admin',
-      component: () => import('../views/Admin/AdminView.vue'),
+      path: '/newAdmin',
+      name: 'newAdmin',
+      component: () => import('../views/Admin/AdminViewNew.vue'),
       meta: { requiresAuth: true }
     },
-    {
-       path: '/temp',
-      name: 'temp',
-      component: () => import('../views/temp/testPage.vue'),
-      //meta: { requiresAuth: true }
-    },
-    {
-      path: '/tempAdmin',
-      name: 'adminNew',
-      component: () => import('../views/Admin/AdminViewNew.vue'),
-    }
+    { path: '/:pathMatch(.*)*', redirect: '/home' }  // 或跳转到专门的 404 页
   ]
 })
 
@@ -101,6 +97,14 @@ router.beforeEach((to, from) => {
   if(to.meta.requiresAuth && (!localStorageUser || !localStorageToken)){
     //如果不是公共页面且未登录，跳转到登录页
     return {path:'/login'};
+  }
+
+  // 判断用户信息是否过期
+  const expiredTime = useUserInfoStore().expireTime;
+  if (expiredTime && Date.now() > expiredTime) {
+    // 用户信息过期，清除用户信息和 token
+    useUserInfoStore().clearUserInfo();
+    return { path: '/login' }; // 跳转到登录页
   }
 
 })

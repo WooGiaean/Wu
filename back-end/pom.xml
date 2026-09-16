@@ -48,14 +48,6 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- mybatis依赖jar包-->
-		<dependency>
-			<groupId>org.mybatis.spring.boot</groupId>
-			<artifactId>mybatis-spring-boot-starter</artifactId>
-			<version>3.0.5</version>
-		</dependency>
-
-
 		<!-- lombok依赖jar包 -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -84,11 +76,11 @@
 			<version>1.4.7</version>
 		</dependency>
 
-		<!-- fastjson -->
+		<!-- fastjson（1.2.83 修复了 1.2.76 的已知 RCE 漏洞；后续如需彻底移除可迁至 Jackson） -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>1.2.76</version>
+			<version>1.2.83</version>
 		</dependency>
 
 
@@ -154,10 +146,11 @@
 		</dependency>
 
 		<!-- 热部署： -->
-		<!--<dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
-		</dependency>-->
+			<optional>true</optional>
+		</dependency>
 
 
 		<!-- knife4j接口文档依赖 -->
@@ -167,6 +160,13 @@
 			<version>4.5.0</version>
 		</dependency>
 
+
+		<!-- SpringDoc OpenAPI UI -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.3.0</version>
+		</dependency>
 
 
 		<!-- 添加Bean Validation依赖 -->
@@ -182,12 +182,6 @@
 			<version>0.21.0</version>
 		</dependency>
 		<!-- jwt 依赖 -->
-		<!--<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt</artifactId>
-			<version>0.11.5</version>
-		</dependency>-->
-
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
@@ -204,6 +198,12 @@
 			<artifactId>jjwt-jackson</artifactId>
 			<version>${jjwt.version}</version>
 			<scope>runtime</scope>
+		</dependency>
+
+		<!-- aop依赖 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
 		</dependency>
 
 	</dependencies>

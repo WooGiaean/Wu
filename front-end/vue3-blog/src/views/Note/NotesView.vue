@@ -1,97 +1,114 @@
 <template>
-  <div class="container" id="notes-list">
-    <leftNav></leftNav>
-
-    <!-- 右侧笔记列表 -->
-    <main class="right-column">
-      <div class="content-wrapper">
-        <!-- 页面标题 -->
-        <div class="section-header">
-          <h2>✍️ 我的笔记</h2>
+  <AppLayout>
+    <div class="notes-page">
+      <div class="page-header">
+        <div class="page-title">
+          <EditPen class="title-icon" />
+          <h1>我的笔记</h1>
         </div>
-
-        <!-- 导航和新增部分 -->
-        <div class="controls">
-          <input type="text" v-model="keyword" class="search-bar" placeholder="搜索笔记..." @keyup.enter="search" />
-          <button class="btn btn-primary" @click="search">搜索</button>
-          <button class="btn btn-secondary" @click="showAddModal = true">新增</button>
-        </div>
-
-        <!-- 笔记列表展示页面 -->
-        <div v-if="loading" class="loading">笔记加载中...</div>
-        <div v-else-if="notes.length === 0" class="empty-state">暂无笔记，快去写一篇吧！</div>
-        <div v-else>
-          <section v-for="(item, index) in notes" :key="item.noteId"
-                   @click="turnToNote(item.noteId)">
-            <article class="note-item">
-              <h2 class="note-title">
-                {{ item.noteTopic }}
-              </h2>
-              <p class="note-summary">{{ item.noteContent }}</p>
-              <span class="note-date">{{ formatDate(item.noteCreateTime) }}</span>
-            </article>
-          </section>
-        </div>
+        <el-button type="primary" class="add-btn" @click="showAddModal = true">
+          <Plus class="btn-icon" />
+          新建笔记
+        </el-button>
       </div>
-    </main>
 
-    <!-- 新增笔记模态框 -->
-    <div class="modal" v-if="showAddModal" @click="closeModal">
-      <div class="modal-dialog" @click.stop>
-        <div class="modal-content">
-          <!-- 标题头部 -->
-          <div class="modal-header">
-            <h5 class="modal-title">新增笔记</h5>
-            <button type="button" class="btn-close" @click="closeModal">&times;</button>
-          </div>
+      <div v-if="loading" class="loading-state">
+        <el-skeleton :rows="5" animated />
+      </div>
 
-          <!-- 中间提交内容 -->
-          <div class="modal-body">
-            <form id="noteForm">
-              <div class="mb-3">
-                <label for="noteTopic" class="form-label">笔记标题</label>
-                <input type="text" v-model="newNote.topic" class="form-control" id="noteTopic" required>
-              </div>
-              <div class="mb-3">
-                <label for="noteContent" class="form-label">笔记内容</label>
-                <textarea class="form-control" v-model="newNote.content" id="noteContent" rows="6" required></textarea>
-              </div>
-            </form>
-          </div>
+      <div v-else-if="notes.length === 0" class="empty-state">
+        <el-empty description="暂无笔记，快去写一篇吧！" />
+      </div>
 
-          <!-- 底部按钮 -->
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="insertNew">保存笔记</button>
-            <button type="button" class="btn btn-secondary" @click="closeModal">取消</button>
+      <div v-else class="notes-grid">
+        <el-card
+          v-for="(note, index) in notes"
+          :key="note.noteId"
+          class="note-card"
+          @click="goToNote(note.noteId)"
+          :style="{ animationDelay: `${index * 0.08}s` }"
+        >
+          <template #header>
+            <div class="note-header">
+              <h3 class="note-title">{{ note.noteTopic }}</h3>
+              <span class="note-date">{{ formatDate(note.noteCreateTime) }}</span>
+            </div>
+          </template>
+          <p class="note-content">{{ note.noteContent ? note.noteContent.substring(0, 150) + '...' : '无内容' }}</p>
+          <div class="note-footer">
+            <el-tag size="small" type="primary" effect="plain">笔记</el-tag>
+            <div class="note-actions">
+              <button class="action-btn" @click.stop="editNote(note.noteId)">
+                <EditPen class="action-icon" />
+              </button>
+              <button class="action-btn" @click.stop="deleteNote(note.noteId)">
+                <FolderDelete class="action-icon" />
+              </button>
+            </div>
           </div>
-        </div>
+        </el-card>
       </div>
     </div>
-  </div>
+
+    <el-dialog
+      v-model="showAddModal"
+      title="新建笔记"
+      width="600px"
+      top="5vh"
+      class="add-note-dialog"
+      :close-on-click-modal="false"
+    >
+      <div class="note-form">
+        <el-form :model="newNote">
+          <el-form-item label="标题" required>
+            <el-input
+              v-model="newNote.topic"
+              placeholder="请输入笔记标题"
+              size="large"
+            />
+          </el-form-item>
+
+          <el-form-item label="内容" required>
+            <div ref="vditorRef" class="vditor-container"></div>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <template #footer>
+        <el-button @click="closeModal">取消</el-button>
+        <el-button type="primary" @click="submitNew" :loading="submitting">提交</el-button>
+      </template>
+    </el-dialog>
+  </AppLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import AppLayout from '@/components/layout/AppLayout.vue'
 import axiosAPI from '@/utils/api/axios.js'
-import leftNav from '@/components/layout/leftNav.vue'
-//import '../../assets/css/home.css'
+import { EditPen, FolderDelete, Plus } from '@element-plus/icons-vue'
+import { ElButton, ElCard, ElDialog, ElEmpty, ElForm, ElFormItem, ElInput, ElMessage, ElMessageBox, ElSkeleton, ElTag } from 'element-plus'
+import Vditor from 'vditor'
+import 'vditor/dist/index.css'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-// 数据状态
-const keyword = ref('')
 const notes = ref([])
 const loading = ref(true)
 const showAddModal = ref(false)
+const submitting = ref(false)
+
 const newNote = ref({
   topic: '',
   content: ''
 })
 
-// 格式化日期函数
+const vditorRef = ref(null)
+const vditorInstance = ref(null)
+
 const formatDate = (timeString) => {
-  if(!timeString) return ''
+  if (!timeString) return ''
   const date = new Date(timeString)
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -99,81 +116,16 @@ const formatDate = (timeString) => {
   return `${year}-${month}-${day}`
 }
 
-// 跳转到具体笔记页面
-const turnToNote = (id) => {
-  console.log("点击了id为{}的笔记", id)
-  router.push(`/notes/${id}`)
-}
-
-// 关键字查询笔记
-const search = () => {
-  const word = keyword.value.trim()
-  if (!word) {
-    alert("请输入关键字！")
-    return
-  }
-
+const getAllNotes = () => {
   loading.value = true
-  axiosAPI.post('/notes/query', {
-    noteTopic: word,
-    noteContent: word
-  })
-    .then(res => {
-      console.log("请求转发成功")
-      console.log(res.data.data.records)
-      const result = res.data
-      if (result.code == 1 || result.success) {
-        console.log("后端数据返回成功")
-        notes.value = result.data.records || []
-        console.log(result.data.records)
-      } else {
-        console.log("后端数据返回失败", result.msg || result.message)
-        notes.value = []
-        alert("没有该笔记！")
-      }
-    }).catch(err => {
-      console.error('请求转发失败', err)
-      notes.value = []
-      loading.value = false
-    }).finally(() => {
-      loading.value = false
-    })
-}
-
-// 添加新笔记
-const insertNew = () => {
-  console.log("点击了新增按钮")
-  axiosAPI.post('/user/notes', {
-    noteTopic: newNote.value.topic,
-    noteContent: newNote.value.content,
-  }).then(res => {
-    console.log("请求转发成功")
-    const result = res.data
-    console.log(result)
-    if (result.code == 1 || result.success) {
-      alert("添加成功！")
-      showAddModal.value = false
-      // 重新加载笔记列表
-      getNotes()
-    } else {
-      alert("添加失败：" + (result.msg || "Unknown errors"))
-    }
-  }).catch(err => {
-    console.error('请求转发失败', err)
-    alert("添加失败，请重试")
-  })
-}
-
-// 获取笔记列表
-const getNotes = () => {
-  loading.value = true
+  
   axiosAPI.get('/user/notes/list')
-    .then(res => {
-      console.log(res.data.data.records)
-      notes.value = res.data.data.records || []
+    .then(response => {
+      const res = response.data
+      notes.value = (res.data && res.data.records) || []
     })
-    .catch(err => {
-      console.error('加载失败', err)
+    .catch(error => {
+      console.error('请求失败', error)
       notes.value = []
     })
     .finally(() => {
@@ -181,292 +133,310 @@ const getNotes = () => {
     })
 }
 
-// 关闭模态框
-const closeModal = () => {
-  showAddModal.value = false
-  // 清空表单
-  newNote.value = {
-    topic: '',
-    content: ''
+const goToNote = (id) => {
+  router.push(`/notes/${id}`)
+}
+
+const editNote = (id) => {
+  router.push(`/notes/edit/${id}`)
+}
+
+const deleteNote = async (id) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除这条笔记吗？',
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    const response = await axiosAPI.delete(`/user/notes/delete/${id}`)
+    if (response.data.code === 1) {
+      ElMessage.success('删除成功')
+      getAllNotes()
+    } else {
+      ElMessage.error('删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败', error)
+      ElMessage.error('删除失败')
+    }
   }
 }
 
-// 页面加载时渲染数据
+const submitNew = async () => {
+  if (!newNote.value.topic.trim()) {
+    ElMessage.warning('请输入笔记标题')
+    return
+  }
+  
+  if (vditorInstance.value) {
+    newNote.value.content = vditorInstance.value.getValue()
+  }
+  
+  submitting.value = true
+  
+  try {
+    const response = await axiosAPI.post('/user/notes/insert', {
+      noteTopic: newNote.value.topic,
+      noteContent: newNote.value.content
+    })
+    
+    if (response.data.code === 1) {
+      ElMessage.success('笔记添加成功')
+      getAllNotes()
+      closeModal()
+    } else {
+      ElMessage.error('笔记添加失败')
+    }
+  } catch (error) {
+    console.error('请求失败', error)
+    ElMessage.error('请求失败')
+  } finally {
+    submitting.value = false
+  }
+}
+
+const initVditor = () => {
+  nextTick(() => {
+    if (vditorRef.value && !vditorInstance.value) {
+      vditorInstance.value = new Vditor(vditorRef.value, {
+        mode: 'sv',
+        preview: { show: true, theme: 'light' },
+        toolbar: ['emoji', 'headings', 'bold', 'italic', 'link', 'list', 'code', 'line'],
+        height: 300,
+        cache: { enable: false },
+        blur: () => {
+          if (vditorInstance.value) {
+            newNote.value.content = vditorInstance.value.getValue()
+          }
+        }
+      })
+    }
+  })
+}
+
+const destroyVditor = () => {
+  if (vditorInstance.value) {
+    vditorInstance.value.destroy()
+    vditorInstance.value = null
+  }
+}
+
+const closeModal = () => {
+  showAddModal.value = false
+  newNote.value = { topic: '', content: '' }
+  destroyVditor()
+}
+
 onMounted(() => {
-  getNotes()
+  getAllNotes()
+  
+  watch(showAddModal, (newVal) => {
+    if (newVal) {
+      initVditor()
+    } else {
+      destroyVditor()
+    }
+  })
+})
+
+onUnmounted(() => {
+  destroyVditor()
 })
 </script>
 
 <style scoped>
-/* 容器布局 */
-.container {
-  display: flex;
-  flex: 1;
-  padding: 20px;
-  gap: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-  align-items: flex-start;
-  min-height: 100vh;
-}
-
-/* 左侧导航栏 */
-.left-column {
-  width: 250px;
-  flex-shrink: 0;
-}
-
-/* 主内容区域 */
-.right-column {
-  flex: 1;
+.notes-page {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: var(--spacing-xl);
 }
 
-/* 响应式设计 */
-@media (max-width: 1024px) {
-  .container {
-    padding: 15px;
-    gap: 20px;
-  }
-
-  .left-column {
-    width: 220px;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-    padding: 10px;
-    gap: 20px;
-  }
-
-  .left-column {
-    width: 100%;
-  }
-
-  .right-column {
-    width: 100%;
-  }
-}
-
-/* 内容包装器 */
-.content-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 页面标题 */
-.section-header {
-  text-align: center;
-  padding: 30px 0;
-  background: var(--card-bg);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--card-shadow);
-}
-
-.section-header h2 {
-  color: var(--text-primary);
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.controls {
+.page-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 10px;
+  align-items: center;
 }
 
-.search-bar {
-  flex: 1;
-  min-width: 200px;
-  padding: 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-primary);
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.title-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--primary-500);
+}
+
+.page-title h1 {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
   color: var(--text-primary);
+  margin: 0;
 }
 
-.search-bar:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  border-radius: var(--radius-lg);
 }
 
-.note-item {
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  background: var(--card-bg);
-  transition: all 0.3s ease;
+.add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+
+.btn-icon {
+  margin-right: var(--spacing-xs);
+}
+
+.loading-state,
+.empty-state {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
   border: 1px solid var(--border-color);
-  box-shadow: var(--card-shadow);
-  cursor: pointer;
 }
 
-.note-item:hover {
-  transform: translateY(-3px);
-  background: var(--bg-secondary);
-  box-shadow: var(--hover-shadow);
-  border-color: var(--accent-color);
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.note-card {
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  animation: fade-in 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.note-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .note-title {
-  margin: 0 0 10px;
-  font-size: 18px;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
   color: var(--text-primary);
-  font-weight: 600;
+  margin: 0;
 }
 
-.note-summary {
+.note-date {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.note-content {
+  font-size: var(--text-sm);
   color: var(--text-secondary);
-  line-height: 1.5;
-  margin-bottom: 15px;
-  font-size: 14px;
+  line-height: var(--leading-relaxed);
+  margin: var(--spacing-md) 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.note-date {
-  color: var(--text-secondary);
-  font-size: 12px;
-  display: block;
-  text-align: right;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-dialog {
-  background: var(--bg-secondary);
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--card-shadow);
-}
-
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--border-color);
+.note-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--bg-primary);
+  margin-top: var(--spacing-md);
 }
 
-.modal-body {
-  padding: 20px;
-}
-
-.modal-footer {
-  padding: 20px;
-  border-top: 1px solid var(--border-color);
+.note-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  background: var(--bg-primary);
+  gap: var(--spacing-sm);
 }
 
-.form-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  margin-bottom: 15px;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
-}
-
-.btn-close {
-  background: none;
+.action-btn {
+  width: 32px;
+  height: 32px;
   border: none;
-  font-size: 24px;
+  background: transparent;
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
-  color: var(--text-secondary);
+  transition: all var(--transition-fast);
 }
 
-.btn-close:hover {
-  color: var(--text-primary);
+.action-btn:hover {
+  background: rgba(249, 115, 22, 0.1);
 }
 
-/* 加载和空状态 */
-.loading,
-.empty-state {
-  text-align: center;
-  padding: 40px;
-  color: var(--text-secondary);
-  background: var(--card-bg);
-  border-radius: 12px;
+.action-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-tertiary);
+}
+
+.action-btn:hover .action-icon {
+  color: var(--primary-500);
+}
+
+.add-note-dialog {
+  border-radius: var(--radius-xl);
+}
+
+:deep(.add-note-dialog .el-dialog__header) {
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+:deep(.add-note-dialog .el-dialog__title) {
+  font-weight: var(--font-semibold);
+}
+
+.note-form {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.vditor-container {
   border: 1px solid var(--border-color);
-  box-shadow: var(--card-shadow);
-}
-
-/* 响应式设计 */
-@media (max-width: 1200px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .left-column {
-    width: 100%;
-  }
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  min-height: 250px;
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 10px;
-    gap: 20px;
-  }
-
-  .controls {
+  .page-header {
     flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: flex-start;
   }
-
-  .search-bar {
-    width: 100%;
+  
+  .page-title h1 {
+    font-size: var(--text-2xl);
   }
-
-  .btn {
-    width: 100%;
+  
+  .notes-grid {
+    grid-template-columns: 1fr;
   }
+}
 
-  .section-header h2 {
-    font-size: 24px;
+@media (max-width: 480px) {
+  .page-title h1 {
+    font-size: var(--text-xl);
   }
 }
 </style>

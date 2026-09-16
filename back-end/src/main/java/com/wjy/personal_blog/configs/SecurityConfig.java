@@ -7,6 +7,7 @@ import com.wjy.personal_blog.handler.CustomLogoutSuccessHandler;
 import com.wjy.personal_blog.handler.CustomSuccessHandler;
 import com.wjy.personal_blog.service.auth.AuthorizeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,6 +25,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -47,8 +49,11 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Value("${cors.allowed-origins}")
+    private String allowedOrigins;
 
-    /*
+
+    /**
     * 密码加密
     * */
     @Bean
@@ -108,7 +113,7 @@ public class SecurityConfig {
             // 公开接口
             authz.requestMatchers("/api/auth/**", "/api/articles/**",
                             "/api/comments/article/**", "/api/category/**",
-                            "/api/tags/list","/uploaded-images/**").permitAll()
+                            "/api/tags/**","/uploaded-images/**").permitAll()
                     // 接口文档无需认证权限
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
                             "/doc.html", "/webjars/**", "/swagger-resources/**",
@@ -129,16 +134,15 @@ public class SecurityConfig {
     }
 
     /**
-     * 配置CORS跨域
-     * */
+     * 配置CORS跨域。允许的来源通过 cors.allowed-origins 配置项注入，
+     * 多个来源用逗号分隔。生产环境应通过环境变量 CORS_ALLOWED_ORIGINS 限定为实际前端域名。
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        //允许本地开发前端访问
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "http://localhost:5174"
-        ));
+        //允许的前端来源（从配置读取，逗号分隔）
+        configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
+
         //允许所有请求方法
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         //允许所有请求头

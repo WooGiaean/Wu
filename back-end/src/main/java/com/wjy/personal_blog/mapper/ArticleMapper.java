@@ -17,16 +17,14 @@ public interface ArticleMapper {
     /**
      * 查询所所有文章
      * */
-   /* @Select("select article.*,user.user_nickname as blogger " +
-            "from article left join user " +
-            "on article.article_user_id = user.user_id" +
-            " order by article.article_create_time desc")*/
     Page<Article> list(@Param("articleUserId")Integer articleUserId);   //带有标签的文章列表
 
 
-    /*
-    * 管理员查询所有文章
+    /**
+    * 管理员查询所有文章（后台展示页面）
     * */
+    @Select("select a.*,u.user_nickname as blogger from article a left join user u on a.article_user_id = u.user_id" +
+            " order by a.article_update_time desc")
     Page<Article> adminSeeArticlesList();
 
 
@@ -37,7 +35,9 @@ public interface ArticleMapper {
     List<Article> queryConditional(Article article);
 
 
-    // ArticleMapper.java
+   /**
+   * 模糊搜索文章
+   * */
     List<Article> searchArticles(@Param("keyword") String keyword, @Param("offset") int offset, @Param("pageSize") int pageSize);
 
     /**
@@ -60,11 +60,15 @@ public interface ArticleMapper {
     void deleteArticle(Integer articleId);
 
 
-    //查询具体某篇文章
+    /**
+     * 查询具体某篇文章
+     * */
     Article specificArticle(Integer articleId);
 
 
-    //公开状态下的具体文章
+    /**
+     * 公开状态下的具体文章
+     * */
     @Results({
             @Result(id = true, property = "articleId", column = "article_id"),
             @Result(property = "categoryList", column = "article_id",
@@ -75,31 +79,21 @@ public interface ArticleMapper {
     Article publicArticle(Integer articleId);
 
     //更新文章阅读量
-    @Update("update article set article_read_count=article_read_count=#{count} where article_id=#{articleId}")
+    @Update("update article set article_read_count=article_read_count+#{count} where article_id=#{articleId}")
     int updateReadCount(Integer articleId,Integer count);
 
     //更新文章评论数
     @Update("update article set article_comment_count=article_comment_count+#{count} where article_id= #{articleId}")
     int updateArticleCommentCount(Integer articleId,Integer count);
 
-    //查询对应用户文章数量
-    /*@Select("select article_user_id, count(*) as articlCount from " +
-            "article where article_user_id in " +
-            "#{userIds} group by article_user_id")*/
-    /*@MapKey("article_user_id")
-    List<Map<Integer,Integer>> countByArticleUserIdMapList(@Param("userIds") List<Integer> userIds);*/
-
-   /* @Select("select article_user_id as auId,count(*) as aCount from article where article_user_id in #{userIds} " +
-            "group by article_user_id")*/
-
-    /*
+    /**
     获取各个用户对应的文章数量以及博客数量
     * */
     @MapKey("article_user_id")
     Map<Integer, Map<String, Long>> countByArticleUserIdMap(@Param("userIds")List<Integer> userIds);
 
-    /*
-    * 计算当前id用户的博客数量和笔记数量
+    /**
+    * 计算当前id用户的博客数量
     * */
     @Select("select count(*) from article where article_user_id=#{articleUserId}")
     Integer countArticleByUserId(Integer articleUserId);
@@ -109,21 +103,63 @@ public interface ArticleMapper {
     Page<Article> getArticlesByCategory(@Param("articleUserId") Integer articleUserId,@Param("categoryId") Integer categoryId);
 
 
-    /* 计算分类下的文章数量 */
+    /* 计算分类在下的文章数量 */
     @MapKey("category_id")
     List<Map<String, Object>> getArticleCountByCategories(@Param("categoryIds") List<Integer> categoryIds);
 
-    @Select("select * from article where article_status=1")
-    Page<Article> getPublicArticles();
-
 
     /**
-     * 保存草稿
-     * */
-    //void saveDraft(Article article);
-
-    /**
-     * 获取草稿列表
+    * 获取公开状态下的所有文章
     * */
-    //List<Article> getDrafts(@Param("articleUserId") Integer articleUserId);
+    List<Article> getPublicArticles();
+
+
+    /**
+    * 计算所有文章数量：方便后台管理页面展示统计
+    * */
+    @Select("select count(*) from article")
+    int countArticles();
+
+
+    /**
+    * 计算公开状态下的文章数量
+    * */
+    @Select("select count(*) from article where article_status=1")
+    Integer countPublicArticles();
+
+
+    /**
+    * 批量删除文章
+    * */
+    void deleteBatchArticles(List<Integer> articleIds);
+
+    /**
+    * 更新文章点赞数
+    * */
+    @Update("UPDATE article SET article_like_count = article_like_count + #{count} WHERE article_id = #{articleId}")
+    int updateArticleLikeCount(@Param("articleId") Integer articleId, @Param("count") Integer count);
+
+
+    /**
+     * 查询文章列表（按置顶排序，时间倒序）
+     * 置顶文章排在前面的 SQL 逻辑：
+     * ORDER BY article_order DESC, article_create_time DESC
+     */
+    @Select("SELECT * FROM article " +
+            "WHERE article_status = 1 " +
+            "ORDER BY article_order DESC, article_create_time DESC")
+    List<Article> selectPublicArticlesOrderByTop();
+
+
+    /**
+     * 通过id列表获取文章列表
+     * */
+    List<Article> selectArticlesByIds(@Param("articleIds") List<Integer> articleIds);
+
+
+    /**
+    * 根据分类+标签查询文章
+    * */
+    List<Article> selectArticlesByCategoryAndTag(@Param("categoryId") Integer categoryId
+            , @Param("articleIds") List<Integer> articleIds);
 }

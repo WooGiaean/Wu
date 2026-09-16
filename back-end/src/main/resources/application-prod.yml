@@ -1,0 +1,65 @@
+# 生产环境配置：所有敏感值必须通过环境变量提供，默认值仅作占位符提示
+spring:
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/${MYSQL_DATABASE:personal_blog}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:change-me-in-env}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: 5672
+    username: ${RABBITMQ_USER:blog}
+    password: ${RABBITMQ_PASSWORD:change-me-in-env}
+    virtual-host: /
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: 6379
+      database: 1
+      password: ${REDIS_PASSWORD:}
+
+  mail:
+    host: ${MAIL_HOST:smtp.qq.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
+          auth: true
+          starttls:
+            enable: true
+          requied: true
+
+
+blog:
+  upload:
+    path: ${UPLOAD_PATH:/app/uploads/}
+
+jwt:
+  secret: ${JWT_SECRET:change-me-in-env}
+  expiration: 86400000
+  token-header: Authorization
+
+# 生产环境关闭接口文档，避免暴露接口结构
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+knife4j:
+  enable: false
+
+logging:
+  level:
+    org.springframework.security: INFO
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+  mapper-locations: classpath:mapper/*.xml

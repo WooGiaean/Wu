@@ -15,7 +15,7 @@ public interface NoteMapper {
     Page<Notes> list(@Param("noteUserId")Integer noteUserId);
 
     @Select("select notes.*,user.user_nickname as noteAuthor from notes " +
-            "join user on note_user_id=user_id;")
+            "join user on note_user_id=user_id")
     Page<Notes> adminSeeNotesList();
 
 
@@ -43,6 +43,10 @@ public interface NoteMapper {
     @Delete("delete from notes where note_id=#{noteId}")
     void deleteNote(Integer noteId);
 
+
+    //@Delete("delete from notes where note_id in (#{noteIdList})")
+    void deleteBatchNotes(List<Integer> noteIdList);
+
     /*
     * 查询每个用户
     * */
@@ -51,6 +55,11 @@ public interface NoteMapper {
 
     @Select("select count(*) from notes where note_user_id=#{noteUserId}")
     Integer countNoteByUserId(Integer noteUserId);
+
+    @Select("select count(*) from notes")
+    Integer countAllNotes();
+
+    List<Notes> adminSearchNotes(String keyword);
 
 
     //int countByUserId(Integer userId);

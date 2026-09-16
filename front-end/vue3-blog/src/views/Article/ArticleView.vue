@@ -1,198 +1,166 @@
 <template>
-  <div class="container" id="article">
-    <!-- 左侧侧边栏 -->
-    <aside class="sidebar">
-      <!-- 分类导航 -->
-      <div class="sidebar-section">
-        <h3>📁 文章分类</h3>
-        <ul class="category-list">
-          <li class="category-item" @click="goToArticles()">
-            全部
-          </li>
-          <li v-for="category in categories" :key="category.categoryId" class="category-item"
-              @click="goToCategory(category.categoryId)">
-            {{ category.categoryName }}
-          </li>
-        </ul>
+  <AppLayout>
+    <div class="article-page">
+      <router-link to="/articles" class="back-link">
+        ←  返回文章列表
+      </router-link>
+
+      <div v-if="loading" class="loading-state">
+        <el-skeleton :rows="8" animated />
       </div>
 
-      <!-- 热门标签 -->
-      <div class="sidebar-section">
-        <h3>🏷️ 热门标签</h3>
-        <div class="tag-cloud">
-          <span v-for="tag in tags" :key="tag.tagId" class="tag" @click="goToTag(tag.tagId)">
-            {{ tag.tagName }}
-          </span>
-        </div>
+      <div v-else-if="!article" class="empty-state">
+        <el-empty description="文章不存在或已被删除" />
       </div>
 
-      <!-- 最近文章 -->
-      <div class="sidebar-section">
-        <h3>📅 最近文章</h3>
-        <ul class="recent-articles">
-          <li v-for="article in recentArticles" :key="article.articleId" class="recent-article-item" @click="goToArticle(article.articleId)">
-            <span class="recent-title">{{ article.articleTitle }}</span>
-            <span class="recent-date">{{ formatDate(article.articleCreateTime) }}</span>
-          </li>
-        </ul>
-      </div>
-    </aside>
+      <div v-else class="article-content">
+        <header class="article-header">
+          <h1 class="article-title">{{ article.articleTitle }}</h1>
 
-    <!-- 右侧文章内容 -->
-    <main class="main-content">
-      <div class="content-wrapper">
-        <article v-if="article">
-          <header>
-            <h1>{{article.articleTitle}}</h1>
-            <p class="meta">发布于：{{formatDate(article.articleCreateTime)}} | 作者：{{article.blogger}}</p>
-          </header>
-
-          <!-- 文章分类和标签 -->
           <div class="article-meta">
-            <div class="meta-item">
-              <span class="meta-label">分类：</span>
-              <div class="article-categories" v-if="article.categoryList && article.categoryList.length > 0">
-                <span class="article-category" v-for="category in article.categoryList" :key="category.categoryId" @click="goToCategory(category.categoryId)">
-                  {{category.categoryName}}
-                </span>
-              </div>
-              <span v-else>暂无分类</span>
-            </div>
-
-            <div class="meta-item">
-              <span class="meta-label">标签：</span>
-              <div class="article-tags" v-if="article.tagList && article.tagList.length > 0">
-                <span class="article-tag" v-for="tag in article.tagList" :key="tag.tagId" @click="goToTag(tag.tagId)">
-                  {{tag.tagName}}
-                </span>
-              </div>
-              <span v-else>暂无标签</span>
-            </div>
+            <span class="meta-item">
+              <User class="meta-icon" />
+              {{ article.userNickname }}
+            </span>
+            <span class="meta-divider">|</span>
+            <span class="meta-item">
+              <Calendar class="meta-icon" />
+              {{ formatDate(article.articleCreateTime) }}
+            </span>
+            <span class="meta-divider">|</span>
+            <span class="meta-item">
+              <View class="meta-icon" />
+              {{ article.articleReadCount || 0 }}
+            </span>
+            <span class="meta-divider">|</span>
+            <span class="meta-item">
+              <ChatDotRound class="meta-icon" />
+              {{ article.articleCommentCount || 0 }}
+            </span>
           </div>
 
-          <!-- 文章内容 -->
-          <div class="content" v-html="articleContentHtml"></div>
-
-          <!-- 文章缩略图 -->
-          <div class="article-thumbnail" v-if="article.articleThumbnail">
-            <img :src="'/uploaded-images/'+article.articleThumbnail"
-                 :alt="article.articleTitle"
-                 class="thumbnail-img">
+          <!-- 标签展示区域  -->
+          <div class="article-tags">
+            <el-tag v-for="category in article.categoryList" :key="category.categoryId" size="small" type="primary"
+              effect="plain" @click="goToCategory(category.categoryId)">
+              {{ category.categoryName }}
+            </el-tag>
+            <el-tag v-for="tag in article.tagList" :key="tag.tagId" size="small" type="info" effect="plain">
+              {{ tag.tagName }}
+            </el-tag>
           </div>
 
-          <!-- 编辑和删除文章按钮的位置 -->
-          <div class="actions">
-            <button class="btn btn-info" @click="editArticle(article.articleId)">
-              ✏️ 编辑文章
+        </header>
+
+        <div v-if="article.articleThumbnail" class="article-cover">
+          <img :src="`/uploaded-images/${article.articleThumbnail}`" :alt="article.articleTitle" />
+        </div>
+
+
+        <main class="article-body" v-html="articleHtml"></main>
+
+        <!--  编辑和删除按钮  -->
+        <div class="actions">
+          <button class="btn btn-info" @click="openEditView(article)">
+            <EditPen class="btn-icon" /> 编辑文章
+          </button>
+
+          <button class="btn btn-delete" @click="deleteArticle(article.articleId)">
+            <Delete class="btn-icon" /> 删除文章
+          </button>
+        </div>
+
+        <footer class="article-footer">
+          <div class="like-section">
+            <button class="like-btn" :class="{ liked: isLiked }" @click="handleLike">
+              <Star class="like-icon" />
+              <span class="like-count">{{ article.articleLikeCount || 0 }}</span>
             </button>
+          </div>
+        </footer>
 
-            <button class="btn btn-delete" @click="confirmDelete(article.articleId)">
-              🗑️ 删除文章
-            </button>
+        <!--  评论区域 -->
+        <section class="comment-section">
+          <div class="section-header">
+            <div class="section-title">
+              <ChatDotRound class="section-icon" />
+              <h2>评论 ({{ comments.length }})</h2>
+            </div>
           </div>
 
-          <!-- 评论区 -->
-          <div class="comments-section">
-            <h3>💬 评论区</h3>
+          <div v-if="comments.length === 0" class="empty-comments">
+            <el-empty description="暂无评论，快来发表第一条评论吧！" />
+          </div>
 
-            <!-- 发表评论 -->
-            <div class="comment-form">
-              <textarea v-model="newComment.content" placeholder="写下你的评论..." rows="4"></textarea>
-              <div class="form-actions">
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="newComment.isAnonymous"> 匿名评论
-                </label>
-                <input v-if="newComment.isAnonymous" v-model="newComment.anonymousName" placeholder="匿名昵称" class="anonymous-input">
-                <button class="btn btn-primary" @click="submitComment">发表评论</button>
+          <!-- 评论列表 -->
+          <div v-else class="comments-list">
+            <div v-for="comment in comments" :key="comment.commentId" class="comment-item">
+              <div class="comment-avatar">
+                <el-avatar :size="48" :src="comment.userAvatar">
+                  <User />
+                </el-avatar>
               </div>
-            </div>
-
-            <!-- 评论列表 -->
-            <div class="comments-list" v-if="comments.length > 0">
-              <div class="comment-item" v-for="comment in paginatedComments" :key="comment.commentId">
+              <div class="comment-content">
                 <div class="comment-header">
-                  <span class="comment-author">{{comment.anonymousName || userNickName || '匿名用户'}}</span>
-                  <span class="comment-time">{{formatDate(comment.createTime)}}</span>
+                  <span class="comment-author">{{ comment.userNickname }}</span>
+                  <span class="comment-time">{{ formatDate(comment.commentCreateTime) }}</span>
                 </div>
-                <div class="comment-content">{{comment.content}}</div>
+                <p class="comment-text">{{ comment.commentContent }}</p>
               </div>
-            </div>
-            <div v-else class="empty-comments">暂无评论，快来发表第一条评论吧！</div>
-
-            <!-- 分页 -->
-            <div class="pagination" v-if="totalPages > 1">
-              <button class="page-btn" @click="currentPage = 1" :disabled="currentPage === 1">首页</button>
-              <button class="page-btn" @click="currentPage--" :disabled="currentPage === 1">上一页</button>
-              <span class="page-info">第 {{currentPage}} 页，共 {{totalPages}} 页</span>
-              <button class="page-btn" @click="currentPage++" :disabled="currentPage === totalPages">下一页</button>
-              <button class="page-btn" @click="currentPage = totalPages" :disabled="currentPage === totalPages">末页</button>
             </div>
           </div>
 
-          <!-- 回到首页 -->
-          <router-link to="/articles" class="back-home">← 回到文章列表</router-link>
-        </article>
-        <div v-else-if="loading" class="loading">文章加载中...</div>
-        <div v-else class="empty-state">文章不存在或已被删除</div>
+          <!--  新增评论表单  -->
+          <div class="comment-form">
+            <el-form :model="commentForm">
+              <el-form-item>
+                <el-input v-model="commentForm.content" type="textarea" :rows="3" placeholder="写下你的评论..."
+                  class="comment-input" />
+              </el-form-item>
+              <el-form-item class="form-actions">
+                <el-button type="primary" class="submit-btn" @click="submitComment" :loading="submitting">
+                  发表评论
+                </el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+
+        </section>
+
       </div>
-    </main>
-  </div>
+    </div>
+  </AppLayout>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import {  useRoute } from 'vue-router'
-import router from '@/router/index.js'
+import AppLayout from '@/components/layout/AppLayout.vue'
 import axiosAPI from '@/utils/api/axios.js'
+import { Calendar, ChatDotRound, Star, User, View } from '@element-plus/icons-vue'
+import { ElAvatar, ElButton, ElEmpty, ElForm, ElFormItem, ElInput, ElSkeleton, ElTag } from 'element-plus'
 import { marked } from 'marked'
-import { ElForm, ElFormItem, ElInput, ElButton, ElDialog,
-  ElTag, ElMenu, ElMenuItem, ElCard, ElSkeleton, ElEmpty,
-  ElCheckbox, ElCheckboxGroup, ElUpload, ElMessage } from 'element-plus'
-//import '@/assets/css/home.css'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-/*const router = useRouter()*/
 const route = useRoute()
+const router = useRouter()
 
-// 数据状态
 const article = ref(null)
-const userNickName = ref('')
-const loading = ref(true)
 const comments = ref([])
-const currentPage = ref(1)
-const pageSize = ref(10)
-const categories = ref([])
-const tags = ref([])
-const recentArticles = ref([])
-// 新增的评论数据格式
-const newComment = ref({
-  content: '',
-  isAnonymous: false,
-  anonymousName: ''
+const loading = ref(true)
+const isLiked = ref(false)
+const submitting = ref(false)
+
+const commentForm = ref({
+  content: ''
 })
 
-// 将markdown转换为HTML
-const articleContentHtml = computed(() => {
-  if (article.value && article.value.articleContent) {
-    return marked(article.value.articleContent)
-  }
-  return ''
+const articleHtml = computed(() => {
+  if (!article.value?.articleContent) return ''
+  return marked.parse(article.value.articleContent)
 })
 
-// 分页评论计算
-const paginatedComments = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return comments.value.slice(start, end)
-})
-
-// 总页数计算
-const totalPages = computed(() => {
-  return Math.ceil(comments.value.length / pageSize.value)
-})
-
-// 格式化日期函数
 const formatDate = (timeString) => {
-  if(!timeString) return ''
+  if (!timeString) return ''
   const date = new Date(timeString)
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -200,488 +168,304 @@ const formatDate = (timeString) => {
   return `${year}-${month}-${day}`
 }
 
-// 修改文章
-const editArticle = (id) => {
-  console.log('正在执行修改文章' + id)
-  router.push(`/articles/edit/${id}`)
-}
-
-// 删除文章
-const confirmDelete = (id) => {
-  if(confirm('确定要删除这篇文章吗？')) {
-    console.log('正在执行删除文章' + id)
-    axiosAPI.delete(`/user/articles/${id}`)
-      .then(response => {
-        console.log(response.data.code == 1 ? '删除成功' : '删除失败')
-        if (response.data.code == 1) {
-          router.push('/articles')
-        } else {
-          alert('删除失败：' + (response.data.msg || '未知错误'))
-        }
-      })
-      .catch(error => {
-        console.log('请求失败：' + error)
-        alert('删除失败，请重试')
-      })
-  }
-}
-
-// 导航函数
-const goToArticles = () => {
-  router.push('/articles')
-}
-
 const goToCategory = (categoryId) => {
   router.push(`/articles?category=${categoryId}`)
 }
 
-const goToTag = (tagId) => {
-  router.push(`/articles?tag=${tagId}`)
-}
-
-// 获取当前用户信息
-const getCurrentUser = () => {
-  axiosAPI.get('/home/currentUser', { credentials: 'include' })
-    .then(response => {
-      if(response.data.data) {
-        userNickName.value = response.data.data.userNickname || 'Visitor'
-      }
-    })
-    .catch(error => {
-      console.error('获取用户信息失败', error)
-    })
-}
-
-// 获取分类列表
-const getCategories = () => {
-  axiosAPI.get('/category/list')
-    .then(response => {
-      if (response.data.code === 1 && response.data.data) {
-        categories.value = response.data.data.records || []
-      } else {
-        categories.value = []
-      }
-    })
-    .catch(error => {
-      console.error('获取分类列表失败:', error)
-    })
-}
-
-// 获取标签列表
-const getTags = () => {
-  axiosAPI.get('/tags/list')
-    .then(response => {
-      if (response.data.code === 1 && response.data.data) {
-        tags.value = response.data.data.records || []
-      } else {
-        tags.value = []
-      }
-    })
-    .catch(error => {
-      console.error('获取标签列表失败:', error)
-    })
-}
-
-// 获取最近文章
-const getRecentArticles = () => {
-  axiosAPI.get('/home/latestArticles')
-    .then(response => {
-      if (response.data.code === 1 && response.data.data) {
-        recentArticles.value = response.data.data.records.slice(0, 5) || []
-      } else {
-        recentArticles.value = []
-      }
-    })
-    .catch(error => {
-      console.error('获取最近文章失败:', error)
-    })
-}
-
-// 获取评论列表
-const getComments = (articleId) => {
-  axiosAPI.get(`/comments/article/${articleId}`)
-    .then(response => {
-      if (response.data.code === 1 && response.data.data) {
-        comments.value = response.data.data.records || []
-        currentPage.value = 1 // 重置页码
-      }
-    })
-    .catch(error => {
-      console.error('获取评论失败', error)
-    })
-}
-
-// 提交评论
-const submitComment = () => {
-  if (!newComment.value.content.trim()) {
-    alert('评论内容不能为空')
-    return
-  }
-
-  if (newComment.value.anonymous && !newComment.value.anonymousName.trim()) {
-    alert('请输入匿名昵称')
-    return
-  }
-
-  const commentData = {
-    articleId: article.value.articleId,
-    content: newComment.value.content,
-    isAnonymous: newComment.value.isAnonymous,
-    anonymousName: newComment.value.isAnonymous ? newComment.value.anonymousName : ''
-  }
-  console.log(commentData)
-  axiosAPI.post('/user/comments', commentData,{
-    headers:{
-      'Authorization': 'Bearer ' + localStorage.getItem('token')
-    }
-  })
-    .then(response => {
-      console.log('请求转发成功', response.data)
-      if (response.data.code === 1) {
-        alert('评论发表成功')
-        // 清空评论表单
-        newComment.value = {
-          content: '',
-          anonymous: false,
-          anonymousName: ''
-        }
-        // 重新获取评论列表
-        getComments(article.value.articleId)
-      } else {
-        alert('评论发表失败：' + (response.data.msg || '未知错误'))
-      }
-    })
-    .catch(error => {
-      console.error('提交评论失败', error)
-      alert('评论发表失败，请重试')
-    })
-}
-
-// 页面加载时显示文章
-onMounted(() => {
-  // 获取当前用户信息
-  getCurrentUser()
-  // 获取分类、标签和最近文章
-  getCategories()
-  getTags()
-  getRecentArticles()
-
-  // 获取文章ID
-  const id = route.params.id
-  if (!id) {
-    alert("文章id无效")
-    router.push('/articles')
-    return
-  }
-  console.log("文章id为：" + id)
-
-  // 获取文章详情
+const getArticle = async () => {
   loading.value = true
-  axiosAPI.get(`user/articles/${id}`)
-    .then(response => {
-      if (response.data.code === 1) {
-        console.log("成功跳转到具体的文章页面")
-        console.log(response.data.data)
-        article.value = response.data.data
-        // 获取评论列表
-        getComments(article.value.articleId)
-      } else {
-        console.log("跳转失败：" + response.data.msg)
-        //alert(response.data.msg)
-        ElMessage.error(response.data.msg)
+  const articleId = route.params.id
+
+  try {
+    const response = await axiosAPI.get(`/user/articles/${articleId}`)
+    const res = response.data
+
+    if (res.code === 1 && res.data) {
+      article.value = res.data
+    } else {
+      article.value = null
+    }
+  } catch (error) {
+    console.error('获取文章详情失败', error)
+    article.value = null
+  } finally {
+    loading.value = false
+  }
+}
+
+//跳转至编辑文章页面
+const openEditView = (article) => {
+  if (!article) return
+  router.push({ name: 'edit-article', params: { id: article.articleId } })
+}
+
+//删除文字
+const deleteArticle = async (articleId) => {
+  if (confirm('确定要删除这篇文章吗？')) {
+    try {
+      const response = await axiosAPI.delete(`/user/articles/${articleId}`)
+      const res = response.data
+
+      if (res.code === 1) {
+        article.value = null
         router.push('/articles')
       }
+    } catch (error) {
+      console.error('删除文章失败', error)
+    }
+  }
+
+
+}
+
+const getComments = async () => {
+  const articleId = route.params.id
+
+  try {
+    const response = await axiosAPI.get(`/user/comments/article/${articleId}/comments`)
+    const res = response.data
+
+    if (res.code === 1 && res.data) {
+      comments.value = res.data.records || []
+    } else {
+      comments.value = []
+    }
+  } catch (error) {
+    console.error('获取评论失败', error)
+    comments.value = []
+  }
+}
+
+const handleLike = async () => {
+  if (!article.value) return
+
+  try {
+    const response = await axiosAPI.post(`/articles/detail/${article.value.articleId}/like`)
+    const res = response.data
+
+    if (res.code === 1) {
+      isLiked.value = !isLiked.value
+      if (isLiked.value) {
+        article.value.articleLikeCount = (article.value.articleLikeCount || 0) + 1
+      } else {
+        article.value.articleLikeCount = Math.max(0, (article.value.articleLikeCount || 0) - 1)
+      }
+    }
+  } catch (error) {
+    console.error('点赞失败', error)
+  }
+}
+
+const submitComment = async () => {
+
+  if (!commentForm.value.content.trim()) {
+    return
+  }
+
+  submitting.value = true
+  /* 
+  /articles/detail/${article.value.articleId}/comments
+  */
+  try {
+    const response = await axiosAPI.post(`/user/comments`, {
+      content: commentForm.value.content,
+      articleId: article.value.articleId,
+      parentId: null
     })
-    .catch(error => {
-      console.log("请求失败：" + error)
-      ElMessage.error(error)
-      router.push('/articles')
-    })
-    .finally(() => {
-      loading.value = false
-    })
+
+    const res = response.data
+
+    if (res.code === 1) {
+      commentForm.value.content = ''
+      await getComments()
+    }
+  } catch (error) {
+    console.error('提交评论失败', error)
+  } finally {
+    submitting.value = false
+  }
+}
+
+onMounted(async () => {
+  await getArticle()
+  await getComments()
 })
 </script>
 
 <style scoped>
-/* 容器布局 */
-.container {
-  display: flex;
-  flex: 1;
-  padding: 20px;
-  gap: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-  align-items: flex-start;
-  min-height: 100vh;
-}
-
-/* 侧边栏样式 */
-.sidebar {
-  width: 250px;
-  flex-shrink: 0;
+.article-page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--spacing-xl);
 }
 
-/* 响应式设计 */
-@media (max-width: 1024px) {
-  .container {
-    padding: 15px;
-    gap: 20px;
-  }
-
-  .sidebar {
-    width: 220px;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-    padding: 10px;
-    gap: 20px;
-  }
-
-  .sidebar {
-    width: 100%;
-  }
-
-  .main-content {
-    width: 100%;
-  }
-}
-
-.sidebar-section {
-  background: var(--card-bg);
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--card-shadow);
-}
-
-.sidebar-section h3 {
-  color: var(--text-primary);
-  margin-bottom: 15px;
-  font-size: 16px;
-  font-weight: 600;
-  border-left: 4px solid var(--accent-color);
-  padding-left: 10px;
-}
-
-.category-list {
-  list-style: none;
-}
-
-.category-item {
-  padding: 10px 0;
-  cursor: pointer;
-  color: var(--text-secondary);
-  transition: all 0.3s ease;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.category-item:hover {
-  color: var(--accent-color);
-  padding-left: 10px;
-}
-
-.tag-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.tag {
-  padding: 4px 12px;
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  border-radius: 16px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.loading-state {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
   border: 1px solid var(--border-color);
 }
 
-.tag:hover {
-  background: var(--accent-color);
-  color: white;
-  border-color: var(--accent-color);
+.empty-state {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  border: 1px solid var(--border-color);
 }
 
-.recent-articles {
-  list-style: none;
-}
-
-.recent-article-item {
-  padding: 10px 0;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border-color);
-  transition: all 0.3s ease;
-}
-
-.recent-article-item:hover {
-  padding-left: 10px;
-}
-
-.recent-title {
-  display: block;
-  color: var(--text-primary);
-  font-size: 14px;
-  margin-bottom: 5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.recent-date {
-  display: block;
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-/* 主内容区域 */
-.main-content {
-  flex: 1;
+.article-content {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: var(--spacing-xl);
 }
 
-/* 文章样式 */
-article {
-  background-color: var(--card-bg);
-  border-radius: 12px;
-  padding: 30px;
+.article-header {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
   border: 1px solid var(--border-color);
-  box-shadow: var(--card-shadow);
 }
 
-article header {
-  text-align: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid var(--border-color);
-}
-
-article h1 {
-  font-size: 24px;
+.article-title {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
   color: var(--text-primary);
-  margin-bottom: 15px;
-  line-height: 1.3;
-  font-weight: 600;
+  margin: 0 0 var(--spacing-lg);
+  line-height: var(--leading-tight);
 }
 
-.meta {
-  color: var(--text-secondary);
-  font-size: 14px;
-  margin-top: 10px;
-}
-
-/* 文章内容 */
-.content {
-  font-size: 16px;
-  color: var(--text-primary);
-  line-height: 1.8;
-  margin-bottom: 30px;
-}
-
-.content p {
-  margin-bottom: 20px;
-}
-
-.content img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  margin: 20px 0;
-}
-
-/* 文章分类和标签 */
 .article-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 30px;
-  padding: 15px;
-  background-color: var(--bg-primary);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
 }
 
-.meta-label {
-  font-weight: bold;
-  color: var(--text-primary);
-  font-size: 14px;
+.meta-icon {
+  width: 16px;
+  height: 16px;
 }
 
-.article-categories, .article-tags {
+.meta-divider {
+  color: var(--border-color);
+}
+
+.article-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
-.article-category, .article-tag {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 14px;
-  font-size: 12px;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  cursor: pointer;
+.article-cover {
+  width: 100%;
+  height: 350px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
 }
 
-.article-category {
-  background-color: rgba(76, 175, 80, 0.2);
-  color: var(--accent-color);
-  border: 1px solid var(--accent-color);
+.article-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.article-category:hover {
-  background-color: var(--accent-color);
-  color: white;
+.article-body {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
+  border: 1px solid var(--border-color);
+  line-height: var(--leading-loose);
 }
 
-.article-tag {
-  background-color: var(--bg-secondary);
+.article-body :deep(h1),
+.article-body :deep(h2),
+.article-body :deep(h3),
+.article-body :deep(h4),
+.article-body :deep(h5),
+.article-body :deep(h6) {
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.article-body :deep(h1) {
+  font-size: var(--text-2xl);
+}
+
+.article-body :deep(h2) {
+  font-size: var(--text-xl);
+}
+
+.article-body :deep(h3) {
+  font-size: var(--text-lg);
+}
+
+.article-body :deep(p) {
+  margin-bottom: var(--spacing-lg);
   color: var(--text-secondary);
+}
+
+.article-body :deep(code) {
+  background: rgba(249, 115, 22, 0.1);
+  color: var(--primary-600);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-family: 'Fira Code', monospace;
+}
+
+.article-body :deep(pre) {
+  background: var(--bg-primary);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+  margin: var(--spacing-lg) 0;
   border: 1px solid var(--border-color);
 }
 
-.article-tag:hover {
-  background-color: var(--accent-color);
-  color: white;
-  border-color: var(--accent-color);
+.article-body :deep(pre code) {
+  background: none;
+  padding: 0;
 }
 
-/* 文章缩略图 */
-.article-thumbnail {
-  margin: 30px 0;
-  text-align: center;
+.article-body :deep(blockquote) {
+  border-left: 4px solid var(--primary-500);
+  padding-left: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+  color: var(--text-tertiary);
+  font-style: italic;
 }
 
-.thumbnail-img {
+.article-body :deep(img) {
   max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+  border-radius: var(--radius-lg);
+  margin: var(--spacing-md) 0;
 }
 
-.thumbnail-img:hover {
-  transform: scale(1.02);
+.article-body :deep(ul),
+.article-body :deep(ol) {
+  margin: var(--spacing-lg) 0;
+  padding-left: var(--spacing-xl);
 }
 
-/* 操作按钮 */
+.article-body :deep(li) {
+  margin-bottom: var(--spacing-sm);
+}
+
+.article-footer {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-xl);
+}
+
 .actions {
   margin-top: 30px;
   padding-top: 20px;
@@ -699,7 +483,14 @@ article h1 {
   transition: all 0.3s ease;
   font-weight: 500;
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .btn-info {
@@ -710,7 +501,7 @@ article h1 {
 .btn-info:hover {
   background-color: #388E3C;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .btn-delete {
@@ -722,258 +513,193 @@ article h1 {
 .btn-delete:hover {
   background-color: var(--bg-primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* 回到首页链接 */
-.back-home {
-  display: inline-block;
-  margin-top: 30px;
-  padding: 10px 20px;
-  background-color: var(--accent-color);
-  color: white;
-  text-decoration: none;
-  border-radius: 25px;
-  transition: all 0.3s ease;
+
+
+.like-section {
+  display: flex;
+  justify-content: center;
 }
 
-.back-home:hover {
-  background-color: #388E3C;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-/* 评论区 */
-.comments-section {
-  margin-top: 40px;
-  padding-top: 30px;
-  border-top: 2px solid var(--border-color);
-}
-
-.comments-section h3 {
-  color: var(--text-primary);
-  margin-bottom: 20px;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-/* 评论表单 */
-.comment-form {
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: var(--bg-primary);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-}
-
-.comment-form textarea {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  resize: vertical;
-  font-size: 14px;
-  font-family: inherit;
-  margin-bottom: 15px;
-}
-
-.comment-form textarea:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
-}
-
-.form-actions {
+.like-btn {
   display: flex;
   align-items: center;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 14px;
-  color: var(--text-secondary);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  border: 2px solid var(--primary-300);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--primary-500);
+  font-weight: var(--font-medium);
   cursor: pointer;
+  transition: all var(--transition-normal);
 }
 
-.anonymous-input {
-  padding: 8px 12px;
+.like-btn:hover {
+  background: rgba(249, 115, 22, 0.1);
+  transform: translateY(-2px);
+}
+
+.like-btn.liked {
+  background: rgba(249, 115, 22, 0.1);
+  border-color: var(--primary-500);
+}
+
+.like-btn.liked .like-icon {
+  color: #ef4444;
+}
+
+.like-icon {
+  width: 20px;
+  height: 20px;
+  transition: color var(--transition-fast);
+}
+
+.comment-section {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
-  background-color: var(--bg-secondary);
+}
+
+.section-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.section-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--primary-500);
+}
+
+.section-title h2 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
   color: var(--text-primary);
-  font-size: 14px;
-  flex: 1;
-  min-width: 200px;
+  margin: 0;
 }
 
-.anonymous-input:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+.empty-comments {
+  padding: var(--spacing-xl);
 }
 
-/* 评论列表 */
 .comments-list {
-  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 .comment-item {
-  padding: 20px;
-  background-color: var(--bg-primary);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  margin-bottom: 15px;
-  transition: all 0.3s ease;
+  display: flex;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
 }
 
-.comment-item:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transform: translateY(-2px);
+.comment-avatar {
+  flex-shrink: 0;
+}
+
+.comment-content {
+  flex: 1;
 }
 
 .comment-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .comment-author {
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   color: var(--text-primary);
-  font-size: 14px;
 }
 
 .comment-time {
-  font-size: 12px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.comment-text {
+  font-size: var(--text-base);
   color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+  margin: 0;
 }
 
-.comment-content {
-  font-size: 14px;
-  color: var(--text-primary);
-  line-height: 1.6;
-  word-break: break-word;
+.comment-form {
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--spacing-xl);
 }
 
-.empty-comments {
-  text-align: center;
-  padding: 40px;
-  color: var(--text-secondary);
-  font-size: 14px;
-  background-color: var(--bg-primary);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+.comment-input {
+  border-radius: var(--radius-lg);
 }
 
-/* 分页 */
-.pagination {
+:deep(.comment-input .el-input__wrapper) {
+  border-radius: var(--radius-lg);
+}
+
+.form-actions {
+  margin-bottom: 0;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
+  justify-content: flex-end;
 }
 
-.page-btn {
-  padding: 6px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.page-btn:hover:not(:disabled) {
-  background-color: var(--accent-color);
-  color: white;
-  border-color: var(--accent-color);
-}
-
-.page-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-info {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-/* 响应式设计 */
-@media (max-width: 1200px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .sidebar-section {
-    flex: 1;
-    min-width: 250px;
-  }
+.submit-btn {
+  border-radius: var(--radius-lg);
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 10px;
-    gap: 20px;
+  .article-header {
+    padding: var(--spacing-xl);
   }
 
-  .sidebar {
-    flex-direction: column;
-  }
-
-  .sidebar-section {
-    width: 100%;
-  }
-
-  article h1 {
-    font-size: 20px;
+  .article-title {
+    font-size: var(--text-2xl);
   }
 
   .article-meta {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .actions {
-    flex-direction: column;
-  }
-
-  .btn {
-    width: 100%;
-    text-align: center;
-  }
-
-  .form-actions {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .anonymous-input {
-    width: 100%;
-  }
-
-  .pagination {
     flex-wrap: wrap;
+    gap: var(--spacing-sm);
   }
 
-  .page-btn {
-    flex: 1;
-    min-width: 80px;
+  .article-cover {
+    height: 200px;
+  }
+
+  .article-body {
+    padding: var(--spacing-xl);
+  }
+
+  .comment-item {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .article-title {
+    font-size: var(--text-xl);
+  }
+
+  .article-cover {
+    height: 150px;
+  }
+
+  .article-body {
+    padding: var(--spacing-lg);
   }
 }
 </style>

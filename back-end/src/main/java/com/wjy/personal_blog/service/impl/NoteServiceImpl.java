@@ -10,6 +10,7 @@ import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
 import com.wjy.personal_blog.pojo.entity.Notes;
 import com.wjy.personal_blog.result.PageResult;
 import com.wjy.personal_blog.service.NoteService;
+import com.wjy.personal_blog.service.custom.UserStatisticsService;
 import com.wjy.personal_blog.utils.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Time;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.wjy.personal_blog.constants.RedisConstant.RECENT_NOTES_KEY;
@@ -34,6 +36,11 @@ public class NoteServiceImpl implements NoteService {
 
     @Autowired
     private RedisTemplate<String,Object>redisTemplate;
+
+
+
+    @Autowired
+    private UserStatisticsService statisticsService;
 
     /*
     * 缓存笔记列表
@@ -128,6 +135,7 @@ public class NoteServiceImpl implements NoteService {
         notes.setNoteUpdateTime(LocalDateTime.now());
         //数据库插入新数据
         noteMapper.addNewNote(notes);
+        statisticsService.updateNoteCount(currentId);
         redisTemplate.delete(RECENT_NOTES_KEY);
     }
 
@@ -184,6 +192,38 @@ public class NoteServiceImpl implements NoteService {
         noteMapper.deleteNote(noteId);
         log.info("删除笔记成功：{}",noteId);
         redisTemplate.delete(RECENT_NOTES_KEY);
+    }
+
+    @Override
+    public int countNotes() {
+        return noteMapper.countAllNotes();
+    }
+
+    @Override
+    public Notes getNoteByAdmin(Integer noteId) {
+        log.info("管理员查看笔记，ID：{}", noteId);
+        return noteId != null ? noteMapper.getNoteById(noteId) : null;
+    }
+
+    @Override
+    public void deleteNoteByAdmin(Integer noteId) {
+        log.info("管理员删除笔记:ID为：{}", noteId);
+        noteMapper.deleteNote(noteId);
+    }
+
+    @Override
+    public void deleteBatchNotes(List<Integer> noteIdList) {
+        log.info("管理员批量删除笔记，ID列表：{}", noteIdList);
+        noteMapper.deleteBatchNotes(noteIdList);
+    }
+
+    @Override
+    public PageResult adminSearchNotes(String keyword, int page, int pageSize) {
+        log.info("管理员开始搜索笔记，关键字：{}", keyword);
+        PageHelper.startPage(page, pageSize);
+        List<Notes> notes =  noteMapper.adminSearchNotes(keyword);
+        PageResult pageResult = new PageResult(notes.size(),notes);
+        return pageResult;
     }
 
 

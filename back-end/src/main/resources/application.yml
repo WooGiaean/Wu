@@ -6,22 +6,35 @@ server:
 spring:
   application:
     name: Personal_Blog
+  profiles:
+    active: dev  # 默认开发环境，Docker 启动时通过命令行覆盖为 prod
+
+  # 配置数据库连接（本地开发默认值，生产环境通过环境变量覆盖）
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/personal_blog?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true
-    username: root
-    password: 123456
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/${MYSQL_DATABASE:personal_blog}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:123456}
+
+  #RabbitMQ异步请求配置
+  rabbitmq:
+   host: ${RABBITMQ_HOST:localhost}
+   port: 5672
+   username: ${RABBITMQ_USER:guest}
+   password: ${RABBITMQ_PASSWORD:guest}
+   virtual-host: /
+
 #文件上传配置
   servlet:
     multipart:
       max-file-size: 5MB    #单个文件上传大小限制
       max-request-size: 10MB  #
-#邮箱验证配置
+#邮箱验证配置（QQ 邮箱 SMTP 授权码必须从环境变量或 .env 读取，请勿硬编码）
   mail:
-    host: smtp.qq.com
-    port: 587
-    username: 2939958861@qq.com  #发件人的邮箱地址
-    password: ouwvahghmcfbdfee  #发件人的邮箱密码
+    host: ${MAIL_HOST:smtp.qq.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}  #发件人的邮箱地址，从环境变量读取
+    password: ${MAIL_PASSWORD:}  #QQ邮箱SMTP授权码，从环境变量读取
     default-encoding: UTF-8
     properties:
       mail:
@@ -33,13 +46,24 @@ spring:
           starttls:
             enable: true
           requied: true
-#web资源配置路径
-#  web:
-#    resources:
-#      static-locations: classpath:/static
-#      add-mappings: true
-#  thymeleaf:
-#    check-template-location: false
+
+  data:
+    #配置redis
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+      database: 1
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 1
+
+# CORS 跨域允许来源（生产环境通过 CORS_ALLOWED_ORIGINS 环境变量覆盖为实际前端域名）
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:5174}
 
 #接口文档配置
 springdoc:
@@ -47,8 +71,10 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+    enabled: true
   api-docs:
     path: /v3/api-docs
+    enabled: true
 
 
 knife4j:
@@ -57,37 +83,16 @@ knife4j:
     language: zh_cn
     enable-footer: false
 
-  data:
-    #配置redis
-    redis:
-      host: localhost
-      port: 6379
-      database: 1
-      password: ''
-      timeout: 3000
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 1
 
 
-#RabbitMQ异步请求配置
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-    virtual-host: /
-
-#配置图片上传存放路径
+#配置图片上传存放路径（默认相对路径，避免暴露本地目录）
 blog:
   upload:
-    path: "D:/Self_Directory/Pictures/"
+    path: ${UPLOAD_PATH:./uploads/}
 
-#jwt令牌的密钥和过期时间
+#jwt令牌的密钥和过期时间（生产环境必须通过 JWT_SECRET 环境变量覆盖）
 jwt:
-  secret: "2bCpaRzrNb/5ZV3fmJ5VuUxKUb+N3UEseubJJaLKwxk="
+  secret: ${JWT_SECRET:dev-only-secret-please-change-in-production}
   expiration: 86400000 # 1天（24小时）
   token-header: Authorization
 
@@ -103,6 +108,4 @@ mybatis-plus:
 logging:
   level:
     org.springframework.security: DEBUG
-
-
 

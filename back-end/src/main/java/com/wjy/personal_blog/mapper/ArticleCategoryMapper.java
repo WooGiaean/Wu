@@ -1,10 +1,7 @@
 package com.wjy.personal_blog.mapper;
 
 import com.wjy.personal_blog.pojo.entity.ArticleCategory;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -31,4 +28,12 @@ public interface ArticleCategoryMapper {
      */
     @Insert("insert into article_category (article_id, category_id) values (#{articleId}, #{categoryId})")
     void insert(@Param("articleId") Integer articleId, @Param("categoryId") Integer categoryId);
+
+    /**
+    * 计算分类下的文章数量
+    * @param categoryId 分类ID
+    * @return 文章数量
+    */
+    @Select("select count(*) from article_category where category_id = #{categoryId}")
+    int countByCategoryId(Integer categoryId);
 }

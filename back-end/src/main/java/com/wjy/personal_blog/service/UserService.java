@@ -3,6 +3,7 @@ package com.wjy.personal_blog.service;
 import com.wjy.personal_blog.pojo.dto.LoginDTO;
 import com.wjy.personal_blog.pojo.dto.UserDTO;
 import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
+import com.wjy.personal_blog.pojo.dto.UserStatisticsDTO;
 import com.wjy.personal_blog.pojo.entity.User;
 import com.wjy.personal_blog.result.PageResult;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +36,7 @@ public interface UserService {
     void deleteUser(Integer id);
 
     //批量删除用户
-    void batchDeleteUsers(Integer[] userIds);
+    void batchDeleteUsers(List<Integer> userIds);
 
     //查询用户
     PageResult findSpecificUser(UserDTO userDTO);
@@ -52,4 +53,8 @@ public interface UserService {
     String uploadAvatar(Integer userId, MultipartFile file);
 
     void resetPasswordByEmail(String email, String newPassword);
+
+    int countUsers();
+
+  //  UserStatisticsDTO getUserStatistics(Integer userId);
 }

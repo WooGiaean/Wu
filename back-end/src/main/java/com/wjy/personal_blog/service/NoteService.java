@@ -5,6 +5,8 @@ import com.wjy.personal_blog.pojo.dto.PageQueryDTO;
 import com.wjy.personal_blog.pojo.entity.Notes;
 import com.wjy.personal_blog.result.PageResult;
 
+import java.util.List;
+
 public interface NoteService {
     /* 笔记列表 */
     PageResult noteList(Integer currentId);
@@ -22,4 +24,14 @@ public interface NoteService {
     void updateNote(NotesDTO notesDTO);
 
     void deleteNote(Integer noteId);
+
+    int countNotes();
+
+    Notes getNoteByAdmin(Integer noteId);
+
+    void deleteNoteByAdmin(Integer noteIds);
+
+    void deleteBatchNotes(List<Integer> noteIdList);
+
+    PageResult adminSearchNotes(String keyword, int page, int pageSize);
 }

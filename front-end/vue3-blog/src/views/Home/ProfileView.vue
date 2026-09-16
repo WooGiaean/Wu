@@ -1,127 +1,148 @@
 <template>
-  <div class="container" id="profile">
-    <leftNav></leftNav>
+  <AppLayout>
+    <div class="content-wrapper">
+      <!-- 页面标题 -->
+      <div class="section-header">
+        <h2><User class="title-icon" /> 关于我</h2>
+      </div>
 
-    <!-- 右侧个人信息内容 -->
-    <main class="right-column">
-      <div class="content-wrapper">
-        <!-- 页面标题 -->
-        <div class="section-header">
-          <h2>👤 关于我</h2>
-        </div>
-
-        <!-- 个人信息卡片 -->
-        <el-divider>
-          个人基本信息
-        </el-divider>
-        <div class="profile-card">
-          <!-- 头像区域 -->
-          <div class="avatar-section">
-            <img :src="getDefaultUserAvatar(userInfo)"
-                 alt="用户头像"
-                 class="profile-avatar">
-            <h3>{{ userInfo.userNickname || '用户' }}</h3>
-            <p class="user-email">{{ userInfo.userEmail || '未设置邮箱' }}</p>
+      <!-- 个人信息卡片 -->
+      <el-divider>
+        个人基本信息
+      </el-divider>
+      <div class="profile-card">
+        <!-- 头像区域 -->
+        <div class="avatar-section">
+          <img :src="getDefaultUserAvatar(userInfo)"
+               alt="用户头像"
+               class="profile-avatar">
+          <h3>{{ userInfo.userNickname || '用户' }}</h3>
+          <p class="user-email">{{ userInfo.userEmail || '未设置邮箱' }}</p>
 <!--            <button class="btn btn-secondary" @click="showEditModal = true">编辑资料</button>-->
-            <el-button @click="showEditModal = true" type="primary">
-              编辑资料
-            </el-button>
-          </div>
-
-          <!-- 个人信息详情 -->
-          <div class="info-section">
-            <h4>个人资料</h4>
-            <div class="info-item">
-              <span class="info-label">用户名：</span>
-              <span class="info-value">{{ userInfo.userName || '未设置' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">昵称：</span>
-              <span class="info-value">{{ userInfo.userNickname || '未设置' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">邮箱：</span>
-              <span class="info-value">{{ userInfo.userEmail || '未设置' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">注册时间：</span>
-              <span class="info-value">{{ formatDate(userInfo.userCreateTime) }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">上次登录：</span>
-              <span class="info-value">{{ formatDate(userInfo.userLastLoginTime) }}</span>
-            </div>
-          </div>
+          <el-button @click="showEditModal = true" type="primary">
+            编辑资料
+          </el-button>
         </div>
 
-        <!-- 最近活动 -->
-        <el-divider>
-          最近活动
-        </el-divider>
-        <div class="activity-section">
-          <div class="section-header">
-            <h3>📊 最近活动</h3>
+        <!-- 个人信息详情 -->
+        <div class="info-section">
+          <h4>个人资料</h4>
+          <div class="info-item">
+            <span class="info-label">用户名：</span>
+            <span class="info-value">{{ userInfo.userName || '未设置' }}</span>
           </div>
-          <div class="activity-stats">
-            <div class="stat-card">
-              <div class="stat-number">{{ userInfo.articleCount || 0 }}</div>
-              <div class="stat-label">文章</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number">{{ userInfo.noteCount || 0 }}</div>
-              <div class="stat-label">笔记</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number">{{ userInfo.commentCount || 0 }}</div>
-              <div class="stat-label">评论</div>
-            </div>
+          <div class="info-item">
+            <span class="info-label">昵称：</span>
+            <span class="info-value">{{ userInfo.userNickname || '未设置' }}</span>
           </div>
-        </div>
-
-        <!-- 最近文章 -->
-        <el-divider>
-          最新文章
-        </el-divider>
-        <div class="recent-section">
-          <div class="section-header">
-            <h3>📚 最近文章</h3>
-            <a href="/articles">查看全部 &rarr;</a>
+          <div class="info-item">
+            <span class="info-label">邮箱：</span>
+            <span class="info-value">{{ userInfo.userEmail || '未设置' }}</span>
           </div>
-          <div v-if="recentArticles.length === 0" class="empty-state">
-<!--            暂无文章-->
-            <el-empty description="暂无文章"></el-empty>
+          <div class="info-item">
+            <span class="info-label">注册时间：</span>
+            <span class="info-value">{{ formatDate(userInfo.userCreateTime) }}</span>
           </div>
-
-          <div v-else class="recent-articles">
-            <div class="recent-item" v-for="article in recentArticles" :key="article.articleId" @click="goToArticle(article.articleId)">
-              <h4>{{ article.articleTitle }}</h4>
-              <p class="recent-meta">{{ formatDate(article.articleCreateTime) }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 最近笔记 -->
-        <el-divider>
-          最新笔记
-        </el-divider>
-        <div class="recent-section">
-          <div class="section-header">
-            <h3>✍️ 最近笔记</h3>
-            <a href="/notes">查看全部 &rarr;</a>
-          </div>
-          <div v-if="recentNotes.length === 0" class="empty-state">
-<!--            暂无笔记-->
-            <el-empty description="暂无笔记"></el-empty>
-          </div>
-          <div v-else class="recent-notes">
-            <div class="recent-item" v-for="note in recentNotes" :key="note.noteId" @click="goToNote(note.noteId)">
-              <h4>{{ note.noteTopic }}</h4>
-              <p class="recent-meta">{{ formatDate(note.noteCreateTime) }}</p>
-            </div>
+          <div class="info-item">
+            <span class="info-label">上次登录：</span>
+            <span class="info-value">{{ formatDate(userInfo.userLastLoginTime) }}</span>
           </div>
         </div>
       </div>
-    </main>
+
+
+
+
+
+      <!-- 最近活动 -->
+      <el-divider>
+        最近活动
+      </el-divider>
+      <div class="activity-section">
+        <div class="section-header">
+          <h3><TrendCharts class="title-icon" /> 最近活动</h3>
+        </div>
+        <div class="activity-stats">
+          <div class="stat-card">
+            <div class="stat-number">{{ userInfo.articleCount || 0 }}</div>
+            <div class="stat-label">文章</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ userInfo.noteCount || 0 }}</div>
+            <div class="stat-label">笔记</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ userInfo.commentCount || 0 }}</div>
+            <div class="stat-label">评论</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 最近文章 -->
+      <el-divider>
+        最新文章
+      </el-divider>
+      <div class="recent-section">
+        <div class="section-header">
+          <h3><Notebook class="title-icon" /> 最近文章</h3>
+          <a href="/articles">查看全部 &rarr;</a>
+        </div>
+        <div v-if="recentArticles.length === 0" class="empty-state">
+<!--            暂无文章-->
+          <el-empty description="暂无文章"></el-empty>
+        </div>
+
+        <div v-else class="recent-articles">
+          <div class="recent-item" v-for="article in recentArticles" :key="article.articleId" @click="goToArticle(article.articleId)">
+            <h4>{{ article.articleTitle }}</h4>
+            <p class="recent-meta">{{ formatDate(article.articleCreateTime) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 最近笔记 -->
+      <el-divider>
+        最新笔记
+      </el-divider>
+      <div class="recent-section">
+        <div class="section-header">
+          <h3><EditPen class="title-icon" /> 最近笔记</h3>
+          <a href="/notes">查看全部 &rarr;</a>
+        </div>
+        <div v-if="recentNotes.length === 0" class="empty-state">
+<!--            暂无笔记-->
+          <el-empty description="暂无笔记"></el-empty>
+        </div>
+        <div v-else class="recent-notes">
+          <div class="recent-item" v-for="note in recentNotes" :key="note.noteId" @click="goToNote(note.noteId)">
+            <h4>{{ note.noteTopic }}</h4>
+            <p class="recent-meta">{{ formatDate(note.noteCreateTime) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 最近评论 -->
+      <el-divider>
+        最新评论
+      </el-divider>
+      <div class="recent-section">
+        <div class="section-header">
+          <h3><ChatDotRound class="title-icon" /> 最近评论</h3>
+<!--            <a href="/comments">查看全部 &rarr;</a>-->
+          <router-link  to="/comments" >查看全部</router-link>
+        </div>
+        <div v-if="recentComments.length === 0" class="empty-state">
+          <el-empty description="暂无评论"></el-empty>
+        </div>
+        <div v-else class="recent-comments">
+          <div class="recent-item" v-for="comment in recentComments" :key="comment.commentId" @click="goToArticle(comment.articleId)">
+            <h4>{{ truncateContent(comment.content)}} · {{comment.articleId}} </h4>
+            <p class="recent-meta">{{ formatDate(comment.createTime) }} </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
 
     <!-- 编辑资料弹窗 -->
     <div class="modal" v-if="showEditModal" @click="closeEditModal">
@@ -133,53 +154,27 @@
           </div>
 
           <div class="modal-body">
-<!--            <form>
-              &lt;!&ndash; 昵称 &ndash;&gt;
-              <div class="mb-3">
-                <label for="nickname" class="form-label">昵称</label>
-&lt;!&ndash;                <input type="text" class="form-control" id="nickname" v-model="editForm.userNickname" placeholder="请输入昵称">&ndash;&gt;
-                <el-form-item label="昵称">
-                  <el-input v-model="userInfo.userNickname" placeholder="昵称" />
-                </el-form-item>
-              </div>
-
-              &lt;!&ndash; 邮箱 &ndash;&gt;
-              <div class="mb-3">
-                <label for="email" class="form-label">邮箱</label>
-&lt;!&ndash;                <input type="email" class="form-control" id="email" v-model="editForm.userEmail" placeholder="请输入邮箱">&ndash;&gt;
-                <el-form-item label="邮箱">
-                  <el-input v-model="userInfo.userEmail" placeholder="邮箱" />
-                </el-form-item>
-              </div>
-
-              &lt;!&ndash; 头像上传 &ndash;&gt;
-              <div class="mb-3">
-                <label for="avatar" class="form-label">头像</label>
-                <input type="file" class="form-control" id="avatar" accept="image/*" @change="handleAvatarUpload">
-              </div>
-            </form>-->
-
             <el-form :model="userInfo">
+              <el-form-item label="用户名">
+                <el-input v-model="userInfo.userName" placeholder="用户名" :prefix-icon="User" />
+              </el-form-item>
+
+
               <el-form-item label="昵称">
                 <el-input v-model="userInfo.userNickname" placeholder="昵称" />
               </el-form-item>
-
+                
               <el-form-item label="邮箱">
                 <el-input v-model="userInfo.userEmail" placeholder="邮箱" />
               </el-form-item>
 
               <el-form-item label="头像">
-<!--                <el-input v-model="userInfo.userAvatar" placeholder="头像" />-->
-
                 <el-upload  class="avatar-uploader"
-
                 :show-file-list="false"
                 :on-success="handleAvatarUpload"
                 :auto-upload="true">
-<!--  action="/api/images/upload"-->
-                  <el-avatar :src="userInfo.userAvatar? `/uploaded-images/${userInfo.userAvatar}`
-                  :'@/assets/images/blog_avatar2.png'">
-                  </el-avatar>
+
+                  <el-avatar :src="getDefaultUserAvatar(userInfo)"></el-avatar>
 
                 </el-upload>
               </el-form-item>
@@ -195,29 +190,39 @@
         </div>
       </div>
     </div>
-  </div>
+  </AppLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import  router  from '@/router/index.js'
+//import '@/assets/css/el_plus.css'
+import AppLayout from '@/components/layout/AppLayout.vue'
+import router from '@/router/index.js'
 import axiosAPI from '@/utils/api/axios.js'
-import leftNav from '@/components/layout/leftNav.vue'
-import { ElForm, ElFormItem, ElInput, ElButton, ElUpload
-  , ElMessage, ElSkeleton, ElEmpty, ElAvatar, ElDivider } from 'element-plus'
+import { ChatDotRound, EditPen, Notebook, TrendCharts, User } from '@element-plus/icons-vue'
+import {
+  ElAvatar,
+  ElButton,
+  ElDivider,
+  ElEmpty,
+  ElForm, ElFormItem, ElInput,
+  ElMessage,
+  ElUpload
+} from 'element-plus'
+import { onMounted, ref } from 'vue'
 //import '@/assets/css/home.css'
-import { useUserInfoStore } from '@/stores/modules/userInfo.js'
+//import { useUserInfoStore } from '@/stores/modules/userInfo.js'
+import { allStores } from '@/stores/index.js'
 import { getDefaultUserAvatar } from '@/utils/common/setPics.js'
 
 
-
 //const router = useRouter()
-const userStore = useUserInfoStore()
+const userStore = allStores.useUserInfoStore()
 // 数据状态
 const userInfo = ref({})
 //const userStats = ref({})
 const recentArticles = ref([])
 const recentNotes = ref([])
+const recentComments = ref([])
 const showEditModal = ref(false)
 const editForm = ref({})
 
@@ -231,54 +236,39 @@ const formatDate = (timeString) => {
   return `${year}-${month}-${day}`
 }
 
-// 获取用户信息
-
 const getUserInfo = () => {
- /* axiosAPI.get('/user/profile')
-    .then(response => {
-      console.log('用户信息:', response.data.data)
-      if (response.data.data) {
-        userInfo.value = response.data.data
-        editForm.value = { ...response.data.data }
+  // 总是从后端获取最新数据，确保统计信息是最新的
+  axiosAPI.get('/user/profile')
+    .then(res=>{
+      if(res.data.code===1){
+        userInfo.value = res.data.data
+        editForm.value = { ...res.data.data }
+        const token = userStore.getToken()
+        userStore.setUserAndToken(res.data.data,token)
+        console.log('用户信息:', userInfo.value)
       }
-    })
-    .catch(error => {
-      console.error('获取用户信息失败:', error)
-    })*/
-
-  //userInfo.value= JSON.parse(sessionStorage.getItem('user')||'{}')
-  const userInfoStore = userStore.getUserInfo();
- // const tempUserId = userInfoStore.userId
-
-  if(!userInfoStore) {
-    axiosAPI.get('/user/profile')
-      .then(res=>{
-        if(res.data.code===1){
-          userInfo.value = res.data.data
-          editForm.value = { ...res.data.data }
-          const token = userStore.getToken()
-          userStore.setUserAndToken(res.data.data,token)
-        }
-      }).catch(err=>{
-      console.error('获取用户信息失败:', err)
-    })
-  }
-  userInfo.value = userInfoStore
-  editForm.value = { userInfoStore }
-  console.log('用户信息:', userInfo.value)
+    }).catch(err=>{
+    console.error('获取用户信息失败:', err)
+    // 失败时再尝试从 store 中获取
+    const userInfoStore = userStore.getUserInfo();
+    if(userInfoStore) {
+      userInfo.value = userInfoStore
+      editForm.value = { userInfoStore }
+    }
+  })
 }
 
+
 // 获取用户统计信息
-/*const getUserInfoDetail=()=>{
-  axiosAPI.get('/user/info')
+const getUserStats=()=>{
+  axiosAPI.get('/user/statics')
     .then(response => {
-      console.log('用户统计信息:', response.data.data)
     if (response.data.code===1) {
         userInfo.value = response.data.data
         editForm.value = { ...response.data.data }
       }
     })
-}*/
+}
 
 // 获取最近文章
 const getRecentArticles = () => {
@@ -307,13 +297,33 @@ const getRecentNotes = () => {
     })
 }
 
-// 处理头像上传
+
+// 获取最近评论
+const getRecentComments = () => {
+  axiosAPI.get('/user/comments')
+    .then(response => {
+      if (response.data.code === 1 && response.data.data) {
+        recentComments.value = response.data.data.records.slice(0, 3)
+      }
+    })
+    .catch(error => {
+      console.error('获取最近评论失败:', error)
+    })
+}
+
+// 截断评论内容
+const truncateContent = (content) => {
+  if (!content) return ''
+  return content.length > 50 ? content.substring(0, 50) + '...' : content
+}
+
+// 处理头像上传 /user/avatar
 const handleAvatarUpload = (event) => {
   const file = event.target.files[0]
   if (file) {
     const formData = new FormData()
     formData.append('file', file)
-    axiosAPI.post('/images/upload', formData, {
+    axiosAPI.post('/user/avatar', formData, {
       headers: {'Content-Type': 'multipart/form-data'}
     }).then(response => {
       if (response.data.code == 1) {
@@ -373,38 +383,19 @@ const closeEditModal = () => {
 // 页面加载时获取数据
 onMounted(() => {
   getUserInfo()
-//  getUserStats()
+  getUserStats()
   getRecentArticles()
   getRecentNotes()
+  getRecentComments()
 })
 </script>
 
 <style scoped>
-/* 容器布局 */
-.container {
-  display: flex;
-  flex: 1;
-  padding: 20px;
-  gap: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-  align-items: flex-start;
-}
-
-/* 主内容区域 */
-.right-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
-
 /* 内容包装器 */
 .content-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 20px;
 }
 
 /* 页面标题 */
@@ -421,6 +412,10 @@ onMounted(() => {
   color: var(--text-primary);
   font-size: 28px;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .section-header h3 {
@@ -428,6 +423,15 @@ onMounted(() => {
   font-size: 20px;
   font-weight: 600;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--primary-color, #F97316);
 }
 
 .section-header a {
@@ -681,22 +685,7 @@ onMounted(() => {
 }
 
 /* 响应式设计 */
-@media (max-width: 1200px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .left-column {
-    width: 100%;
-  }
-}
-
 @media (max-width: 768px) {
-  .container {
-    padding: 10px;
-    gap: 20px;
-  }
-
   .section-header h2 {
     font-size: 24px;
   }

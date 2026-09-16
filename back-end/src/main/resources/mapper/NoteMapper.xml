@@ -15,6 +15,14 @@
         where note_id = #{noteId}
     </update>
 
+
+    <delete id="deleteBatchNotes">
+        delete from notes where note_id in
+        <foreach item="noteId" collection="noteIdList" open="(" separator="," close=")">
+            #{noteId}
+        </foreach>
+    </delete>
+
     <!-- 模糊查询 -->
     <select id="queryByKeyWord" resultType="com.wjy.personal_blog.pojo.entity.Notes">
         select * from notes
@@ -39,5 +47,17 @@
             #{ids}
         </foreach>
         group by note_user_id
+    </select>
+
+    <select id="adminSearchNotes" resultType="com.wjy.personal_blog.pojo.entity.Notes">
+        select * from notes
+        <where>
+            <if test="noteTopic != null and noteTopic != ''">
+                or note_topic like concat('%',#{noteTopic},'%')
+            </if>
+            <if test="noteContent != null and noteContent != ''">
+                or note_content like concat('%',#{noteContent},'%')
+            </if>
+        </where>
     </select>
 </mapper>

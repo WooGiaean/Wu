@@ -1,8 +1,18 @@
 HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
+logs/
+*.log
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+### 敏感配置（切勿提交真实凭据） ###
+.env
+application-local.yml
+application-local.properties
+
+### 上传文件 ###
+uploads/
+**/uploads/
 
 ### STS ###
 .apt_generated
@@ -31,3 +41,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Node ###
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+### Redis Windows 安装包（体积大，不应提交到仓库） ###
+redis/Redis-x64-*/
+
+### Maven Wrapper Jar ###
+.mvn/wrapper/maven-wrapper.jar

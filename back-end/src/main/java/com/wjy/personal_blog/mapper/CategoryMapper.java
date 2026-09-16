@@ -12,4 +12,6 @@ public interface CategoryMapper extends BaseMapper<Category> {
 
     @Select("select * from category where category_id=#{categoryId}")
     Category getCategoryById(Integer categoryId);
+
+
 }

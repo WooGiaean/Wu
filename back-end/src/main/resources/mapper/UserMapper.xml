@@ -33,6 +33,12 @@
         </set>
         where user_id = #{userId}
     </update>
+    <delete id="deleteUserBatch">
+        delete from user where user_id in
+        <foreach item="id" index="index" collection="userIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
 
 
     <!-- 注册新用户 -->
@@ -41,7 +47,7 @@
     </insert>-->
 
 
-    <!-- 根据名字/邮箱找用户 -->
+    <!-- 模糊搜寻用户 -->
     <select id="findSingleUser" resultType="com.wjy.personal_blog.pojo.entity.User">
         select * from user
         <where>

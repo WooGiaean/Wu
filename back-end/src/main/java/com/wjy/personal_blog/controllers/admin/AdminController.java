@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequestMapping("/front/admin")
 @Slf4j
+@Tag(name = "认证管理", description = "登录、注册、验证码等认证相关接口")
 public class AdminController {
 
     @Autowired
@@ -102,13 +103,12 @@ public class AdminController {
      */
 
     @PostMapping("/register")
-
+    @Operation(summary = "用户注册", description = "用户注册接口，需验证验证码")
     public Result register(@RequestBody UserDTO userDTO){
         log.info("用户注册验证：{}",userDTO);
         
         // 验证码注册（从Redis中获取验证码并验证）
         if (userDTO.getCaptchaCode() != null && !userDTO.getCaptchaCode().isEmpty()) {
-            // TODO: 实现验证码验证逻辑，从Redis中获取验证码并验证
             // 从redis获取验证码进行校验
             String storedCode = (String) redisTemplate.opsForValue()
                     .get(RedisConstant.VERIFY_CODE_KEY+userDTO.getUserEmail());
@@ -134,7 +134,7 @@ public class AdminController {
      * 退出登录
      */
     @PostMapping("/logout")
-
+    @Operation(summary = "退出登录", description = "用户退出登录")
     public Result<String> logoutPage(){
         log.info("用户退出登录");
        /* session.invalidate();   //让session失效
@@ -148,7 +148,7 @@ public class AdminController {
      * 邮件发送验证码
      * */
     @PostMapping("/code2Email")
-
+    @Operation(summary = "发送验证码", description = "发送邮件验证码")
     public Result sendEmailCode(@RequestBody VerifyCodeDTO codeDTO){
         String email = codeDTO.getEmail();
         //限制发送频率已经再EmailService实现
@@ -173,7 +173,7 @@ public class AdminController {
     * 验证码登录
     * */
     @PostMapping("/verifyCodeLogin")
-
+    @Operation(summary = "验证码登录", description = "使用验证码登录")
     public Result loginWithVerifyCode(@RequestBody VerifyCodeDTO verifyDTO,HttpSession session){
         log.info("用户验证码登录：{}",verifyDTO.getEmail());
         User user = emailService.loginWithVerifyCode(verifyDTO);

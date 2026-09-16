@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ArticleTag {
+    private static final long serialVersionUID = 1L;
     private Integer articleId;
     private Integer tagId;
 }

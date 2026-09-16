@@ -1,5 +1,6 @@
 package com.wjy.personal_blog.pojo.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -43,10 +44,18 @@ public class User implements Serializable {
     /**
      * 文章数量（不是数据库字段）
      */
+    @TableField(exist = false)
     private Integer articleCount;
 
     /**
     * 笔记数量（非数据库字段）
-    * */
+    * */ @TableField(exist = false)
     private Integer noteCount;
+
+    /**
+     * 评论数量（非数据库字段）
+     *
+     * */
+    @TableField(exist = false)
+    private Integer commentCount;
 }

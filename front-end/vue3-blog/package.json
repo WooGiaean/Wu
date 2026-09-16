@@ -13,10 +13,13 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "@tailwindcss/vite": "^4.3.0",
     "axios": "^1.13.6",
     "marked": "^17.0.5",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
+    "tailwindcss": "^4.3.0",
     "vditor": "^3.11.2",
     "vue": "beta",
     "vue-router": "^5.0.3"

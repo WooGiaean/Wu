@@ -8,8 +8,7 @@ export const getDefaultArticleThumbnail=(article)=>{
 }
 
 export const getDefaultUserAvatar=(user)=>{
-  console.log(user)
-  if(user.userAvatar){
+  if(user&&user.userAvatar&& typeof user.userAvatar === 'string' && user.userAvatar.trim()){
     return `/uploaded-images/${user.userAvatar}`
   }else{
     return new URL('@/assets/default/pics/blog_avatar2.png', import.meta.url).href

@@ -29,4 +29,6 @@ public class Category {
     @TableField("category_parent_id")
     private Integer categoryParentId;
     //非数据库字段，用于关联查询
+    @TableField(exist = false)
+    private Integer linkArticleCount;
 }

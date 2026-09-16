@@ -30,7 +30,6 @@ public class Article implements Serializable {
 
     private Integer articleStatus;
 
-    //private Integer articleOrder;
 
     private String articleContent;
 
@@ -38,6 +37,10 @@ public class Article implements Serializable {
 
     private String articleThumbnail;
 
+    private Integer articleOrder;
+
+
+    /* blogger 是博客作者的用户名，非数据库字段 */
     private String blogger;
 
     /* tagList 和 categoryList 不是数据库字段 */

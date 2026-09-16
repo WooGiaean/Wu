@@ -2,9 +2,11 @@ package com.wjy.personal_blog.configs;
 
 import com.wjy.personal_blog.json.JacksonObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
@@ -25,8 +27,10 @@ public class RedisConfig {
         //创建Redis对象
         RedisTemplate redis=new RedisTemplate();
         //设置redis连接工厂对象
-        redis.setConnectionFactory(redisConnectionFactory);
-
+       redis.setConnectionFactory(redisConnectionFactory);
+        /*RedisConnection connection = redisConnectionFactory.getConnection();
+        connection.select(dateBase);
+        connection.close();*/
         //引入时间的序列化器
         JacksonObjectMapper objectMapper = new JacksonObjectMapper();
 
