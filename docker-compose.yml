@@ -1,0 +1,81 @@
+# 所有敏感配置通过 .env 文件提供（参考 .env.example，复制为 .env 后填入真实值）
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: blog-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: personal_blog
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/database.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - blog-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: blog-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - blog-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: blog-rabbitmq
+    environment:
+      # guest 用户不允许远程连接，必须创建专用用户
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - blog-net
+
+  backend:
+    build: ./back-end
+    container_name: blog-backend
+    ports:
+      - "8008:8008"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: personal_blog
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      UPLOAD_PATH: /app/uploads/
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+    restart: on-failure
+    networks:
+      - blog-net
+
+  frontend:
+    build: ./front-end/vue3-blog
+    container_name: blog-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - blog-net
+
+volumes:
+  mysql_data:
+
+networks:
+  blog-net:
+    driver: bridge
