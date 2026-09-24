@@ -1,10 +1,18 @@
+# 系统还需完善
+
+1、系统展示页面的样式优化
+2、Docker容器化一键部署（RabbitMQ、Redis、Nginx）
+3、评论功能还需完善（树形展示、评论权限）
+
+
+
 # 个人博客系统
 
 > 基于 Spring Boot 3 + Vue3 的前后端分离个人博客系统，支持多用户发文、分类标签、评论、点赞收藏、邮件通知、后台管理等功能。
 
 ## 项目简介
 
-本项目为个人学习开发的全栈博客系统，后端基于 Spring Boot 3 + Spring Security + MyBatis-Plus + Redis + RabbitMQ 实现，前端基于 Vue3 + Element Plus + Pinia 实现。涵盖用户认证鉴权、文章管理、分类标签、评论互动、邮件异步通知、管理员后台等完整业务模块。
+项目为个人学习开发的全栈博客系统，后端基于 Spring Boot 3 + Spring Security + MyBatis-Plus + Redis + RabbitMQ 实现，前端基于 Vue3 + Element Plus + Pinia 实现。涵盖用户认证鉴权、文章管理、分类标签、评论互动、邮件异步通知、管理员后台等完整业务模块。
 
 ## 技术栈
 
@@ -69,26 +77,8 @@ Personal_Blog/
 
 ## 快速开始
 
-### 方式一：Docker Compose 一键启动（推荐）
 
-前置：已安装 Docker 和 Docker Compose。
-
-```bash
-# 1. 复制环境变量示例并填入真实值
-cp .env.example .env
-# 编辑 .env 填入 MySQL / RabbitMQ / 邮箱授权码 / JWT 密钥等
-
-# 2. 一键启动所有服务
-docker compose up -d --build
-
-# 3. 访问
-# 前端：http://localhost
-# 后端：http://localhost:8008
-# 接口文档（dev）：http://localhost:8008/doc.html
-# RabbitMQ 控制台：http://localhost:15672
-```
-
-### 方式二：本地开发
+### 方式：本地开发
 
 #### 后端
 
